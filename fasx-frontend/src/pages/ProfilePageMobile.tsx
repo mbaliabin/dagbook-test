@@ -149,7 +149,7 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Выбор периода (средний размер) */}
+      {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
         <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronLeft className="w-4 h-4" />
@@ -186,37 +186,34 @@ export default function ProfilePageMobile() {
 
       {/* Модальное окно DateRange */}
       {showDateRangePicker && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a1a1d] rounded-xl w-full max-w-md p-4">
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-[#1a1a1d] rounded-xl w-full max-w-md p-2 sm:p-4">
             <DateRange
               onChange={item =>
                 setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })
               }
-              showSelectionPreview={true}
-              moveRangeOnFirstSelection={false}
-              months={1}
-              ranges={[
-                {
-                  startDate: dateRange?.startDate || new Date(),
-                  endDate: dateRange?.endDate || new Date(),
-                  key: "selection",
-                },
-              ]}
+              ranges={[{
+                startDate: dateRange?.startDate || new Date(),
+                endDate: dateRange?.endDate || new Date(),
+                key: "selection",
+              }]}
+              months={1} // один месяц на экране
               direction="horizontal"
-              rangeColors={["#3b82f6"]}
+              showMonthAndYearPickers={false}
               locale={ru}
               weekStartsOn={1}
+              rangeColors={["#3b82f6"]}
             />
             <div className="flex justify-end mt-2 space-x-2">
               <button
                 onClick={() => setShowDateRangePicker(false)}
-                className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300 text-sm"
               >
                 Отмена
               </button>
               <button
                 onClick={applyDateRange}
-                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
               >
                 Применить
               </button>
@@ -225,7 +222,7 @@ export default function ProfilePageMobile() {
         </div>
       )}
 
-      {/* Статистика (средний размер) */}
+      {/* Статистика */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
           <Timer className="w-6 h-6 text-gray-400" />
@@ -244,7 +241,7 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* График нагрузки и зоны интенсивности */}
+      {/* График и зоны интенсивности */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
       <IntensityZonesMobile workouts={filteredWorkouts} />
 
@@ -261,6 +258,23 @@ export default function ProfilePageMobile() {
         onClose={() => setIsModalOpen(false)}
         onAddWorkout={handleAddWorkout}
       />
+
+      {/* Тёмная тема для react-date-range */}
+      <style>{`
+        .rdrCalendarWrapper, .rdrMonths, .rdrMonth {
+          background-color: #1a1a1d !important;
+          color: #fff !important;
+        }
+        .rdrDayNumber span { color: #fff !important; }
+        .rdrDayPassive span { color: #888 !important; }
+        .rdrDayToday span { border-color: #3b82f6 !important; }
+        .rdrDaySelected span { background-color: #3b82f6 !important; color: #fff !important; }
+        .rdrMonthAndYearPickers select {
+          background-color: #2a2a2d !important;
+          color: #fff !important;
+        }
+      `}</style>
     </div>
   );
 }
+
