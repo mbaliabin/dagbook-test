@@ -13,15 +13,12 @@ import {
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { DateRange } from "react-date-range";
-import { ru } from "date-fns/locale";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
 
 import TrainingLoadChartMobile from "../components/TrainingLoadChartMobile";
 import IntensityZonesMobile from "../components/IntensityZonesMobile";
 import RecentWorkoutsMobile from "../components/RecentWorkoutsMobile";
 import AddWorkoutModalMobile from "../components/AddWorkoutModalMobile";
+import CustomDateRangeModal from "../components/CustomDateRangeModal";
 import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.extend(isBetween);
@@ -122,7 +119,6 @@ export default function ProfilePageMobile() {
     setSelectedMonth(prev => prev.add(1, "month"));
     setDateRange(null);
   };
-  const applyDateRange = () => setShowDateRangePicker(false);
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4">
@@ -151,17 +147,16 @@ export default function ProfilePageMobile() {
 
       {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Верхние кнопки месяца — серые */}
-        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-gray-600 text-white">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div
-          className="px-3 py-1 rounded bg-[#1f1f22] text-white cursor-pointer text-xs"
+          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
-        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-gray-600 text-white">
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
@@ -185,43 +180,16 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Модальное окно DateRange */}
-      {showDateRangePicker && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-[#1a1a1d] rounded-xl w-full max-w-md p-2 sm:p-4">
-            <DateRange
-              onChange={item =>
-                setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })
-              }
-              ranges={[{
-                startDate: dateRange?.startDate || new Date(),
-                endDate: dateRange?.endDate || new Date(),
-                key: "selection",
-              }]}
-              months={1}
-              direction="horizontal"
-              showMonthAndYearPickers={false}
-              locale={ru}
-              weekStartsOn={1}
-              rangeColors={["#3b82f6"]}
-            />
-            <div className="flex justify-end mt-2 space-x-2">
-              <button
-                onClick={() => setShowDateRangePicker(false)}
-                className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300 text-sm"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={applyDateRange}
-                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
-              >
-                Применить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Кастомная модалка выбора диапазона */}
+      <CustomDateRangeModal
+        isOpen={showDateRangePicker}
+        initialRange={dateRange || undefined}
+        onClose={() => setShowDateRangePicker(false)}
+        onApply={(newRange) => {
+          setDateRange(newRange);
+          setShowDateRangePicker(false);
+        }}
+      />
 
       {/* Статистика */}
       <div className="grid grid-cols-3 gap-3">
@@ -242,50 +210,25 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Графики и списки */}
+      {/* График нагрузки и зоны интенсивности */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
       <IntensityZonesMobile workouts={filteredWorkouts} />
+
+      {/* Последние тренировки */}
       <RecentWorkoutsMobile
         workouts={filteredWorkouts}
         onDeleteWorkout={handleDeleteWorkout}
         onUpdateWorkout={fetchWorkouts}
       />
+
+      {/* Модалка добавления тренировки */}
       <AddWorkoutModalMobile
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddWorkout={handleAddWorkout}
       />
-
-      {/* Стили для календаря */}
-      <style>{`
-        /* Основной фон календаря */
-        .rdrCalendarWrapper, .rdrMonths, .rdrMonth {
-          background-color: #1a1a1d !important;
-          color: #fff !important;
-        }
-        /* Верхняя полоска месяца */
-        .rdrMonthAndYearPickers {
-          background-color: #1a1a1d !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        .rdrMonthAndYearPickers span, .rdrMonthAndYearPickers select {
-          color: #fff !important;
-          background-color: #1a1a1d !important;
-        }
-        /* Дни */
-        .rdrDayNumber span { color: #fff !important; }
-        .rdrDayPassive span { color: #888 !important; }
-        .rdrDayToday span { border-color: #3b82f6 !important; }
-        .rdrDaySelected span { background-color: #3b82f6 !important; color: #fff !important; }
-        /* Кнопки навигации календаря — серые */
-        .rdrPprevButton, .rdrNextButton {
-          background-color: #4b5563 !important;
-          color: #fff !important;
-        }
-        .rdrDay:hover span { color: #fff !important; }
-      `}</style>
     </div>
   );
 }
+
 
