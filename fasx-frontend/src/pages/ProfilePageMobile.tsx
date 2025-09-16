@@ -229,12 +229,12 @@ export default function ProfilePageMobile() {
       {/* Статистика */}
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-[#1a1a1a] rounded-lg p-2 flex flex-col items-center">
-          <Timer className="w-4 h-4 text-gray-400" />
+          <Timer className="w-8 h-8 text-gray-400" />
           <span className="text-sm mt-1">{totalTimeStr}</span>
           <span className="text-xs text-gray-500">Время</span>
         </div>
         <div className="bg-[#1a1a1a] rounded-lg p-2 flex flex-col items-center">
-          <MapPin className="w-4 h-4 text-gray-400" />
+          <MapPin className="w-8 h-8 text-gray-400" />
           <span className="text-sm mt-1">{totalDistance.toFixed(1)} км</span>
           <span className="text-xs text-gray-500">Дистанция</span>
         </div>
