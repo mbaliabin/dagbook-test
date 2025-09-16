@@ -20,7 +20,6 @@ import "react-date-range/dist/theme/default.css";
 
 import TrainingLoadChartMobile from "../components/TrainingLoadChartMobile";
 import IntensityZonesMobile from "../components/IntensityZonesMobile";
-import ActivityTableMobile from "../components/ActivityTableMobile";
 import RecentWorkoutsMobile from "../components/RecentWorkoutsMobile";
 import AddWorkoutModalMobile from "../components/AddWorkoutModalMobile";
 import { getUserProfile } from "../api/getUserProfile";
@@ -87,6 +86,7 @@ export default function ProfilePageMobile() {
     window.location.href = "/login";
   };
 
+  // Фильтрация по выбранному периоду
   const filteredWorkouts = workouts.filter(w => {
     const workoutDate = dayjs(w.date);
     if (dateRange) {
@@ -185,7 +185,7 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Модальное окно DateRange */}
+      {/* Модальное окно DateRange на весь экран */}
       {showDateRangePicker && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-[#1a1a1d] rounded-xl w-full max-w-md p-4">
@@ -193,7 +193,7 @@ export default function ProfilePageMobile() {
               onChange={item =>
                 setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })
               }
-              showSelectionPreview
+              showSelectionPreview={true}
               moveRangeOnFirstSelection={false}
               months={1}
               ranges={[
@@ -247,16 +247,9 @@ export default function ProfilePageMobile() {
 
       {/* График нагрузки и зоны интенсивности */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
-      <div className="flex justify-center">
-        <IntensityZonesMobile workouts={filteredWorkouts} />
-      </div>
+      <IntensityZonesMobile workouts={filteredWorkouts} />
 
-      {/* Таблица активностей */}
-      <div className="flex justify-center">
-        <ActivityTableMobile workouts={filteredWorkouts} />
-      </div>
-
-      {/* Последние тренировки */}
+      {/* Последние тренировки (мобильная версия) */}
       <RecentWorkoutsMobile
         workouts={filteredWorkouts}
         onDeleteWorkout={handleDeleteWorkout}
@@ -272,6 +265,3 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
-
-
-
