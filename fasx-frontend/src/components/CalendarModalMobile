@@ -1,137 +1,102 @@
-// MonthCalendarModal.tsx
 import React, { useState } from "react";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface MonthCalendarModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApply: (startDate: Date, endDate: Date) => void;
-  initialStartDate?: Date;
-  initialEndDate?: Date;
-}
+const CalendarGarmin: React.FC = () => {
+  const [currentDate, setCurrentDate] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
-export default function MonthCalendarModal({
-  isOpen,
-  onClose,
-  onApply,
-  initialStartDate,
-  initialEndDate,
-}: MonthCalendarModalProps) {
-  const [currentMonth, setCurrentMonth] = useState(dayjs());
-  const [startDate, setStartDate] = useState<Date | null>(initialStartDate || null);
-  const [endDate, setEndDate] = useState<Date | null>(initialEndDate || null);
+  const startOfMonth = currentDate.startOf("month");
+  const endOfMonth = currentDate.endOf("month");
+  const startDay = startOfMonth.day() === 0 ? 7 : startOfMonth.day(); // Пн - первый
+  const daysInMonth = endOfMonth.date();
 
-  if (!isOpen) return null;
+  const weeks: (number | null)[][] = [];
+  let day = 1 - (startDay - 1);
 
-  const daysInMonth = currentMonth.daysInMonth();
-  const firstDayOfWeek = currentMonth.startOf("month").day(); // 0 = Sunday
-  const weeks: (Date | null)[][] = [];
-  let dayCounter = 1 - firstDayOfWeek;
-
-  while (dayCounter <= daysInMonth) {
-    const week: (Date | null)[] = [];
+  while (day <= daysInMonth) {
+    const week: (number | null)[] = [];
     for (let i = 0; i < 7; i++) {
-      if (dayCounter < 1 || dayCounter > daysInMonth) {
-        week.push(null);
+      if (day > 0 && day <= daysInMonth) {
+        week.push(day);
       } else {
-        week.push(currentMonth.date(dayCounter).toDate());
+        week.push(null);
       }
-      dayCounter++;
+      day++;
     }
     weeks.push(week);
   }
 
-  const handleDateClick = (date: Date) => {
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(date);
-      setEndDate(null);
-    } else if (startDate && !endDate) {
-      if (dayjs(date).isBefore(dayjs(startDate))) {
-        setEndDate(startDate);
-        setStartDate(date);
-      } else {
-        setEndDate(date);
-      }
-    }
+  const changeMonth = (diff: number) => {
+    setCurrentDate(currentDate.add(diff, "month"));
   };
 
-  const isInRange = (date: Date) => {
-    if (startDate && endDate) {
-      return dayjs(date).isBetween(dayjs(startDate), dayjs(endDate), null, "[]");
-    }
-    return false;
+  const handleSelectDate = (day: number | null) => {
+    if (!day) return;
+    const newDate = currentDate.date(day);
+    setSelectedDate(newDate);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1a1a1d] rounded-xl p-4 w-full max-w-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setCurrentMonth(prev => prev.subtract(1, "month"))}
-            className="p-2 rounded bg-[#2a2a2d] hover:bg-gray-700 text-gray-300"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="text-white font-semibold">
-            {currentMonth.format("MMMM YYYY")}
-          </div>
-          <button
-            onClick={() => setCurrentMonth(prev => prev.add(1, "month"))}
-            className="p-2 rounded bg-[#2a2a2d] hover:bg-gray-700 text-gray-300"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+    <div className="w-80 bg-[#1c1c1e] text-gray-200 rounded-2xl shadow-lg p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => changeMonth(-1)}
+          className="px-2 py-1 rounded-md hover:bg-gray-700"
+        >
+          ◀
+        </button>
+        <div className="flex items-center space-x-2 font-semibold">
+          <span className="capitalize">{currentDate.format("MMMM")}</span>
+          <span>{currentDate.format("YYYY")}</span>
         </div>
+        <button
+          onClick={() => changeMonth(1)}
+          className="px-2 py-1 rounded-md hover:bg-gray-700"
+        >
+          ▶
+        </button>
+      </div>
 
-        {/* Weekdays */}
-        <div className="grid grid-cols-7 text-xs text-gray-400 mb-2 text-center">
-          {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
+      {/* Days of week */}
+      <div className="grid grid-cols-7 text-center text-sm text-gray-400 mb-2">
+        <div>Пн</div>
+        <div>Вт</div>
+        <div>Ср</div>
+        <div>Чт</div>
+        <div>Пт</div>
+        <div>Сб</div>
+        <div>Вс</div>
+      </div>
 
-        {/* Days */}
-        <div className="grid grid-cols-7 gap-1">
-          {weeks.flat().map((date, idx) => (
-            <div
-              key={idx}
-              className={`h-10 flex items-center justify-center rounded cursor-pointer
-                ${date ? "text-white" : "text-transparent"}
-                ${date && dayjs(date).isSame(dayjs(), "day") ? "border border-blue-600" : ""}
-                ${date && isInRange(date) ? "bg-blue-600" : ""}
-              `}
-              onClick={() => date && handleDateClick(date)}
-            >
-              {date ? dayjs(date).date() : ""}
-            </div>
-          ))}
-        </div>
+      {/* Dates */}
+      <div className="grid grid-cols-7 gap-1">
+        {weeks.map((week, wi) =>
+          week.map((d, di) => {
+            const dateObj = d ? currentDate.date(d) : null;
+            const isSelected =
+              dateObj && dateObj.isSame(selectedDate, "day");
+            const isToday = dateObj && dateObj.isSame(dayjs(), "day");
 
-        {/* Buttons */}
-        <div className="flex justify-end mt-4 gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white"
-          >
-            Отмена
-          </button>
-          <button
-            onClick={() => {
-              if (startDate && endDate) {
-                onApply(startDate, endDate);
-                onClose();
-              } else {
-                alert("Выберите диапазон дат");
-              }
-            }}
-            className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Применить
-          </button>
-        </div>
+            return (
+              <div
+                key={`${wi}-${di}`}
+                className={`h-10 flex items-center justify-center rounded-lg cursor-pointer transition
+                  ${!d ? "opacity-30" : ""}
+                  ${isSelected ? "bg-blue-600 text-white" : ""}
+                  ${isToday && !isSelected ? "border border-blue-500" : ""}
+                  ${!isSelected && !isToday && d ? "hover:bg-gray-700" : ""}
+                `}
+                onClick={() => handleSelectDate(d)}
+              >
+                {d}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default CalendarGarmin;
