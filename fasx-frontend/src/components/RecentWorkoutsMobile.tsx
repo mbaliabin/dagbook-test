@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Calendar, Clock, Activity, Trash2, Edit2 } from "lucide-react";
 import ActivityTable from "../components/ActivityTable";
-import EditWorkoutModal from "./EditWorkoutModal";
+import EditWorkoutModal from "./EditWorkoutModalMobile";
 
 interface Workout {
   id: string;
