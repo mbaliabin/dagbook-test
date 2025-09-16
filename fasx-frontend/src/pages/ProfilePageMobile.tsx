@@ -18,7 +18,7 @@ import TrainingLoadChartMobile from "../components/TrainingLoadChartMobile";
 import IntensityZonesMobile from "../components/IntensityZonesMobile";
 import RecentWorkoutsMobile from "../components/RecentWorkoutsMobile";
 import AddWorkoutModalMobile from "../components/AddWorkoutModalMobile";
-import CustomDateRangeModal from "../components/CustomDateRangeModal";
+import CalendarModalMobile from "../components/CalendarModalMobile"; // <-- новый календарь
 import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.extend(isBetween);
@@ -172,7 +172,7 @@ export default function ProfilePageMobile() {
         </button>
         <div className="relative">
           <button
-            onClick={() => setShowDateRangePicker(prev => !prev)}
+            onClick={() => setShowDateRangePicker(true)}
             className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
           >
             <Calendar className="w-4 h-4" /> Произвольный период <ChevronDown className="w-4 h-4" />
@@ -180,15 +180,11 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Кастомная модалка выбора диапазона */}
-      <CustomDateRangeModal
+      {/* Модалка нового календаря */}
+      <CalendarModalMobile
         isOpen={showDateRangePicker}
-        initialRange={dateRange || undefined}
         onClose={() => setShowDateRangePicker(false)}
-        onApply={(newRange) => {
-          setDateRange(newRange);
-          setShowDateRangePicker(false);
-        }}
+        onApply={(start, end) => setDateRange({ startDate: start, endDate: end })}
       />
 
       {/* Статистика */}
@@ -210,7 +206,7 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* График нагрузки и зоны интенсивности */}
+      {/* Графики */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
       <IntensityZonesMobile workouts={filteredWorkouts} />
 
@@ -230,5 +226,6 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
+
 
 
