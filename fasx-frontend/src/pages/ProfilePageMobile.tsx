@@ -226,4 +226,41 @@ export default function ProfilePageMobile() {
       )}
 
       {/* Статистика (средний размер) */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
+          <Timer className="w-6 h-6 text-gray-400" />
+          <span className="text-sm mt-1">{totalTimeStr}</span>
+          <span className="text-xs text-gray-500">Время</span>
+        </div>
+        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
+          <MapPin className="w-6 h-6 text-gray-400" />
+          <span className="text-sm mt-1">{totalDistance.toFixed(1)} км</span>
+          <span className="text-xs text-gray-500">Дистанция</span>
+        </div>
+        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
+          <Zap className="w-6 h-6 text-gray-400" />
+          <span className="text-sm mt-1">{intensiveSessions}</span>
+          <span className="text-xs text-gray-500">Интенсивные</span>
+        </div>
+      </div>
 
+      {/* График нагрузки и зоны интенсивности */}
+      <TrainingLoadChartMobile workouts={filteredWorkouts} />
+      <IntensityZonesMobile workouts={filteredWorkouts} />
+
+      {/* Последние тренировки */}
+      <RecentWorkoutsMobile
+        workouts={filteredWorkouts}
+        onDeleteWorkout={handleDeleteWorkout}
+        onUpdateWorkout={fetchWorkouts}
+      />
+
+      {/* Модалка добавления тренировки */}
+      <AddWorkoutModalMobile
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddWorkout={handleAddWorkout}
+      />
+    </div>
+  );
+}
