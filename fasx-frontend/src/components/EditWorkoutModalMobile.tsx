@@ -243,32 +243,34 @@ export default function EditWorkoutModal({
               <label className="block text-sm text-gray-400 mb-2">
                 Минуты по зонам интенсивности
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {zones.map((val, i) => (
-                  <div key={i} className="flex flex-col items-center w-full">
-                    <span className="text-sm text-gray-300 mb-1">{zoneLabels[i]}</span>
-                    <div
-                      className={`w-full h-6 rounded-t-lg ${zoneColors[i]} border border-gray-600 shadow-md`}
-                    />
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={val}
-                      onChange={(e) => {
-                        if (!isEditing) return;
-                        const updated = [...zones];
-                        updated[i] = e.target.value;
-                        setZones(updated);
-                      }}
-                      disabled={!isEditing}
-                      className={`w-full text-center bg-[#2a2a2d] text-white py-1 rounded-b-lg no-spinner ${
-                        !isEditing
-                          ? "opacity-70 cursor-not-allowed"
-                          : "focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      }`}
-                    />
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-2">
+                  {zones.map((val, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                      <span className="text-sm text-gray-300 mb-1">{zoneLabels[i]}</span>
+                      <div
+                        className={`w-full h-6 rounded-t-lg ${zoneColors[i]} border border-gray-600 shadow-md`}
+                      />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={val}
+                        onChange={(e) => {
+                          if (!isEditing) return;
+                          const updated = [...zones];
+                          updated[i] = e.target.value;
+                          setZones(updated);
+                        }}
+                        disabled={!isEditing}
+                        className={`w-full text-center bg-[#2a2a2d] text-white py-1 rounded-b-lg no-spinner ${
+                          !isEditing
+                            ? "opacity-70 cursor-not-allowed"
+                            : "focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
