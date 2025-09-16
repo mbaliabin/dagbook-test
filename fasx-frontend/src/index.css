@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  @apply font-sans;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Сбрасываем фон у html и body — пусть Tailwind управляет им */
+html, body {
+  @apply bg-transparent text-white m-0 p-0 min-h-screen;
+}
+
+/* Кастомный тёмный скроллбар */
+
+/* Для Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* если горизонтальный скролл */
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1d;      /* цвет трека — совпадает с фоном модалки */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #444;   /* цвет ползунка — тёмно-серый */
+  border-radius: 8px;
+  border: 2px solid #1a1a1d; /* отступ, чтобы ползунок не сливался с треком */
+}
+
+/* Для Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1d;
+}
+

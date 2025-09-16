@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String
+  avatarUrl String?
+  createdAt DateTime  @default(now())
+
+  profile   Profile?
+  workouts  Workout[]
+
+  followers Follow[]  @relation("following")
+  following Follow[]  @relation("follower")
+}
+
+model Workout {
+  id          String      @id @default(cuid())
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+
+  name        String
+  date        DateTime
+  comment     String?
+
+  effort      Int?        // Воспринимаемая нагрузка (1–10)
+  feeling     Int?        // Самочувствие (1–10)
+  type        WorkoutType
+  duration    Int         // Суммарное время тренировки в минутах
+  distance    Float?      // Только если не силовая и не другое
+
+  zone1Min    Int         @default(0)
+  zone2Min    Int         @default(0)
+  zone3Min    Int         @default(0)
+  zone4Min    Int         @default(0)
+  zone5Min    Int         @default(0)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime?   @updatedAt
+}
+
+model Follow {
+  id           String   @id @default(cuid())
+  follower     User     @relation("follower", fields: [followerId], references: [id])
+  followerId   String
+
+  following    User     @relation("following", fields: [followingId], references: [id])
+  followingId  String
+
+  createdAt    DateTime @default(now())
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  fullName  String
+  bio       String?
+  createdAt DateTime @default(now())
+}
+
+enum WorkoutType {
+  Running
+  XC_Skiing_Classic
+  XC_Skiing_Skate
+  RollerSki_Classic
+  RollerSki_Skate
+  StrengthTraining
+  Other
+  Bike
+}
+

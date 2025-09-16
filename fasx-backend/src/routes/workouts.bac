@@ -1,0 +1,133 @@
+import express from 'express'
+import prisma from '../prisma/client.js'
+import { authenticateToken } from '../middleware/authMiddleware.js'
+
+const router = express.Router()
+
+// Создание тренировки — защищённый роут
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Пользователь не аутентифицирован' })
+    }
+
+    const {
+      name,
+      type,
+      date,
+      duration,
+      distance,
+      comment,
+      effort,
+      feeling,
+      intensityZones,
+    } = req.body
+
+    if (
+      !intensityZones ||
+      typeof intensityZones !== 'object' ||
+      ['zone1Min', 'zone2Min', 'zone3Min', 'zone4Min', 'zone5Min'].some(
+        (z) => typeof intensityZones[z] !== 'number'
+      )
+    ) {
+      return res.status(400).json({ error: 'intensityZones должен содержать числовые значения зон' })
+    }
+
+    const validTypes = [
+      'Running',
+      'XC_Skiing_Skate',
+      'XC_Skiing_Classic',
+      'RollerSki_Skate',
+      'RollerSki_Classic',
+      'StrengthTraining',
+      'Swimming',
+      'Bike',
+      'Other',
+    ]
+
+    if (
+      typeof name !== 'string' ||
+      !validTypes.includes(type) ||
+      !date ||
+      typeof duration !== 'number' ||
+      (distance !== undefined && distance !== null && typeof distance !== 'number') ||
+      (effort !== undefined && effort !== null && typeof effort !== 'number') ||
+      (feeling !== undefined && feeling !== null && typeof feeling !== 'number')
+    ) {
+      return res.status(400).json({ error: 'Некорректные данные в запросе' })
+    }
+
+    const workout = await prisma.workout.create({
+      data: {
+        userId,
+        name,
+        type,
+        date: new Date(date),
+        duration,
+        distance: distance ?? null,
+        comment: comment ?? null,
+        effort: effort ?? null,
+        feeling: feeling ?? null,
+        zone1Min: intensityZones.zone1Min,
+        zone2Min: intensityZones.zone2Min,
+        zone3Min: intensityZones.zone3Min,
+        zone4Min: intensityZones.zone4Min,
+        zone5Min: intensityZones.zone5Min,
+      },
+    })
+
+    res.status(201).json(workout)
+  } catch (error) {
+    console.error('Ошибка при создании тренировки:', error)
+    res.status(500).json({ error: 'Ошибка сервера: ' + error.message })
+  }
+})
+
+// Получение всех тренировок пользователя — защищённый роут
+router.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Пользователь не аутентифицирован' })
+    }
+
+    const workouts = await prisma.workout.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    res.json(workouts)
+  } catch (error) {
+    console.error('Ошибка при получении тренировок:', error)
+    res.status(500).json({ error: 'Ошибка при получении тренировок' })
+  }
+})
+
+// Удаление тренировки — защищённый роут
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId
+    const workoutId = req.params.id
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Пользователь не аутентифицирован' })
+    }
+
+    const deleted = await prisma.workout.deleteMany({
+      where: { id: workoutId, userId },
+    })
+
+    if (deleted.count === 0) {
+      return res.status(404).json({ error: 'Тренировка не найдена' })
+    }
+
+    // ✅ Явно возвращаем 200
+    res.status(200).json({ message: 'Тренировка удалена' })
+  } catch (error) {
+    console.error('Ошибка удаления тренировки:', error)
+    res.status(500).json({ error: 'Ошибка сервера' })
+  }
+})
+
+export default router

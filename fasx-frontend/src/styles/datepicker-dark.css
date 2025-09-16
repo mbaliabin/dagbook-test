@@ -1,0 +1,54 @@
+/* src/styles/datepicker-dark.css */
+
+.rdrCalendarWrapper {
+  background-color: #121214 !important;  /* почти черный фон */
+  color: #cbd5e1 !important;            /* светло-серый текст */
+  border-radius: 10px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7) !important;
+  font-family: 'Inter', sans-serif;
+}
+
+.rdrMonthAndYearPickers {
+  background-color: #1f2937 !important;  /* темно-синий фон */
+  color: #e0e7ff !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+.rdrDaySelected,
+.rdrDaySelected:hover {
+  background-color: #2563eb !important; /* синий акцент, но не яркий */
+  color: #f0f9ff !important;
+  border-radius: 50% !important;
+}
+
+.rdrDayInRange,
+.rdrDayStartEdge,
+.rdrDayEndEdge {
+  background-color: #3b82f6 !important;
+  color: #f0f9ff !important;
+}
+
+.rdrDay:hover {
+  background-color: #374151 !important; /* аккуратный hover */
+}
+
+.rdrDayNotInMonth {
+  color: #6b7280 !important; /* приглушённый цвет */
+}
+
+.rdrNextPrevButton {
+  color: #9ca3af !important;
+}
+
+.rdrNextPrevButton:hover {
+  color: #3b82f6 !important;
+}
+
+.rdrWeekDay {
+  color: #94a3b8 !important; /* мягкий серый */
+}
+
+.rdrMonthName {
+  font-weight: 600 !important;
+}
+

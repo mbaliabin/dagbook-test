@@ -1,0 +1,531 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { Clock, Calendar, Activity, Trash2, X, Edit2 } from "lucide-react";
+import { Dialog } from "@headlessui/react";
+
+interface Workout {
+  id: string;
+  name: string;
+  date: string;
+  duration: number;
+  type: string;
+  comment?: string;
+  effort?: number;
+  feeling?: number;
+  intensityZones?: {
+    zone1Min: number;
+    zone2Min: number;
+    zone3Min: number;
+    zone4Min: number;
+    zone5Min: number;
+  };
+  distance?: number | null;
+}
+
+interface Props {
+  workouts?: Workout[];
+  onDeleteWorkout?: (id: string) => void;
+  onUpdateWorkout?: (updatedWorkout: Workout) => void;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString();
+}
+
+function formatDuration(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h > 0 ? `${h}ч ` : ""}${m}м`;
+}
+
+const zoneColors = [
+  "bg-green-500",
+  "bg-lime-400",
+  "bg-yellow-400",
+  "bg-orange-400",
+  "bg-red-500",
+];
+
+const zoneLabels = ["I1", "I2", "I3", "I4", "I5"];
+
+export default function RecentWorkouts({
+  workouts,
+  onDeleteWorkout,
+  onUpdateWorkout,
+}: Props) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [openedFromEditButton, setOpenedFromEditButton] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [comment, setComment] = useState("");
+  const [effort, setEffort] = useState<number | null>(null);
+  const [feeling, setFeeling] = useState<number | null>(null);
+  const [type, setType] = useState("");
+  const [zones, setZones] = useState<string[]>(["", "", "", "", ""]);
+  const [distance, setDistance] = useState<number | "">("");
+
+  useEffect(() => {
+    if (selectedWorkout) {
+      setTitle(selectedWorkout.name);
+      setDate(selectedWorkout.date.slice(0, 10));
+      setComment(selectedWorkout.comment || "");
+      setEffort(selectedWorkout.effort ?? null);
+      setFeeling(selectedWorkout.feeling ?? null);
+      setType(selectedWorkout.type);
+      setZones([
+        (selectedWorkout.intensityZones?.zone1Min ?? 0).toString(),
+        (selectedWorkout.intensityZones?.zone2Min ?? 0).toString(),
+        (selectedWorkout.intensityZones?.zone3Min ?? 0).toString(),
+        (selectedWorkout.intensityZones?.zone4Min ?? 0).toString(),
+        (selectedWorkout.intensityZones?.zone5Min ?? 0).toString(),
+      ]);
+      setDistance(selectedWorkout.distance ?? "");
+    } else {
+      setTitle("");
+      setDate("");
+      setComment("");
+      setEffort(null);
+      setFeeling(null);
+      setType("");
+      setZones(["", "", "", "", ""]);
+      setDistance("");
+      setIsEditing(false);
+      setOpenedFromEditButton(false);
+    }
+  }, [selectedWorkout]);
+
+  const handleZoneChange = (index: number, value: string) => {
+    if (/^\d*$/.test(value)) {
+      const updated = [...zones];
+      updated[index] = value;
+      setZones(updated);
+    }
+  };
+
+  const duration = useMemo(() => {
+    return zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+  }, [zones]);
+
+  const formattedDuration = `${Math.floor(duration / 60)}ч ${duration % 60}м`;
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Удалить тренировку?")) return;
+
+    setDeletingId(id);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Вы не авторизованы");
+        setDeletingId(null);
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/workouts/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token },
+        }
+      );
+
+      if (!response.ok) {
+        alert("Ошибка при удалении");
+      } else {
+        onDeleteWorkout?.(id);
+        if (selectedWorkout?.id === id) {
+          setSelectedWorkout(null);
+          setIsModalOpen(false);
+        }
+      }
+    } catch {
+      alert("Ошибка соединения");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!title || !date || !type) {
+      alert("Заполните обязательные поля");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Вы не авторизованы");
+      return;
+    }
+
+    const workoutData = {
+      name: title,
+      date,
+      comment,
+      effort,
+      feeling,
+      type,
+      duration,
+      distance: type !== "StrengthTraining" && type !== "Other" ? Number(distance) || null : null,
+      intensityZones: {
+        zone1Min: parseInt(zones[0]) || 0,
+        zone2Min: parseInt(zones[1]) || 0,
+        zone3Min: parseInt(zones[2]) || 0,
+        zone4Min: parseInt(zones[3]) || 0,
+        zone5Min: parseInt(zones[4]) || 0,
+      },
+    };
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${selectedWorkout?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(workoutData),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Ошибка обновления:", errorData);
+        alert("Ошибка при обновлении");
+        return;
+      }
+
+      const updated = await res.json();
+      onUpdateWorkout?.(updated);
+      setSelectedWorkout(updated);
+      setIsEditing(false);
+      setIsModalOpen(false);
+      setOpenedFromEditButton(false);
+    } catch (err) {
+      console.error("Ошибка:", err);
+      alert("Ошибка соединения");
+    }
+  };
+
+  return (
+    <>
+      <div className="bg-[#1a1a1d] p-4 rounded-xl">
+        <h2 className="text-lg font-semibold mb-4">Recent Workouts</h2>
+        <div className="space-y-4">
+          {!workouts ? (
+            <p className="text-gray-500 text-sm">Загрузка...</p>
+          ) : workouts.length === 0 ? (
+            <p className="text-gray-500 text-sm">Пока нет тренировок</p>
+          ) : (
+            workouts.map((w) => (
+              <div
+                key={w.id}
+                className="bg-[#2a2a2d] rounded-lg p-4 flex justify-between items-center"
+              >
+                <div>
+                  <button
+                    onClick={() => {
+                      console.log("Нажали на название", w.id);
+                      setSelectedWorkout(w);
+                      setIsModalOpen(true);
+                      setIsEditing(false);
+                      setOpenedFromEditButton(false);
+                    }}
+                    className="text-md font-semibold text-left hover:underline"
+                    title="Просмотреть тренировку"
+                  >
+                    {w.name}
+                  </button>
+                  <div className="text-sm text-gray-400 flex gap-4">
+                    <Calendar className="w-4 h-4" /> {formatDate(w.date)}
+                    <Clock className="w-4 h-4" /> {formatDuration(w.duration)}
+                    <Activity className="w-4 h-4" /> {w.type}
+                    {w.distance ? <span>— {w.distance} км</span> : null}
+                  </div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={() => {
+                      console.log("Нажали на карандаш", w.id);
+                      setSelectedWorkout(w);
+                      setIsModalOpen(true);
+                      setIsEditing(true);
+                      setOpenedFromEditButton(true);
+                    }}
+                    title="Редактировать"
+                    className="text-blue-400 hover:text-blue-600"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(w.id)}
+                    disabled={deletingId === w.id}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Модалка */}
+      <Dialog
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedWorkout(null);
+          setIsEditing(false);
+          setOpenedFromEditButton(false);
+        }}
+        className="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
+        <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-6 rounded-2xl w-[90%] max-w-xl z-50 text-white shadow-2xl">
+          <button
+            onClick={() => {
+              setIsModalOpen(false);
+              setSelectedWorkout(null);
+              setIsEditing(false);
+              setOpenedFromEditButton(false);
+            }}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          >
+            <X />
+          </button>
+          <Dialog.Title className="text-xl font-semibold mb-4">
+            {isEditing ? "Редактирование тренировки" : "Просмотр тренировки"}
+          </Dialog.Title>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-4"
+          >
+            {/* Название тренировки */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">
+                Название тренировки
+              </label>
+              <input
+                type="text"
+                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
+                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Например: Утренняя пробежка"
+                disabled={!isEditing}
+                required
+              />
+            </div>
+
+            {/* Дата */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Дата</label>
+              <input
+                type="date"
+                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
+                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={!isEditing}
+                required
+              />
+            </div>
+
+            {/* Комментарий */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Комментарий</label>
+              <textarea
+                rows={3}
+                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
+                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+
+            {/* Воспринимаемая нагрузка */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">
+                Воспринимаемая нагрузка
+              </label>
+              <div className="flex items-center justify-between gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`w-8 h-8 rounded-full ${
+                      effort === i + 1
+                        ? "bg-blue-600 text-white"
+                        : "bg-[#2a2a2d] text-gray-300"
+                    }`}
+                    onClick={() => isEditing && setEffort(i + 1)}
+                    disabled={!isEditing}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Легко</span>
+                <span>Максимум</span>
+              </div>
+            </div>
+
+            {/* Самочувствие */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Самочувствие</label>
+              <div className="flex items-center justify-between gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`w-8 h-8 rounded-full ${
+                      feeling === i + 1
+                        ? "bg-green-600 text-white"
+                        : "bg-[#2a2a2d] text-gray-300"
+                    }`}
+                    onClick={() => isEditing && setFeeling(i + 1)}
+                    disabled={!isEditing}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Плохо</span>
+                <span>Отлично</span>
+              </div>
+            </div>
+
+            {/* Тип тренировки */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Тип тренировки</label>
+              <select
+                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
+                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                disabled={!isEditing}
+                required
+              >
+                <option value="">Выберите тип</option>
+                <option value="Running">Бег</option>
+                <option value="Cycling">Велосипед</option>
+                <option value="StrengthTraining">Силовая тренировка</option>
+                <option value="Other">Другое</option>
+              </select>
+            </div>
+
+            {/* Зоны интенсивности */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">
+                Минуты по зонам интенсивности
+              </label>
+              <div className="overflow-x-auto">
+                <div className="flex gap-4 min-w-[560px]">
+                  {zones.map((val, i) => (
+                    <div key={i} className="flex flex-col items-center w-28">
+                      <span className="text-sm text-gray-300 mb-1">{zoneLabels[i]}</span>
+                      <div
+                        className={`w-full h-6 rounded-t-lg ${zoneColors[i]} border border-gray-600 shadow-md`}
+                      />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={`w-full text-center bg-[#2a2a2d] text-white py-1 rounded-b-lg no-spinner ${
+                          !isEditing
+                            ? "opacity-70 cursor-not-allowed"
+                            : "focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        }`}
+                        value={val}
+                        onChange={(e) =>
+                          isEditing && handleZoneChange(i, e.target.value)
+                        }
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Продолжительность — не редактируемое поле */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Общее время</label>
+              <input
+                type="text"
+                readOnly
+                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white opacity-70 cursor-not-allowed"
+                value={formattedDuration}
+              />
+            </div>
+
+            {/* Расстояние — показывается, если тип тренировки не StrengthTraining и не Other */}
+            {type !== "StrengthTraining" && type !== "Other" && (
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Расстояние (км)</label>
+                <input
+                  type="number"
+                  className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
+                    !isEditing ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  value={distance}
+                  onChange={(e) =>
+                    isEditing &&
+                    setDistance(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
+                  disabled={!isEditing}
+                  min={0}
+                  step={0.01}
+                />
+              </div>
+            )}
+
+            {/* Кнопки управления */}
+            <div className="flex justify-end gap-2 mt-6">
+              {isEditing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700"
+                  >
+                    Сохранить
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+                >
+                  Закрыть
+                </button>
+              )}
+            </div>
+          </form>
+        </Dialog.Panel>
+      </Dialog>
+    </>
+  );
+}
+
