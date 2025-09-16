@@ -242,18 +242,14 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* График и зоны интенсивности */}
+      {/* Графики и списки */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
       <IntensityZonesMobile workouts={filteredWorkouts} />
-
-      {/* Последние тренировки */}
       <RecentWorkoutsMobile
         workouts={filteredWorkouts}
         onDeleteWorkout={handleDeleteWorkout}
         onUpdateWorkout={fetchWorkouts}
       />
-
-      {/* Модалка добавления тренировки */}
       <AddWorkoutModalMobile
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -267,28 +263,29 @@ export default function ProfilePageMobile() {
           background-color: #1a1a1d !important;
           color: #fff !important;
         }
-
-        /* Заголовок месяца */
+        /* Верхняя полоска месяца */
+        .rdrMonthAndYearPickers {
+          background-color: #1a1a1d !important;
+          color: #fff !important;
+          border: none !important;
+        }
         .rdrMonthAndYearPickers span, .rdrMonthAndYearPickers select {
           color: #fff !important;
           background-color: #1a1a1d !important;
         }
-
-        /* Дни месяца */
+        /* Дни */
         .rdrDayNumber span { color: #fff !important; }
         .rdrDayPassive span { color: #888 !important; }
         .rdrDayToday span { border-color: #3b82f6 !important; }
         .rdrDaySelected span { background-color: #3b82f6 !important; color: #fff !important; }
-
-        /* Кнопки навигации внутри календаря */
+        /* Кнопки навигации календаря — серые */
         .rdrPprevButton, .rdrNextButton {
-          background-color: #3b82f6 !important;
+          background-color: #4b5563 !important;
           color: #fff !important;
         }
-
-        /* Ховер дней */
         .rdrDay:hover span { color: #fff !important; }
       `}</style>
     </div>
   );
 }
+
