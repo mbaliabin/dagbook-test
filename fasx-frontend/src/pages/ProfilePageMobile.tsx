@@ -151,16 +151,16 @@ export default function ProfilePageMobile() {
 
       {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-blue-600 text-white">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div
-          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
+          className="px-3 py-1 rounded bg-[#1f1f22] text-white cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
-        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-blue-600 text-white">
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
@@ -197,7 +197,7 @@ export default function ProfilePageMobile() {
                 endDate: dateRange?.endDate || new Date(),
                 key: "selection",
               }]}
-              months={1} // один месяц на экране
+              months={1}
               direction="horizontal"
               showMonthAndYearPickers={false}
               locale={ru}
@@ -259,22 +259,22 @@ export default function ProfilePageMobile() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Тёмная тема для react-date-range */}
+      {/* Стили для календаря */}
       <style>{`
         .rdrCalendarWrapper, .rdrMonths, .rdrMonth {
           background-color: #1a1a1d !important;
+          color: #fff !important;
+        }
+        .rdrMonthAndYearPickers span, .rdrMonthAndYearPickers select {
           color: #fff !important;
         }
         .rdrDayNumber span { color: #fff !important; }
         .rdrDayPassive span { color: #888 !important; }
         .rdrDayToday span { border-color: #3b82f6 !important; }
         .rdrDaySelected span { background-color: #3b82f6 !important; color: #fff !important; }
-        .rdrMonthAndYearPickers select {
-          background-color: #2a2a2d !important;
-          color: #fff !important;
-        }
       `}</style>
     </div>
   );
 }
+
 
