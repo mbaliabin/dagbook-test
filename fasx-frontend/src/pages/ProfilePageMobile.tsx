@@ -184,10 +184,11 @@ export default function ProfilePageMobile() {
       <CalendarModalMobile
         isOpen={showDateRangePicker}
         onClose={() => setShowDateRangePicker(false)}
-        onSelectDate={(date) => {
-          setDateRange({ startDate: date, endDate: date });
+        onSelectRange={(range) => {
+          setDateRange(range);
           setShowDateRangePicker(false);
         }}
+        initialRange={dateRange || undefined}
       />
 
       {/* Статистика */}
@@ -229,3 +230,4 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
+
