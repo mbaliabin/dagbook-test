@@ -57,9 +57,20 @@ export default function ProfilePageMobile() {
       });
       if (!res.ok) throw new Error("Ошибка загрузки тренировок");
       const data: Workout[] = await res.json();
-      setWorkouts(data);
+
+      // Безопасная нормализация зон
+      const safeData = data.map(w => ({
+        ...w,
+        zone1Min: w.zone1Min || 0,
+        zone2Min: w.zone2Min || 0,
+        zone3Min: w.zone3Min || 0,
+        zone4Min: w.zone4Min || 0,
+        zone5Min: w.zone5Min || 0,
+      }));
+
+      setWorkouts(safeData);
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка загрузки тренировок:", err);
     }
   }, []);
 
@@ -100,13 +111,7 @@ export default function ProfilePageMobile() {
   const totalTimeStr = `${hours}:${minutes.toString().padStart(2, "0")}`;
 
   const intensiveSessions = filteredWorkouts.filter(w => {
-    const zones = [
-      w.zone1Min || 0,
-      w.zone2Min || 0,
-      w.zone3Min || 0,
-      w.zone4Min || 0,
-      w.zone5Min || 0,
-    ];
+    const zones = [w.zone1Min, w.zone2Min, w.zone3Min, w.zone4Min, w.zone5Min];
     const maxZone = zones.indexOf(Math.max(...zones)) + 1;
     return [3, 4, 5].includes(maxZone);
   }).length;
@@ -234,3 +239,4 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
+
