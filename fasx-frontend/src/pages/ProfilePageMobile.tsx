@@ -151,7 +151,8 @@ export default function ProfilePageMobile() {
 
       {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-blue-600 text-white">
+        {/* Верхние кнопки месяца — серые */}
+        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div
@@ -160,7 +161,7 @@ export default function ProfilePageMobile() {
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
-        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-blue-600 text-white">
+        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
@@ -261,20 +262,33 @@ export default function ProfilePageMobile() {
 
       {/* Стили для календаря */}
       <style>{`
+        /* Основной фон календаря */
         .rdrCalendarWrapper, .rdrMonths, .rdrMonth {
           background-color: #1a1a1d !important;
           color: #fff !important;
         }
+
+        /* Заголовок месяца */
         .rdrMonthAndYearPickers span, .rdrMonthAndYearPickers select {
           color: #fff !important;
+          background-color: #1a1a1d !important;
         }
+
+        /* Дни месяца */
         .rdrDayNumber span { color: #fff !important; }
         .rdrDayPassive span { color: #888 !important; }
         .rdrDayToday span { border-color: #3b82f6 !important; }
         .rdrDaySelected span { background-color: #3b82f6 !important; color: #fff !important; }
+
+        /* Кнопки навигации внутри календаря */
+        .rdrPprevButton, .rdrNextButton {
+          background-color: #3b82f6 !important;
+          color: #fff !important;
+        }
+
+        /* Ховер дней */
+        .rdrDay:hover span { color: #fff !important; }
       `}</style>
     </div>
   );
 }
-
-
