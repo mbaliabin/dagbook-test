@@ -147,18 +147,21 @@ export default function ProfilePageMobile() {
 
       {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-gray-600 text-white">
+        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronLeft className="w-4 h-4" />
         </button>
+
         <div
           className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
-        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-gray-600 text-white">
+
+        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronRight className="w-4 h-4" />
         </button>
+
         <button
           onClick={() =>
             setDateRange({
@@ -170,6 +173,7 @@ export default function ProfilePageMobile() {
         >
           Текущая неделя
         </button>
+
         <div className="relative">
           <button
             onClick={() => setShowDateRangePicker(prev => !prev)}
@@ -230,4 +234,3 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
-
