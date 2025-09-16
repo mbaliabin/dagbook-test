@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Calendar, Clock, Activity, Trash2, Edit2 } from "lucide-react";
-import IntensityZonesMobile from "../components/IntensityZonesMobile";
 import ActivityTable from "../components/ActivityTable";
 import EditWorkoutModal from "./EditWorkoutModal";
 
@@ -47,7 +46,7 @@ function groupByDate(workouts: Workout[]) {
   }, {} as Record<string, Workout[]>);
 }
 
-export default function ProfilePageMobile({
+export default function RecentWorkoutsMobile({
   workouts = [],
   onDeleteWorkout,
   onUpdateWorkout,
@@ -63,13 +62,10 @@ export default function ProfilePageMobile({
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/workouts/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
         onDeleteWorkout?.(id);
       } else {
@@ -83,8 +79,7 @@ export default function ProfilePageMobile({
   };
 
   return (
-    <div className="space-y-4 p-3">
-
+    <div className="flex flex-col gap-4 w-full">
       {/* Статистика активности */}
       <ActivityTable
         workouts={workouts.map((w) => ({
@@ -95,7 +90,7 @@ export default function ProfilePageMobile({
       />
 
       {/* Последние тренировки */}
-      <div className="bg-[#1a1a1d] p-3 rounded-xl">
+      <div className="bg-[#1a1a1d] p-3 rounded-xl w-full">
         <h2 className="text-base font-semibold mb-3">Последние тренировки</h2>
         <div className="space-y-3">
           {!workouts ? (
@@ -106,8 +101,7 @@ export default function ProfilePageMobile({
             Object.entries(
               groupByDate(
                 [...workouts].sort(
-                  (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                 )
               )
             ).map(([date, dayWorkouts]) => (
@@ -194,3 +188,4 @@ export default function ProfilePageMobile({
     </div>
   );
 }
+
