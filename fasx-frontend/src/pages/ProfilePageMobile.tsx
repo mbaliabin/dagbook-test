@@ -86,7 +86,6 @@ export default function ProfilePageMobile() {
     window.location.href = "/login";
   };
 
-  // Фильтрация по выбранному периоду
   const filteredWorkouts = workouts.filter(w => {
     const workoutDate = dayjs(w.date);
     if (dateRange) {
@@ -150,19 +149,19 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Выбор периода (компактные кнопки) */}
+      {/* Выбор периода (средний размер) */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={onPrevMonth} className="px-2 py-0.5 rounded bg-[#1f1f22] text-gray-300">
-          <ChevronLeft className="w-3 h-3" />
+        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <div
-          className="px-2 py-0.5 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
+          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
-        <button onClick={onNextMonth} className="px-2 py-0.5 rounded bg-[#1f1f22] text-gray-300">
-          <ChevronRight className="w-3 h-3" />
+        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+          <ChevronRight className="w-4 h-4" />
         </button>
         <button
           onClick={() =>
@@ -171,17 +170,16 @@ export default function ProfilePageMobile() {
               endDate: dayjs().endOf("isoWeek").toDate(),
             })
           }
-          className="px-2 py-0.5 rounded bg-[#1f1f22] text-gray-300 text-xs"
+          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 text-xs"
         >
           Текущая неделя
         </button>
         <div className="relative">
           <button
             onClick={() => setShowDateRangePicker(prev => !prev)}
-            className="px-2 py-0.5 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
+            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
           >
-            <Calendar className="w-3 h-3" /> Произвольный период{" "}
-            <ChevronDown className="w-3 h-3" />
+            <Calendar className="w-4 h-4" /> Произвольный период <ChevronDown className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -227,42 +225,5 @@ export default function ProfilePageMobile() {
         </div>
       )}
 
-      {/* Статистика (маленькие карточки) */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <Timer className="w-5 h-5 text-gray-400" />
-          <span className="text-sm mt-1">{totalTimeStr}</span>
-          <span className="text-xs text-gray-500">Время</span>
-        </div>
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <MapPin className="w-5 h-5 text-gray-400" />
-          <span className="text-sm mt-1">{totalDistance.toFixed(1)} км</span>
-          <span className="text-xs text-gray-500">Дистанция</span>
-        </div>
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <Zap className="w-5 h-5 text-gray-400" />
-          <span className="text-sm mt-1">{intensiveSessions}</span>
-          <span className="text-xs text-gray-500">Интенсивные</span>
-        </div>
-      </div>
+      {/* Статистика (средний размер) */}
 
-      {/* График нагрузки и зоны интенсивности */}
-      <TrainingLoadChartMobile workouts={filteredWorkouts} />
-      <IntensityZonesMobile workouts={filteredWorkouts} />
-
-      {/* Последние тренировки (мобильная версия) */}
-      <RecentWorkoutsMobile
-        workouts={filteredWorkouts}
-        onDeleteWorkout={handleDeleteWorkout}
-        onUpdateWorkout={fetchWorkouts}
-      />
-
-      {/* Модалка добавления тренировки */}
-      <AddWorkoutModalMobile
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddWorkout={handleAddWorkout}
-      />
-    </div>
-  );
-}
