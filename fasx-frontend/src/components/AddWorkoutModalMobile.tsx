@@ -39,7 +39,10 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
     }
   };
 
-  const duration = useMemo(() => zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0), [zones]);
+  const duration = useMemo(
+    () => zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0),
+    [zones]
+  );
   const formattedDuration = `${Math.floor(duration / 60)}ч ${duration % 60}м`;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +58,10 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
       feeling,
       type,
       duration,
-      distance: type !== "StrengthTraining" && type !== "Other" ? Number(distance) || null : null,
+      distance:
+        type !== "StrengthTraining" && type !== "Other"
+          ? Number(distance) || null
+          : null,
       intensityZones: {
         zone1Min: parseInt(zones[0]) || 0,
         zone2Min: parseInt(zones[1]) || 0,
@@ -136,7 +142,9 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
                       <button
                         key={i}
                         type="button"
-                        className={`w-7 h-7 rounded-full ${state === i + 1 ? colors + " text-white" : "bg-[#2a2a2d] text-gray-300"}`}
+                        className={`w-7 h-7 rounded-full ${
+                          state === i + 1 ? colors + " text-white" : "bg-[#2a2a2d] text-gray-300"
+                        }`}
                         onClick={() => setState(i + 1)}
                       >
                         {i + 1}
@@ -169,13 +177,13 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             <option value="Bike">Велосипед</option>
           </select>
 
-          {/* Зоны интенсивности */}
+          {/* Зоны интенсивности (адаптивные) */}
           <div>
             <span className="block text-sm text-gray-400 mb-2">Минуты по зонам</span>
             <div className="overflow-x-auto">
-              <div className="flex gap-2 min-w-[380px]">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-2">
                 {zones.map((zone, idx) => (
-                  <div key={idx} className="flex flex-col items-center w-20">
+                  <div key={idx} className="flex flex-col items-center">
                     <span className="text-sm text-gray-300 mb-1">{zoneLabels[idx]}</span>
                     <div className={`w-full h-6 rounded-t ${zoneColors[idx]} border border-gray-600`} />
                     <input
@@ -234,3 +242,4 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
     </Dialog>
   );
 }
+
