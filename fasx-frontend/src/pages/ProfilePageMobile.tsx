@@ -244,4 +244,25 @@ export default function ProfilePageMobile() {
           <span className="text-sm mt-1">{intensiveSessions}</span>
           <span className="text-xs text-gray-500">Интенсивные</span>
         </div>
+      </div>
 
+      {/* График нагрузки и зоны интенсивности */}
+      <TrainingLoadChartMobile workouts={filteredWorkouts} />
+      <IntensityZonesMobile workouts={filteredWorkouts} />
+
+      {/* Последние тренировки (мобильная версия) */}
+      <RecentWorkoutsMobile
+        workouts={filteredWorkouts}
+        onDeleteWorkout={handleDeleteWorkout}
+        onUpdateWorkout={fetchWorkouts}
+      />
+
+      {/* Модалка добавления тренировки */}
+      <AddWorkoutModalMobile
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddWorkout={handleAddWorkout}
+      />
+    </div>
+  );
+}
