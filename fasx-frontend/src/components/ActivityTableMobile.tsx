@@ -50,7 +50,7 @@ export default function ActivityTableMobile({ workouts }: Props) {
   };
 
   return (
-    <div className="bg-[#1a1a1d] p-3 rounded-xl text-white" style={{ maxWidth: 400 }}>
+    <div className="bg-[#1a1a1d] p-8 rounded-xl text-white" style={{ maxWidth: 400 }}>
       <h2 className="text-sm font-semibold mb-2">Activities</h2>
 
       <div className="flex flex-col gap-2">
