@@ -239,7 +239,7 @@ export default function ProfilePageMobile() {
           <span className="text-xs text-gray-500">Дистанция</span>
         </div>
         <div className="bg-[#1a1a1a] rounded-lg p-2 flex flex-col items-center">
-          <Zap className="w-4 h-4 text-gray-400" />
+          <Zap className="w-8 h-8 text-gray-400" />
           <span className="text-sm mt-1">{intensiveSessions}</span>
           <span className="text-xs text-gray-500">Интенсивные</span>
         </div>
