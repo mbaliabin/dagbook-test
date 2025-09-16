@@ -18,7 +18,7 @@ import TrainingLoadChartMobile from "../components/TrainingLoadChartMobile";
 import IntensityZonesMobile from "../components/IntensityZonesMobile";
 import RecentWorkoutsMobile from "../components/RecentWorkoutsMobile";
 import AddWorkoutModalMobile from "../components/AddWorkoutModalMobile";
-import CalendarModalMobile from "../components/CalendarModalMobile"; // <-- новый календарь
+import CalendarModalMobile from "../components/CalendarModalMobile";
 import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.extend(isBetween);
@@ -172,7 +172,7 @@ export default function ProfilePageMobile() {
         </button>
         <div className="relative">
           <button
-            onClick={() => setShowDateRangePicker(true)}
+            onClick={() => setShowDateRangePicker(prev => !prev)}
             className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
           >
             <Calendar className="w-4 h-4" /> Произвольный период <ChevronDown className="w-4 h-4" />
@@ -180,11 +180,14 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Модалка нового календаря */}
+      {/* Модалка кастомного календаря */}
       <CalendarModalMobile
         isOpen={showDateRangePicker}
         onClose={() => setShowDateRangePicker(false)}
-        onApply={(start, end) => setDateRange({ startDate: start, endDate: end })}
+        onSelectDate={(date) => {
+          setDateRange({ startDate: date, endDate: date });
+          setShowDateRangePicker(false);
+        }}
       />
 
       {/* Статистика */}
@@ -206,7 +209,7 @@ export default function ProfilePageMobile() {
         </div>
       </div>
 
-      {/* Графики */}
+      {/* График нагрузки и зоны интенсивности */}
       <TrainingLoadChartMobile workouts={filteredWorkouts} />
       <IntensityZonesMobile workouts={filteredWorkouts} />
 
@@ -226,6 +229,3 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
-
-
-
