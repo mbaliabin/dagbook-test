@@ -122,7 +122,7 @@ export default function EditWorkoutModal({
         type !== "StrengthTraining" && type !== "Other"
           ? Number(distance) || null
           : null,
-      ...intensityZones,
+      intensityZones,
     };
 
     try {
