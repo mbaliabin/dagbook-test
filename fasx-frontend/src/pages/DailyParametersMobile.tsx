@@ -3,6 +3,8 @@ import {
   User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award,
   ChevronLeft, ChevronRight
 } from "lucide-react";
+import { getUserProfile } from "../api/getUserProfile"; // импорт API
+
 import dayjs from "dayjs";
 
 export default function DailyParametersMobile() {
@@ -17,6 +19,7 @@ export default function DailyParametersMobile() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
   useEffect(() => {
+    // Загружаем параметры с localStorage
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
@@ -29,9 +32,16 @@ export default function DailyParametersMobile() {
       setComment(data.comment || "");
     }
 
-    // Получаем имя пользователя (например, через API или локальное хранилище)
-    const profile = localStorage.getItem("profileName");
-    if (profile) setName(profile);
+    // Получаем имя профиля через API
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        setName(data.name || "Пользователь");
+      } catch (err) {
+        console.error("Ошибка загрузки имени профиля:", err);
+      }
+    };
+    fetchProfile();
   }, []);
 
   const handleSave = () => {
