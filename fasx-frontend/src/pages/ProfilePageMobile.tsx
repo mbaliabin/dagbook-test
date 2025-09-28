@@ -128,31 +128,8 @@ export default function ProfilePageMobile() {
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-3">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
-          <div>
-            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
-            <p className="text-xs text-gray-400">
-              {!dateRange
-                ? selectedMonth.format("MMMM YYYY")
-                : `${dayjs(dateRange.startDate).format("DD MMM")} — ${dayjs(dateRange.endDate).format("DD MMM")}`}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
-            <Plus className="w-4 h-4 mr-1" /> Добавить
-          </button>
-          <button onClick={handleLogout} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
-            <LogOut className="w-4 h-4 mr-1" /> Выйти
-          </button>
-        </div>
-      </div>
-
-      {/* Горизонтальное меню */}
-      <div className="flex justify-between bg-[#1a1a1d] rounded-xl py-2 px-1">
+      {/* Горизонтальное меню над профилем */}
+      <div className="flex justify-between bg-[#1a1a1d] rounded-xl py-2 px-1 mb-2">
         <div
           onClick={() => setActiveMenu("home")}
           className={`flex flex-col items-center flex-1 cursor-pointer ${activeMenu === "home" ? "text-blue-400" : "text-white"}`}
@@ -180,6 +157,29 @@ export default function ProfilePageMobile() {
         >
           <CalendarDays className="w-5 h-5" />
           <span className="text-[10px]">Статистика</span>
+        </div>
+      </div>
+
+      {/* Header с аватаром и именем */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <div>
+            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
+            <p className="text-xs text-gray-400">
+              {!dateRange
+                ? selectedMonth.format("MMMM YYYY")
+                : `${dayjs(dateRange.startDate).format("DD MMM")} — ${dayjs(dateRange.endDate).format("DD MMM")}`}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
+            <Plus className="w-4 h-4 mr-1" /> Добавить
+          </button>
+          <button onClick={handleLogout} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
+            <LogOut className="w-4 h-4 mr-1" /> Выйти
+          </button>
         </div>
       </div>
 
@@ -272,4 +272,3 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
-
