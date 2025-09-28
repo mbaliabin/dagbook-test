@@ -1,46 +1,31 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  User,
-  Brain,
-  Moon,
-  AlertTriangle,
-  Thermometer,
-  Send,
-  Clock,
-  Sun,
-  Award,
-  Settings,
+  Home, BarChart3, ClipboardList, CalendarDays,
+  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award, Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
-import "dayjs/locale/ru";
-import { getUserProfile } from "../api/getUserProfile";
 
-dayjs.locale("ru");
-
-export default function DailyParametersDesktop() {
+export default function DailyParameters() {
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
+  // Основные параметры (только один можно выбрать)
   const [mainParam, setMainParam] = useState<string | null>(null);
+
+  // Параметры дня
   const [physical, setPhysical] = useState(0);
   const [mental, setMental] = useState(0);
   const [sleepQuality, setSleepQuality] = useState(0);
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
+  const [name, setName] = useState("Пользователь");
+
+  const today = new Date().toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "long",
+  });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setName(data.name || "Пользователь");
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProfile();
-
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
@@ -68,11 +53,7 @@ export default function DailyParametersDesktop() {
     alert("Данные сохранены ✅");
   };
 
-  const renderTenButtons = (
-    value: number,
-    setValue: (val: number) => void,
-    Icon: React.FC<React.SVGProps<SVGSVGElement>>
-  ) => (
+  const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
     <div className="flex flex-wrap gap-3">
       {[...Array(10)].map((_, i) => (
         <button
@@ -105,22 +86,15 @@ export default function DailyParametersDesktop() {
         mainParam === id ? activeColor : "bg-gray-700"
       }`}
     >
-      <Icon
-        className="w-6 h-6"
-        fill={mainParam === id ? "#fff" : "none"}
-        stroke="#fff"
-        strokeWidth={2}
-      />
+      <Icon className="w-6 h-6" fill={mainParam === id ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
       <span>{label}</span>
     </button>
   );
 
-  // Дата текущего дня
-  const today = dayjs().format("D MMMM");
-
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-4xl mx-auto space-y-8">
+
         {/* Верхний блок: Лого, имя и кнопки */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -130,8 +104,8 @@ export default function DailyParametersDesktop() {
               className="w-16 h-16 rounded-full object-cover"
             />
             <div>
-              <h1 className="text-2xl font-bold">{name || "Загрузка..."}</h1>
-              <p className="text-sm text-gray-400">{today}</p>
+              <h1 className="text-2xl font-bold">{name}</h1>
+              <p className="text-sm text-gray-400">{today.charAt(0).toUpperCase() + today.slice(1)}</p>
             </div>
           </div>
 
@@ -170,19 +144,16 @@ export default function DailyParametersDesktop() {
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
 
-          {/* Физическая готовность */}
           <div className="space-y-2">
             <p>Физическая готовность</p>
             {renderTenButtons(physical, setPhysical, User)}
           </div>
 
-          {/* Ментальная готовность */}
           <div className="space-y-2">
             <p>Ментальная готовность</p>
             {renderTenButtons(mental, setMental, Brain)}
           </div>
 
-          {/* Пульс */}
           <div className="space-y-2">
             <p>Пульс (уд/мин)</p>
             <input
@@ -194,7 +165,6 @@ export default function DailyParametersDesktop() {
             />
           </div>
 
-          {/* Сон */}
           <div className="space-y-2">
             <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
@@ -211,7 +181,6 @@ export default function DailyParametersDesktop() {
             />
           </div>
 
-          {/* Комментарий */}
           <div className="space-y-2">
             <p>Комментарии</p>
             <textarea
@@ -222,7 +191,6 @@ export default function DailyParametersDesktop() {
             />
           </div>
 
-          {/* Кнопка сохранить */}
           <button
             onClick={handleSave}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
@@ -230,6 +198,7 @@ export default function DailyParametersDesktop() {
             Сохранить
           </button>
         </div>
+
       </div>
     </div>
   );
