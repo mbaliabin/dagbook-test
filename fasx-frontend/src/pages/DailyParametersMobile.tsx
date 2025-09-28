@@ -32,10 +32,6 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
-  // текущая дата всегда сегодняшняя
-  const currentDate = dayjs();
-
-  // Подтягиваем имя профиля
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -77,13 +73,6 @@ export default function DailyParametersMobile() {
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
 
-  const formatDate = (date: dayjs.Dayjs) =>
-    date
-      .format("dddd, DD MMMM")
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-
   const renderTenButtons = (
     value: number,
     setValue: (val: number) => void,
@@ -95,9 +84,7 @@ export default function DailyParametersMobile() {
           key={i}
           onClick={() => setValue(i + 1)}
           className={`w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition ${
-            i < value
-              ? "bg-blue-500 shadow-md scale-105"
-              : "bg-gray-700"
+            i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"
           }`}
         >
           <Icon
@@ -135,6 +122,18 @@ export default function DailyParametersMobile() {
     </button>
   );
 
+  // фиксированная дата под именем
+  const fixedDate = dayjs().format("D MMMM");
+  const formattedFixedDate =
+    fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
+
+  // дата со стрелками
+  const formattedDate = selectedDate
+    .format("dddd, DD MMMM")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 sm:px-4 py-4 sm:py-6">
       {/* Верхний блок: Лого, имя и кнопка перейти к тренировкам */}
@@ -146,30 +145,24 @@ export default function DailyParametersMobile() {
             className="w-10 h-10 rounded-full"
           />
           <div className="flex flex-col">
-            <h2 className="text-base font-semibold">
-              {name || "Загрузка..."}
-            </h2>
-            <span className="text-xs text-gray-400">
-              {formatDate(currentDate)}
-            </span>
+            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
+            <span className="text-xs text-gray-400">{formattedFixedDate}</span>
           </div>
         </div>
         <button
           onClick={() => navigate("/profile")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm whitespace-nowrap"
         >
           Перейти к тренировкам
         </button>
       </div>
 
       {/* Быстрый доступ к предыдущим/следующим дням */}
-      <div className="flex items-center gap-2 mb-4 justify-start">
+      <div className="flex items-center gap-2 mb-4">
         <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <span className="text-xs text-gray-300">
-          {formatDate(selectedDate)}
-        </span>
+        <span className="text-xs text-gray-300">{formattedDate}</span>
         <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -181,36 +174,16 @@ export default function DailyParametersMobile() {
           Основные параметры
         </h2>
         <div className="space-y-2 sm:space-y-3">
-          {renderSingleSelectButton(
-            "skadet",
-            "Травма",
-            AlertTriangle,
-            "bg-red-600"
-          )}
-          {renderSingleSelectButton(
-            "syk",
-            "Болезнь",
-            Thermometer,
-            "bg-red-500"
-          )}
-          {renderSingleSelectButton(
-            "paReise",
-            "В пути",
-            Send,
-            "bg-blue-500"
-          )}
+          {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
+          {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
+          {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
           {renderSingleSelectButton(
             "hoydedogn",
             "Смена часового пояса",
             Clock,
             "bg-purple-500"
           )}
-          {renderSingleSelectButton(
-            "fridag",
-            "Выходной",
-            Sun,
-            "bg-green-500"
-          )}
+          {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
           {renderSingleSelectButton(
             "konkurranse",
             "Соревнование",
