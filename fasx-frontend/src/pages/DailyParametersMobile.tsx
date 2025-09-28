@@ -82,6 +82,8 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
+    {/* Временный маркер версии */}
+          <p className="text-green-500 text-center mb-4 font-bold">MOBILE VERSION</p>
       <div className="space-y-6">
 
         {/* Навигация */}
