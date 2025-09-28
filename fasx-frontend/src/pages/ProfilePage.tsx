@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    navigate('/')
+    navigate('/daily') // при выходе идём на главную
   }
 
   const filteredWorkouts = workouts.filter(w => {
@@ -152,8 +152,8 @@ export default function ProfilePage() {
   }
 
   const menuItems = [
-    { label: "Главная", icon: Home, path: "/" },
-    { label: "Тренировки", icon: BarChart3, path: "/training" },
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
     { label: "Планирование", icon: ClipboardList, path: "/planning" },
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ]
@@ -344,7 +344,11 @@ export default function ProfilePage() {
       <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = location.pathname === item.path
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
           return (
             <button
               key={item.path}
@@ -353,7 +357,7 @@ export default function ProfilePage() {
                 isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
               }`}
             >
-              <Icon className={`w-6 h-6 ${isActive ? "text-blue-500" : ""}`} />
+              <Icon className="w-6 h-6" />
               <span>{item.label}</span>
             </button>
           )
