@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Home, BarChart3, ClipboardList, CalendarDays } from "lucide-react";
 
 export default function DailyParameters() {
@@ -54,8 +52,8 @@ export default function DailyParameters() {
       </div>
 
       {/* Карточка параметров */}
-      <Card className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg">
-        <CardContent className="p-4 space-y-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-lg">
+        <div className="p-4 space-y-6">
           <h2 className="text-xl font-semibold text-blue-400">
             Dagsparametere
           </h2>
@@ -147,14 +145,14 @@ export default function DailyParameters() {
           </div>
 
           {/* Кнопка сохранить */}
-          <Button
+          <button
             onClick={handleSave}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl"
           >
             Lagre
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
