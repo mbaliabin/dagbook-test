@@ -1,31 +1,49 @@
-import { useState, useEffect } from "react";
-import {
-  Home, BarChart3, ClipboardList, CalendarDays,
-  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award, Settings
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/ru";
+import {
+  User,
+  Brain,
+  Moon,
+  AlertTriangle,
+  Thermometer,
+  Send,
+  Clock,
+  Sun,
+  Award,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { getUserProfile } from "../api/getUserProfile";
+
+dayjs.locale("ru");
 
 export default function DailyParameters() {
   const navigate = useNavigate();
 
-  // Основные параметры (только один можно выбрать)
+  const [name, setName] = useState("");
+  const [selectedDate, setSelectedDate] = useState(dayjs());
   const [mainParam, setMainParam] = useState<string | null>(null);
-
-  // Параметры дня
   const [physical, setPhysical] = useState(0);
   const [mental, setMental] = useState(0);
   const [sleepQuality, setSleepQuality] = useState(0);
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
-  const [name, setName] = useState("Пользователь");
-
-  const today = new Date().toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "long",
-  });
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        setName(data.name || "Пользователь");
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProfile();
+
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
@@ -53,7 +71,14 @@ export default function DailyParameters() {
     alert("Данные сохранены ✅");
   };
 
-  const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
+  const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
+  const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
+
+  const renderTenButtons = (
+    value: number,
+    setValue: (val: number) => void,
+    Icon: React.FC<React.SVGProps<SVGSVGElement>>
+  ) => (
     <div className="flex flex-wrap gap-3">
       {[...Array(10)].map((_, i) => (
         <button
@@ -86,16 +111,30 @@ export default function DailyParameters() {
         mainParam === id ? activeColor : "bg-gray-700"
       }`}
     >
-      <Icon className="w-6 h-6" fill={mainParam === id ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
+      <Icon
+        className="w-6 h-6"
+        fill={mainParam === id ? "#fff" : "none"}
+        stroke="#fff"
+        strokeWidth={2}
+      />
       <span>{label}</span>
     </button>
   );
 
+  const fixedDate = dayjs().format("D MMMM");
+  const formattedFixedDate =
+    fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
+
+  const formattedDate = selectedDate
+    .format("dddd, DD MMMM")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-
-        {/* Верхний блок: Лого, имя и кнопки */}
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Верхний блок */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <img
@@ -105,7 +144,7 @@ export default function DailyParameters() {
             />
             <div>
               <h1 className="text-2xl font-bold">{name}</h1>
-              <p className="text-sm text-gray-400">{today.charAt(0).toUpperCase() + today.slice(1)}</p>
+              <p className="text-sm text-gray-400">{formattedFixedDate}</p>
             </div>
           </div>
 
@@ -127,6 +166,23 @@ export default function DailyParameters() {
           </div>
         </div>
 
+        {/* Выбор даты */}
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={prevDay}
+            className="p-2 rounded bg-[#1f1f22]"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="text-sm text-gray-300">{formattedDate}</span>
+          <button
+            onClick={nextDay}
+            className="p-2 rounded bg-[#1f1f22]"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Основные параметры */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
@@ -144,17 +200,17 @@ export default function DailyParameters() {
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
 
-          <div className="space-y-2">
+          <div>
             <p>Физическая готовность</p>
             {renderTenButtons(physical, setPhysical, User)}
           </div>
 
-          <div className="space-y-2">
+          <div>
             <p>Ментальная готовность</p>
             {renderTenButtons(mental, setMental, Brain)}
           </div>
 
-          <div className="space-y-2">
+          <div>
             <p>Пульс (уд/мин)</p>
             <input
               type="number"
@@ -165,12 +221,12 @@ export default function DailyParameters() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
           </div>
 
-          <div className="space-y-2">
+          <div>
             <p>Продолжительность сна (ч:мин)</p>
             <input
               type="text"
@@ -181,7 +237,7 @@ export default function DailyParameters() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <p>Комментарии</p>
             <textarea
               value={comment}
@@ -198,7 +254,6 @@ export default function DailyParameters() {
             Сохранить
           </button>
         </div>
-
       </div>
     </div>
   );
