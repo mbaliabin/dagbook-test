@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  Home, BarChart3, ClipboardList, CalendarDays,
   User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award,
   ChevronLeft, ChevronRight
 } from "lucide-react";
 import dayjs from "dayjs";
+import 'dayjs/locale/ru'; // для русской локали
+dayjs.locale('ru');
 
 export default function DailyParametersMobile() {
   const [mainParam, setMainParam] = useState<string | null>(null);
@@ -15,10 +16,8 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
-  // Добавляем selectedDate для навигации по дням
+  // Навигация по дням
   const [selectedDate, setSelectedDate] = useState(dayjs());
-
-  const today = selectedDate.format("dddd, DD MMMM");
 
   useEffect(() => {
     const saved = localStorage.getItem("dailyParameters");
@@ -78,7 +77,6 @@ export default function DailyParametersMobile() {
     </button>
   );
 
-  // Функции для листания дней
   const prevDay = () => setSelectedDate(prev => prev.subtract(1, "day"));
   const nextDay = () => setSelectedDate(prev => prev.add(1, "day"));
 
@@ -87,26 +85,29 @@ export default function DailyParametersMobile() {
 
       {/* Верхний блок с аватаром и кнопкой тренировки */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
-          <h2 className="text-base font-semibold">Имя пользователя</h2>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3">
+            <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+            <h2 className="text-base font-semibold">Имя пользователя</h2>
+          </div>
+
+          {/* Компактная навигация по дням под именем */}
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-300">
+            <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span>{selectedDate.format("dddd, DD MMMM")}</span>
+            <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+
         <button
           onClick={() => window.location.href = "/profile"}
           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
         >
           Перейти к тренировкам
-        </button>
-      </div>
-
-      {/* Навигация по дням */}
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="text-white text-sm sm:text-base">{today}</span>
-        <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
-          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
