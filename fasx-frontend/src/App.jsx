@@ -5,6 +5,7 @@ import ProfilePageWrapper from "@/pages/ProfilePageWrapper" // <-- заменя�
 import CalendarPage from "@/pages/CalendarPage"
 import FasxLogin from "@/pages/FasxLogin"
 import FasxRegister from "@/pages/FasxRegister"
+import DailyParameters from "@/pages/DailyParameters" // 👈 новый импорт
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/login" element={<FasxLogin />} />
       <Route path="/register" element={<FasxRegister />} />
+      <Route path="/daily" element={<DailyParameters />} /> {/* 👈 новый путь */}
     </Routes>
   )
 }
