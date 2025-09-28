@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  User,
-  Brain,
-  Moon,
-  AlertTriangle,
-  Thermometer,
-  Send,
-  Clock,
-  Sun,
-  Award
+  Home, BarChart3, ClipboardList, CalendarDays,
+  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { getUserProfile } from "../api/getUserProfile";
+import dayjs from "dayjs";
 
 export default function DailyParametersMobile() {
   const [mainParam, setMainParam] = useState<string | null>(null);
@@ -21,15 +14,11 @@ export default function DailyParametersMobile() {
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
-  const [name, setName] = useState("Пользователь");
 
-  const navigate = useNavigate();
+  // Добавляем selectedDate для навигации по дням
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
-  const today = new Date().toLocaleDateString("ru-RU", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  });
+  const today = selectedDate.format("dddd, DD MMMM");
 
   useEffect(() => {
     const saved = localStorage.getItem("dailyParameters");
@@ -43,16 +32,6 @@ export default function DailyParametersMobile() {
       setSleepDuration(data.sleepDuration || "");
       setComment(data.comment || "");
     }
-
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setName(data.name || "Пользователь");
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProfile();
   }, []);
 
   const handleSave = () => {
@@ -67,7 +46,11 @@ export default function DailyParametersMobile() {
         <button
           key={i}
           onClick={() => setValue(i + 1)}
-          className={`w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition ${i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"}`}
+          className={`
+            w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10
+            rounded-full flex items-center justify-center transition
+            ${i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"}
+          `}
         >
           <Icon
             className={`w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5`}
@@ -95,95 +78,108 @@ export default function DailyParametersMobile() {
     </button>
   );
 
+  // Функции для листания дней
+  const prevDay = () => setSelectedDate(prev => prev.subtract(1, "day"));
+  const nextDay = () => setSelectedDate(prev => prev.add(1, "day"));
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 sm:px-4 py-4 sm:py-6">
-      {/* Шапка с профилем */}
+
+      {/* Верхний блок с аватаром и кнопкой тренировки */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
-          <h2 className="text-lg sm:text-xl font-semibold">{name}</h2>
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <h2 className="text-base font-semibold">Имя пользователя</h2>
         </div>
         <button
-          onClick={() => navigate("/profile")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm sm:text-base"
+          onClick={() => window.location.href = "/profile"}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
         >
-          К тренировкам
+          Перейти к тренировкам
         </button>
       </div>
 
-      <div className="space-y-4 sm:space-y-6">
-        {/* Основные параметры */}
-        <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
-          <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
-          <div className="space-y-2 sm:space-y-3">
-            {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
-            {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
-            {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
-            {renderSingleSelectButton("hoydedogn", "Смена часового пояса", Clock, "bg-purple-500")}
-            {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
-            {renderSingleSelectButton("konkurranse", "Соревнование", Award, "bg-yellow-500")}
-          </div>
+      {/* Навигация по дням */}
+      <div className="flex items-center justify-center gap-4 mb-4">
+        <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="text-white text-sm sm:text-base">{today}</span>
+        <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Основные параметры */}
+      <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
+        <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
+        <div className="space-y-2 sm:space-y-3">
+          {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
+          {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
+          {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
+          {renderSingleSelectButton("hoydedogn", "Смена часового пояса", Clock, "bg-purple-500")}
+          {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
+          {renderSingleSelectButton("konkurranse", "Соревнование", Award, "bg-yellow-500")}
+        </div>
+      </div>
+
+      {/* Параметры дня */}
+      <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
+        <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
+
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Физическая готовность</p>
+          {renderTenButtons(physical, setPhysical, User)}
         </div>
 
-        {/* Параметры дня */}
-        <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
-          <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
-          <p className="text-gray-400 text-xs sm:text-sm capitalize">{today}</p>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Физическая готовность</p>
-            {renderTenButtons(physical, setPhysical, User)}
-          </div>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Ментальная готовность</p>
-            {renderTenButtons(mental, setMental, Brain)}
-          </div>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Пульс (уд/мин)</p>
-            <input
-              type="number"
-              value={pulse}
-              onChange={(e) => setPulse(e.target.value)}
-              placeholder="например, 60"
-              className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
-            />
-          </div>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Качество сна</p>
-            {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
-          </div>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Продолжительность сна (ч:мин)</p>
-            <input
-              type="text"
-              value={sleepDuration}
-              onChange={(e) => setSleepDuration(e.target.value)}
-              placeholder="например, 07:30"
-              className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
-            />
-          </div>
-
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Комментарии</p>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Напишите здесь..."
-              className="w-full p-2 sm:p-3 h-24 sm:h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
-            />
-          </div>
-
-          <button
-            onClick={handleSave}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 rounded-xl text-xs sm:text-sm"
-          >
-            Сохранить
-          </button>
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Ментальная готовность</p>
+          {renderTenButtons(mental, setMental, Brain)}
         </div>
+
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Пульс (уд/мин)</p>
+          <input
+            type="number"
+            value={pulse}
+            onChange={(e) => setPulse(e.target.value)}
+            placeholder="например, 60"
+            className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+          />
+        </div>
+
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Качество сна</p>
+          {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
+        </div>
+
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Продолжительность сна (ч:мин)</p>
+          <input
+            type="text"
+            value={sleepDuration}
+            onChange={(e) => setSleepDuration(e.target.value)}
+            placeholder="например, 07:30"
+            className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+          />
+        </div>
+
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs sm:text-sm">Комментарии</p>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Напишите здесь..."
+            className="w-full p-2 sm:p-3 h-24 sm:h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+          />
+        </div>
+
+        <button
+          onClick={handleSave}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 rounded-xl text-xs sm:text-sm"
+        >
+          Сохранить
+        </button>
       </div>
     </div>
   );
