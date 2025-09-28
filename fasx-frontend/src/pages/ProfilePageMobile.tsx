@@ -125,28 +125,7 @@ export default function ProfilePageMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4">
-
-      {/* Верхнее меню */}
-      <div className="flex justify-around items-center mb-4">
-        <div className="flex flex-col items-center text-blue-400">
-          <Home size={20} />
-          <span className="text-[10px]">Главная</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <BarChart3 size={20} />
-          <span className="text-[10px]">Тренировка</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <ClipboardList size={20} />
-          <span className="text-[10px]">Планирование</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <CalendarDays size={20} />
-          <span className="text-[10px]">Статистика</span>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -256,6 +235,26 @@ export default function ProfilePageMobile() {
         onClose={() => setIsModalOpen(false)}
         onAddWorkout={handleAddWorkout}
       />
+
+      {/* Нижняя панель навигации */}
+      <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around items-center py-2">
+        <div className="flex flex-col items-center text-blue-400">
+          <Home size={20} />
+          <span className="text-[10px]">Главная</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <BarChart3 size={20} />
+          <span className="text-[10px]">Тренировка</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <ClipboardList size={20} />
+          <span className="text-[10px]">Планирование</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <CalendarDays size={20} />
+          <span className="text-[10px]">Статистика</span>
+        </div>
+      </div>
     </div>
   );
 }
