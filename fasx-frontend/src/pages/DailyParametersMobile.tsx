@@ -22,7 +22,6 @@ export default function DailyParametersMobile() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const navigate = useNavigate();
 
-  // Подтягиваем имя профиля
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -34,7 +33,6 @@ export default function DailyParametersMobile() {
     };
     fetchProfile();
 
-    // Загрузка сохраненных параметров
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
@@ -54,11 +52,9 @@ export default function DailyParametersMobile() {
     alert("Данные сохранены ✅");
   };
 
-  // Навигация по дням
   const prevDay = () => setSelectedDate(prev => prev.subtract(1, "day"));
   const nextDay = () => setSelectedDate(prev => prev.add(1, "day"));
 
-  // Рендер кнопок 10-балльной шкалы
   const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
     <div className="flex justify-between flex-wrap gap-1">
       {[...Array(10)].map((_, i) => (
@@ -73,7 +69,6 @@ export default function DailyParametersMobile() {
     </div>
   );
 
-  // Основные параметры дня
   const renderSingleSelectButton = (
     id: string,
     label: string,
@@ -92,30 +87,28 @@ export default function DailyParametersMobile() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-4 flex flex-col gap-4 pb-20">
 
-      {/* Верхний блок: Лого, имя и кнопка перехода к тренировкам */}
+      {/* Верхний блок: лого + имя профиля + кнопка */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
-          <div className="flex flex-col">
-            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
-            {/* Стрелки для перехода по предыдущим/следующим дням */}
-            <div className="flex items-center gap-1 mt-1 text-xs text-gray-300">
-              <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span>{selectedDate.format("dddd, DD MMMM")}</span>
-              <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
         </div>
-
         <button
           onClick={() => navigate("/profile")}
           className="bg-blue-600 px-3 py-1 rounded text-sm font-semibold"
         >
           Перейти к тренировкам
+        </button>
+      </div>
+
+      {/* Дата с навигацией стрелками */}
+      <div className="flex items-center gap-2 text-xs text-gray-300">
+        <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span>{selectedDate.format("dddd, DD MMMM")}</span>
+        <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -133,7 +126,6 @@ export default function DailyParametersMobile() {
       {/* Параметры дня */}
       <div className="bg-[#1a1a1d] p-3 rounded-2xl shadow-md space-y-3">
         <h2 className="text-white text-sm font-semibold">Параметры дня</h2>
-        <p className="text-gray-400 text-xs capitalize">{selectedDate.format("dddd, DD MMMM")}</p>
 
         <div className="space-y-1">
           <p className="text-xs">Физическая готовность</p>
