@@ -79,17 +79,17 @@ export default function DailyParameters() {
     setValue: (val: number) => void,
     Icon: React.FC<React.SVGProps<SVGSVGElement>>
   ) => (
-    <div className="flex justify-between flex-wrap gap-1">
+    <div className="flex flex-wrap gap-3">
       {[...Array(10)].map((_, i) => (
         <button
           key={i}
           onClick={() => setValue(i + 1)}
-          className={`w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition ${
-            i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition ${
+            i < value ? "bg-blue-500 shadow-lg scale-110" : "bg-gray-700"
           }`}
         >
           <Icon
-            className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5"
+            className="w-6 h-6"
             fill={i < value ? "#fff" : "none"}
             stroke="#fff"
             strokeWidth={2}
@@ -107,22 +107,23 @@ export default function DailyParameters() {
   ) => (
     <button
       onClick={() => setMainParam(id)}
-      className={`w-full flex items-center px-3 sm:px-4 py-3 sm:py-4 space-x-2 sm:space-x-3 rounded-xl transition ${
+      className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition ${
         mainParam === id ? activeColor : "bg-gray-700"
       }`}
     >
       <Icon
-        className="w-5 h-5 sm:w-6 sm:h-6"
+        className="w-6 h-6"
         fill={mainParam === id ? "#fff" : "none"}
         stroke="#fff"
         strokeWidth={2}
       />
-      <span className="text-xs sm:text-sm md:text-base text-white">{label}</span>
+      <span>{label}</span>
     </button>
   );
 
   const fixedDate = dayjs().format("D MMMM");
-  const formattedFixedDate = fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
+  const formattedFixedDate =
+    fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
 
   const formattedDate = selectedDate
     .format("dddd, DD MMMM")
@@ -132,13 +133,17 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Верхний блок: Лого, имя и кнопки */}
-        <div className="flex items-center justify-between mb-2"> {/* уменьшенный отступ */}
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Верхний блок */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
             <div>
-              <h1 className="text-2xl font-bold">{name || "Загрузка..."}</h1>
+              <h1 className="text-2xl font-bold">{name}</h1>
               <p className="text-sm text-gray-400">{formattedFixedDate}</p>
             </div>
           </div>
@@ -161,21 +166,21 @@ export default function DailyParameters() {
           </div>
         </div>
 
-        {/* Быстрый доступ к предыдущим/следующим дням */}
-        <div className="flex items-center gap-2 mb-4">
-          <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
-            <ChevronLeft className="w-4 h-4" />
+        {/* Выбор даты */}
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="text-xs text-gray-300">{formattedDate}</span>
-          <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
-            <ChevronRight className="w-4 h-4" />
+          <span className="text-sm text-gray-300">{formattedDate}</span>
+          <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
         {/* Основные параметры */}
-        <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4 mb-4">
-          <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
-          <div className="space-y-2 sm:space-y-3">
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
+          <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
             {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
             {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
@@ -186,58 +191,59 @@ export default function DailyParameters() {
         </div>
 
         {/* Параметры дня */}
-        <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
-          <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Физическая готовность</p>
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
+          <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
+
+          <div>
+            <p>Физическая готовность</p>
             {renderTenButtons(physical, setPhysical, User)}
           </div>
 
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Ментальная готовность</p>
+          <div>
+            <p>Ментальная готовность</p>
             {renderTenButtons(mental, setMental, Brain)}
           </div>
 
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Пульс (уд/мин)</p>
+          <div>
+            <p>Пульс (уд/мин)</p>
             <input
               type="number"
               value={pulse}
               onChange={(e) => setPulse(e.target.value)}
               placeholder="например, 60"
-              className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+              className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Качество сна</p>
+          <div>
+            <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
           </div>
 
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Продолжительность сна (ч:мин)</p>
+          <div>
+            <p>Продолжительность сна (ч:мин)</p>
             <input
               type="text"
               value={sleepDuration}
               onChange={(e) => setSleepDuration(e.target.value)}
               placeholder="например, 07:30"
-              className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+              className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
-          <div className="space-y-1 sm:space-y-2">
-            <p className="text-xs sm:text-sm">Комментарии</p>
+          <div>
+            <p>Комментарии</p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Напишите здесь..."
-              className="w-full p-2 sm:p-3 h-24 sm:h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
+              className="w-full p-3 h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
           <button
             onClick={handleSave}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 rounded-xl text-xs sm:text-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
           >
             Сохранить
           </button>
