@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Timer,
   MapPin,
@@ -7,109 +7,113 @@ import {
   Plus,
   LogOut,
   Calendar,
-  Home,
-  BarChart3,
-  ClipboardList,
-  CalendarDays
-} from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import IntensityZones from '../components/IntensityZones';
-import TrainingLoadChart from "../components/TrainingLoadChart";
-import WeeklySessions from "../components/WeeklySessions";
-import RecentWorkouts from "../components/RecentWorkouts";
-import ActivityTable from "../components/ActivityTable";
-import AddWorkoutModal from "../components/AddWorkoutModal";
-import { getUserProfile } from "../api/getUserProfile";
-import TopSessions from "../components/TopSessions";
+} from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import dayjs from 'dayjs'
+import isBetween from 'dayjs/plugin/isBetween'
+import isoWeek from 'dayjs/plugin/isoWeek'
 
-dayjs.extend(isBetween);
-dayjs.extend(isoWeek);
+import IntensityZones from '../components/IntensityZones'
+import TrainingLoadChart from "../components/TrainingLoadChart"
+import WeeklySessions from "../components/WeeklySessions"
+import RecentWorkouts from "../components/RecentWorkouts"
+import ActivityTable from "../components/ActivityTable"
+import AddWorkoutModal from "../components/AddWorkoutModal"
+import { getUserProfile } from "../api/getUserProfile"
+import TopSessions from "../components/TopSessions"
+
+dayjs.extend(isBetween)
+dayjs.extend(isoWeek)
 
 interface Workout {
-  id: string;
-  name: string;
-  date: string;
-  duration: number;
-  type: string;
-  distance?: number | null;
-  zone1Min?: number;
-  zone2Min?: number;
-  zone3Min?: number;
-  zone4Min?: number;
-  zone5Min?: number;
+  id: string
+  name: string
+  date: string
+  duration: number
+  type: string
+  distance?: number | null
+  zone1Min?: number
+  zone2Min?: number
+  zone3Min?: number
+  zone4Min?: number
+  zone5Min?: number
 }
 
 export default function ProfilePage() {
-  const [name, setName] = useState("");
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [loadingWorkouts, setLoadingWorkouts] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(dayjs());
+  const [name, setName] = useState("")
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(dayjs())
   const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>({
     startDate: dayjs().startOf('isoWeek').toDate(),
     endDate: dayjs().endOf('isoWeek').toDate()
-  });
+  })
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const menuItems = [
+    { label: 'Главная', path: '/daily', icon: Timer },
+    { label: 'Тренировки', path: '/profile', icon: Zap },
+    { label: 'Планирование', path: '/calendar', icon: Calendar },
+    { label: 'Статистика', path: '/profile', icon: Target }
+  ]
 
   const fetchWorkouts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Ошибка загрузки тренировок");
-      const data: Workout[] = await res.json();
-      setWorkouts(data);
+      })
+      if (!res.ok) throw new Error("Ошибка загрузки тренировок")
+      const data: Workout[] = await res.json()
+      setWorkouts(data)
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка:", err)
     } finally {
-      setLoadingWorkouts(false);
+      setLoadingWorkouts(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await getUserProfile();
-        setName(data.name || "Пользователь");
+        const data = await getUserProfile()
+        setName(data.name || "Пользователь")
       } catch (err) {
-        console.error(err);
+        console.error("Ошибка профиля:", err)
       } finally {
-        setLoadingProfile(false);
+        setLoadingProfile(false)
       }
-    };
-    fetchProfile();
-    fetchWorkouts();
-  }, [fetchWorkouts]);
+    }
+    fetchProfile()
+    fetchWorkouts()
+  }, [fetchWorkouts])
 
-  const handleAddWorkout = (w: Workout) => setWorkouts(prev => [w, ...prev]);
-  const handleDeleteWorkout = (id: string) => setWorkouts(prev => prev.filter(w => w.id !== id));
+  const handleAddWorkout = (w: Workout) => setWorkouts(prev => [w, ...prev])
+  const handleDeleteWorkout = (id: string) => setWorkouts(prev => prev.filter(w => w.id !== id))
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
-  };
+    localStorage.removeItem('token')
+    navigate('/')
+  }
 
   const filteredWorkouts = workouts.filter(w => {
-    const workoutDate = dayjs(w.date);
+    const workoutDate = dayjs(w.date)
     if (dateRange) {
-      const start = dayjs(dateRange.startDate).startOf('day');
-      const end = dayjs(dateRange.endDate).endOf('day');
-      return workoutDate.isBetween(start, end, null, '[]');
+      const start = dayjs(dateRange.startDate).startOf('day')
+      const end = dayjs(dateRange.endDate).endOf('day')
+      return workoutDate.isBetween(start, end, null, '[]')
     }
-    return workoutDate.isSame(selectedMonth, 'month');
-  });
+    return workoutDate.isSame(selectedMonth, 'month')
+  })
 
-  const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0);
-  const totalDistance = filteredWorkouts.reduce((sum, w) => sum + (w.distance || 0), 0);
-  const hours = Math.floor(totalDuration / 60);
-  const minutes = totalDuration % 60;
-  const totalTimeStr = `${hours}:${minutes.toString().padStart(2, '0')}`;
+  const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0)
+  const totalDistance = filteredWorkouts.reduce((sum, w) => sum + (w.distance || 0), 0)
+  const hours = Math.floor(totalDuration / 60)
+  const minutes = totalDuration % 60
+  const totalTimeStr = `${hours}:${minutes.toString().padStart(2, '0')}`
 
   const intensiveSessions = filteredWorkouts.filter(w => {
     const zones = [
@@ -118,21 +122,18 @@ export default function ProfilePage() {
       w.zone3Min || 0,
       w.zone4Min || 0,
       w.zone5Min || 0
-    ];
-    const maxZone = zones.indexOf(Math.max(...zones)) + 1;
-    return [3, 4, 5].includes(maxZone);
-  }).length;
+    ]
+    const maxZone = zones.indexOf(Math.max(...zones)) + 1
+    return [3, 4, 5].includes(maxZone)
+  }).length
 
-  const menuItems = [
-    { label: "Главная", icon: Home, path: "/" },
-    { label: "Тренировки", icon: BarChart3, path: "/profile" },
-    { label: "Планирование", icon: ClipboardList, path: "/planning" },
-    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
+  const onPrevMonth = () => { setSelectedMonth(prev => prev.subtract(1, 'month')); setDateRange(null) }
+  const onNextMonth = () => { setSelectedMonth(prev => prev.add(1, 'month')); setDateRange(null) }
+  const applyDateRange = () => { if (dateRange) setShowDateRangePicker(false) }
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 flex flex-col justify-between">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 flex flex-col">
+      <div className="max-w-7xl mx-auto space-y-6 flex-1">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -142,10 +143,12 @@ export default function ProfilePage() {
               <p className="text-sm text-white">
                 {!dateRange
                   ? selectedMonth.format('MMMM YYYY')
-                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`}
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
+                }
               </p>
             </div>
           </div>
+
           <div className="flex items-center space-x-2">
             <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -198,25 +201,22 @@ export default function ProfilePage() {
       </div>
 
       {/* Нижнее меню */}
-      <div className="bg-[#1a1a1d] py-2 mt-4 rounded-t-xl w-full max-w-7xl mx-auto flex justify-around">
+      <div className="max-w-7xl mx-auto mt-4 bg-[#1a1a1d] py-2 rounded-t-xl flex justify-around">
         {menuItems.map(item => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const Icon = item.icon
+          const isActive = location.pathname === item.path
           return (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center text-xs ${isActive ? 'text-blue-500' : 'text-gray-400'}`}
-            >
+            <button key={item.label} onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-xs ${isActive ? 'text-blue-500' : 'text-gray-400'}`}>
               <Icon className={`w-5 h-5 mb-1 ${isActive ? 'text-blue-500' : 'text-gray-400'}`} />
               {item.label}
             </button>
-          );
+          )
         })}
       </div>
 
       {/* Модалка */}
       <AddWorkoutModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAddWorkout={handleAddWorkout} />
     </div>
-  );
+  )
 }
