@@ -3,11 +3,11 @@ import DailyParameters from "./DailyParameters";
 import DailyParametersMobile from "./DailyParametersMobile";
 
 export default function DailyParametersWrapper() {
-  const [isMobile, setIsMobile] = useState(false);
+  // инициализируем сразу по размеру окна
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 768);
-    checkScreen();
 
     window.addEventListener("resize", checkScreen);
     return () => window.removeEventListener("resize", checkScreen);
@@ -15,3 +15,4 @@ export default function DailyParametersWrapper() {
 
   return isMobile ? <DailyParametersMobile /> : <DailyParameters />;
 }
+
