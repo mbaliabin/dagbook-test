@@ -22,24 +22,16 @@ dayjs.locale("ru");
 export default function DailyParameters() {
   const navigate = useNavigate();
 
-  // Профиль
   const [name, setName] = useState("");
-
-  // Основные параметры
   const [mainParam, setMainParam] = useState<string | null>(null);
-
-  // Параметры дня
   const [physical, setPhysical] = useState(0);
   const [mental, setMental] = useState(0);
   const [sleepQuality, setSleepQuality] = useState(0);
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
-
-  // Для стрелок выбора даты
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
-  // Подтягиваем имя профиля и данные
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -81,11 +73,7 @@ export default function DailyParameters() {
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
 
-  const renderTenButtons = (
-    value: number,
-    setValue: (val: number) => void,
-    Icon: React.FC<React.SVGProps<SVGSVGElement>>
-  ) => (
+  const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
     <div className="flex flex-wrap gap-3">
       {[...Array(10)].map((_, i) => (
         <button
@@ -95,44 +83,27 @@ export default function DailyParameters() {
             i < value ? "bg-blue-500 shadow-lg scale-110" : "bg-gray-700"
           }`}
         >
-          <Icon
-            className="w-6 h-6"
-            fill={i < value ? "#fff" : "none"}
-            stroke="#fff"
-            strokeWidth={2}
-          />
+          <Icon className="w-6 h-6" fill={i < value ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
         </button>
       ))}
     </div>
   );
 
-  const renderSingleSelectButton = (
-    id: string,
-    label: string,
-    Icon: React.FC<React.SVGProps<SVGSVGElement>>,
-    activeColor: string
-  ) => (
+  const renderSingleSelectButton = (id: string, label: string, Icon: React.FC<React.SVGProps<SVGSVGElement>>, activeColor: string) => (
     <button
       onClick={() => setMainParam(id)}
       className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition ${
         mainParam === id ? activeColor : "bg-gray-700"
       }`}
     >
-      <Icon
-        className="w-6 h-6"
-        fill={mainParam === id ? "#fff" : "none"}
-        stroke="#fff"
-        strokeWidth={2}
-      />
+      <Icon className="w-6 h-6" fill={mainParam === id ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
       <span>{label}</span>
     </button>
   );
 
-  // Фиксированная дата под именем
   const fixedDate = dayjs().format("D MMMM");
   const formattedFixedDate = fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
 
-  // Дата со стрелками
   const formattedDate = selectedDate
     .format("dddd, DD MMMM")
     .split(" ")
@@ -140,15 +111,15 @@ export default function DailyParameters() {
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-6 py-6">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхний блок: Лого, имя и кнопка */}
-        <div className="flex items-center justify-between mb-4">
+        {/* Верхний блок */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full" />
+            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full" />
             <div className="flex flex-col">
-              <h2 className="text-xl font-semibold">{name || "Загрузка..."}</h2>
+              <h2 className="text-2xl font-bold">{name || "Загрузка..."}</h2>
               <span className="text-sm text-gray-400">{formattedFixedDate}</span>
             </div>
           </div>
@@ -160,15 +131,11 @@ export default function DailyParameters() {
           </button>
         </div>
 
-        {/* Быстрый доступ к предыдущим/следующим дням */}
-        <div className="flex items-center gap-2 mb-6">
-          <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+        {/* Дата со стрелками */}
+        <div className="flex items-center gap-2">
+          <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]"><ChevronLeft className="w-5 h-5" /></button>
           <span className="text-sm text-gray-300">{formattedDate}</span>
-          <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]"><ChevronRight className="w-5 h-5" /></button>
         </div>
 
         {/* Основные параметры */}
@@ -188,19 +155,16 @@ export default function DailyParameters() {
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-2xl font-semibold text-white">Параметры дня</h2>
 
-          {/* Физическая готовность */}
           <div className="space-y-2">
             <p>Физическая готовность</p>
             {renderTenButtons(physical, setPhysical, User)}
           </div>
 
-          {/* Ментальная готовность */}
           <div className="space-y-2">
             <p>Ментальная готовность</p>
             {renderTenButtons(mental, setMental, Brain)}
           </div>
 
-          {/* Пульс */}
           <div className="space-y-2">
             <p>Пульс (уд/мин)</p>
             <input
@@ -212,13 +176,11 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Качество сна */}
           <div className="space-y-2">
             <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
           </div>
 
-          {/* Продолжительность сна */}
           <div className="space-y-2">
             <p>Продолжительность сна (ч:мин)</p>
             <input
@@ -230,7 +192,6 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Комментарии */}
           <div className="space-y-2">
             <p>Комментарии</p>
             <textarea
@@ -241,7 +202,6 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Кнопка сохранить */}
           <button
             onClick={handleSave}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
@@ -249,6 +209,7 @@ export default function DailyParameters() {
             Сохранить
           </button>
         </div>
+
       </div>
     </div>
   );
