@@ -14,6 +14,7 @@ import {
   ClipboardList,
   CalendarDays,
 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -52,6 +53,8 @@ export default function ProfilePageMobile() {
     endDate: dayjs().endOf("isoWeek").toDate(),
   });
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchWorkouts = useCallback(async () => {
     try {
@@ -84,7 +87,7 @@ export default function ProfilePageMobile() {
   const handleDeleteWorkout = (id: string) => setWorkouts(prev => prev.filter(w => w.id !== id));
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+    navigate("/daily");
   };
 
   const filteredWorkouts = workouts.filter(w => {
@@ -123,6 +126,13 @@ export default function ProfilePageMobile() {
     setSelectedMonth(prev => prev.add(1, "month"));
     setDateRange(null);
   };
+
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4 pb-20">
@@ -238,22 +248,24 @@ export default function ProfilePageMobile() {
 
       {/* Нижняя панель навигации */}
       <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around items-center py-2">
-        <div className="flex flex-col items-center text-blue-400">
-          <Home size={20} />
-          <span className="text-[10px]">Главная</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <BarChart3 size={20} />
-          <span className="text-[10px]">Тренировка</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <ClipboardList size={20} />
-          <span className="text-[10px]">Планирование</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <CalendarDays size={20} />
-          <span className="text-[10px]">Статистика</span>
-        </div>
+        {menuItems.map(item => {
+          const Icon = item.icon;
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+
+          return (
+            <div
+              key={item.path}
+              className={`flex flex-col items-center ${isActive ? "text-blue-400" : "text-gray-400"}`}
+              onClick={() => navigate(item.path)}
+            >
+              <Icon size={20} />
+              <span className="text-[10px]">{item.label}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
