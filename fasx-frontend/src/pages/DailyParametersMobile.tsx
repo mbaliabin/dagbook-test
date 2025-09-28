@@ -4,8 +4,6 @@ import {
   ChevronLeft, ChevronRight
 } from "lucide-react";
 import dayjs from "dayjs";
-import 'dayjs/locale/ru'; // для русской локали
-dayjs.locale('ru');
 
 export default function DailyParametersMobile() {
   const [mainParam, setMainParam] = useState<string | null>(null);
@@ -15,8 +13,7 @@ export default function DailyParametersMobile() {
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
-
-  // Навигация по дням
+  const [name, setName] = useState("Пользователь");
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
   useEffect(() => {
@@ -31,6 +28,10 @@ export default function DailyParametersMobile() {
       setSleepDuration(data.sleepDuration || "");
       setComment(data.comment || "");
     }
+
+    // Получаем имя пользователя (например, через API или локальное хранилище)
+    const profile = localStorage.getItem("profileName");
+    if (profile) setName(profile);
   }, []);
 
   const handleSave = () => {
@@ -39,24 +40,18 @@ export default function DailyParametersMobile() {
     alert("Данные сохранены ✅");
   };
 
+  const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
+  const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
+
   const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
     <div className="flex justify-between flex-wrap gap-1">
       {[...Array(10)].map((_, i) => (
         <button
           key={i}
           onClick={() => setValue(i + 1)}
-          className={`
-            w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10
-            rounded-full flex items-center justify-center transition
-            ${i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"}
-          `}
+          className={`w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition ${i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"}`}
         >
-          <Icon
-            className={`w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5`}
-            fill={i < value ? "#fff" : "none"}
-            stroke="#fff"
-            strokeWidth={2}
-          />
+          <Icon className={`w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5`} fill={i < value ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
         </button>
       ))}
     </div>
@@ -77,42 +72,41 @@ export default function DailyParametersMobile() {
     </button>
   );
 
-  const prevDay = () => setSelectedDate(prev => prev.subtract(1, "day"));
-  const nextDay = () => setSelectedDate(prev => prev.add(1, "day"));
+  const todayFormatted = selectedDate.format("dddd, DD MMMM");
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 sm:px-4 py-4 sm:py-6">
 
-      {/* Верхний блок с аватаром и кнопкой тренировки */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Верхний блок с аватаром, именем и кнопкой перехода к тренировкам */}
+      <div className="flex items-start justify-between mb-4">
         <div className="flex flex-col">
           <div className="flex items-center gap-3">
             <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
-            <h2 className="text-base font-semibold">Имя пользователя</h2>
+            <h2 className="text-base font-semibold">{name}</h2>
           </div>
-
           {/* Компактная навигация по дням под именем */}
           <div className="flex items-center gap-2 mt-2 text-xs text-gray-300">
             <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span>{selectedDate.format("dddd, DD MMMM")}</span>
+            <span>{todayFormatted}</span>
             <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
+        {/* Кнопка перехода к тренировкам */}
         <button
           onClick={() => window.location.href = "/profile"}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm mt-1"
         >
           Перейти к тренировкам
         </button>
       </div>
 
       {/* Основные параметры */}
-      <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
+      <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4 mb-4">
         <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
         <div className="space-y-2 sm:space-y-3">
           {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
@@ -127,6 +121,7 @@ export default function DailyParametersMobile() {
       {/* Параметры дня */}
       <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
         <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
+        <p className="text-gray-400 text-xs sm:text-sm capitalize">{todayFormatted}</p>
 
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Физическая готовность</p>
