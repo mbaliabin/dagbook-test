@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Home, BarChart3, ClipboardList, CalendarDays, User, Brain, Moon, AlertTriangle, Thermometer, Airplane, Clock, Sun, Award } from "lucide-react";
+import {
+  Home, BarChart3, ClipboardList, CalendarDays,
+  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award
+} from "lucide-react";
 
 export default function DailyParameters() {
   // Основные параметры (вкл/выкл)
@@ -83,7 +86,13 @@ export default function DailyParameters() {
     </div>
   );
 
-  const renderToggleButton = (active: boolean, setActive: (val: boolean) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>, label: string, activeColor: string) => (
+  const renderToggleButton = (
+    active: boolean,
+    setActive: (val: boolean) => void,
+    Icon: React.FC<React.SVGProps<SVGSVGElement>>,
+    label: string,
+    activeColor: string
+  ) => (
     <button
       onClick={() => setActive(!active)}
       className={`px-4 py-2 rounded-xl flex items-center space-x-2 ${active ? activeColor : "bg-gray-700"}`}
@@ -122,7 +131,7 @@ export default function DailyParameters() {
           <div className="flex flex-wrap gap-2">
             {renderToggleButton(skadet, setSkadet, AlertTriangle, "Травма", "bg-red-600")}
             {renderToggleButton(syk, setSyk, Thermometer, "Болезнь", "bg-red-500")}
-            {renderToggleButton(paReise, setPaReise, Airplane, "В пути", "bg-blue-500")}
+            {renderToggleButton(paReise, setPaReise, Send, "В пути", "bg-blue-500")}
             {renderToggleButton(hoydedogn, setHoydedogn, Clock, "Смена часового пояса", "bg-purple-500")}
             {renderToggleButton(fridag, setFridag, Sun, "Выходной", "bg-green-500")}
             {renderToggleButton(konkurranse, setKonkurranse, Award, "Соревнование", "bg-yellow-500")}
@@ -198,6 +207,7 @@ export default function DailyParameters() {
     </div>
   );
 }
+
 
 
 
