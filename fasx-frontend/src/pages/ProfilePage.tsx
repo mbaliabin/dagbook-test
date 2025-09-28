@@ -349,7 +349,7 @@ export default function ProfilePage() {
       />
 
       {/* Нижняя панель навигации */}
-      <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2">
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
         <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
           <Home className="w-6 h-6" />
           Главная
@@ -367,6 +367,3 @@ export default function ProfilePage() {
           Статистика
         </button>
       </div>
-    </div>
-  )
-}
