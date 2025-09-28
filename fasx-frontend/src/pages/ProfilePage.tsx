@@ -348,22 +348,22 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Нижняя панель навигации */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
-        <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-          <Home className="w-6 h-6" />
-          Главная
-        </button>
-        <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-          <BarChart3 className="w-6 h-6" />
-          Тренировка
-        </button>
-        <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-          <ClipboardList className="w-6 h-6" />
-          Планирование
-        </button>
-        <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-          <BarChart3 className="w-6 h-6" />
-          Статистика
-        </button>
-      </div>
+    {/* Нижняя панель навигации */}
+     <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
+       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
+         <Home className="w-6 h-6" />
+         <span>Главная</span>
+       </button>
+       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
+         <BarChart3 className="w-6 h-6" />
+         <span>Тренировка</span>
+       </button>
+       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
+         <ClipboardList className="w-6 h-6" />
+         <span>Планирование</span>
+       </button>
+       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
+         <CalendarDays className="w-6 h-6" />
+         <span>Статистика</span>
+       </button>
+     </div>
