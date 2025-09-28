@@ -10,6 +10,8 @@ import {
   Clock,
   Sun,
   Award,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -25,10 +27,9 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
   const [name, setName] = useState("Пользователь");
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
   const navigate = useNavigate();
-
-  const today = dayjs().format("dddd, DD MMMM");
 
   useEffect(() => {
     const saved = localStorage.getItem("dailyParameters");
@@ -43,7 +44,6 @@ export default function DailyParametersMobile() {
       setComment(data.comment || "");
     }
 
-    // Подтягиваем имя профиля (если сохраняется в localStorage)
     const userProfile = localStorage.getItem("userProfile");
     if (userProfile) {
       const userData = JSON.parse(userProfile);
@@ -51,13 +51,21 @@ export default function DailyParametersMobile() {
     }
   }, []);
 
+  const todayFormatted =
+    selectedDate.format("dddd, DD MMMM").charAt(0).toUpperCase() +
+    selectedDate.format("dddd, DD MMMM").slice(1);
+
   const handleSave = () => {
     const data = { mainParam, physical, mental, sleepQuality, pulse, sleepDuration, comment };
     localStorage.setItem("dailyParameters", JSON.stringify(data));
     alert("Данные сохранены ✅");
   };
 
-  const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
+  const renderTenButtons = (
+    value: number,
+    setValue: (val: number) => void,
+    Icon: React.FC<React.SVGProps<SVGSVGElement>>
+  ) => (
     <div className="flex justify-between flex-wrap gap-1">
       {[...Array(10)].map((_, i) => (
         <button
@@ -97,13 +105,12 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 py-4 flex flex-col gap-4 pb-20">
-      {/* Header: Лого, имя, кнопка перейти к тренировкам */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
           <div className="flex flex-col">
             <h2 className="text-base font-semibold">{name}</h2>
-            <span className="text-xs text-gray-400">{today.charAt(0).toUpperCase() + today.slice(1)}</span>
           </div>
         </div>
         <button
@@ -111,6 +118,23 @@ export default function DailyParametersMobile() {
           className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm"
         >
           Перейти к тренировкам
+        </button>
+      </div>
+
+      {/* Навигация по датам */}
+      <div className="flex items-center justify-center gap-3">
+        <button
+          onClick={() => setSelectedDate(prev => prev.subtract(1, "day"))}
+          className="p-2 rounded-full bg-[#1a1a1d]"
+        >
+          <ChevronLeft className="w-4 h-4 text-gray-300" />
+        </button>
+        <span className="text-sm text-gray-300">{todayFormatted}</span>
+        <button
+          onClick={() => setSelectedDate(prev => prev.add(1, "day"))}
+          className="p-2 rounded-full bg-[#1a1a1d]"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-300" />
         </button>
       </div>
 
@@ -188,4 +212,3 @@ export default function DailyParametersMobile() {
     </div>
   );
 }
-
