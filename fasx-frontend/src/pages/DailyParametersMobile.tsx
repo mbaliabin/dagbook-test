@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import {
-  Home, BarChart3, ClipboardList, CalendarDays,
-  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award
-} from "lucide-react";
+import { User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function DailyParametersMobile() {
   const [mainParam, setMainParam] = useState<string | null>(null);
@@ -12,6 +10,7 @@ export default function DailyParametersMobile() {
   const [pulse, setPulse] = useState("");
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
+  const navigate = useNavigate();
 
   const today = new Date().toLocaleDateString("ru-RU", {
     weekday: "long",
@@ -39,7 +38,6 @@ export default function DailyParametersMobile() {
     alert("Данные сохранены ✅");
   };
 
-  // Адаптивная 10-бальная шкала
   const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
     <div className="flex justify-between flex-wrap gap-1">
       {[...Array(10)].map((_, i) => (
@@ -80,31 +78,22 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 sm:px-4 py-4 sm:py-6">
-      <p className="text-green-500 text-center mb-3 sm:mb-4 font-bold text-sm sm:text-base">MOBILE VERSION</p>
-
-      <div className="space-y-4 sm:space-y-6">
-
-        {/* Навигация */}
-        <div className="flex justify-around items-center border-b border-[#1f1f22] pb-2 mb-3 sm:mb-4">
-          <div className="flex flex-col items-center text-blue-400">
-            <Home size={18} sm={22} />
-            <span className="text-[9px] sm:text-xs">Главная</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <BarChart3 size={18} sm={22} />
-            <span className="text-[9px] sm:text-xs">Тренировка</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <ClipboardList size={18} sm={22} />
-            <span className="text-[9px] sm:text-xs">Планирование</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <CalendarDays size={18} sm={22} />
-            <span className="text-[9px] sm:text-xs">Статистика</span>
-          </div>
+      {/* Верхний блок с логотипом и кнопкой */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <span className="font-semibold text-white text-sm sm:text-base">Имя пользователя</span>
         </div>
+        <button
+          onClick={() => navigate("/profile")}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base px-3 py-1 sm:px-4 sm:py-2 rounded-xl"
+        >
+          Перейти к тренировкам
+        </button>
+      </div>
 
-        {/* Основные параметры */}
+      {/* Основные параметры */}
+      <div className="space-y-4 sm:space-y-6">
         <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
           <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
           <div className="space-y-2 sm:space-y-3">
@@ -180,5 +169,3 @@ export default function DailyParametersMobile() {
     </div>
   );
 }
-
-
