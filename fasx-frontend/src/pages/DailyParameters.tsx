@@ -1,11 +1,31 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/ru";
 import {
-  Home, BarChart3, ClipboardList, CalendarDays,
-  User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock, Sun, Award
+  User,
+  Brain,
+  Moon,
+  AlertTriangle,
+  Thermometer,
+  Send,
+  Clock,
+  Sun,
+  Award,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { getUserProfile } from "../api/getUserProfile";
+
+dayjs.locale("ru");
 
 export default function DailyParameters() {
-  // Основные параметры (только один можно выбрать)
+  const navigate = useNavigate();
+
+  // Профиль
+  const [name, setName] = useState("");
+
+  // Основные параметры
   const [mainParam, setMainParam] = useState<string | null>(null);
 
   // Параметры дня
@@ -16,13 +36,21 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
-  const today = new Date().toLocaleDateString("ru-RU", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  });
+  // Для стрелок выбора даты
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
+  // Подтягиваем имя профиля и данные
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        setName(data.name || "Пользователь");
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProfile();
+
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
@@ -50,8 +78,15 @@ export default function DailyParameters() {
     alert("Данные сохранены ✅");
   };
 
-  const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
-    <div className="flex flex-wrap gap-3"> {/* увеличен gap между иконками */}
+  const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
+  const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
+
+  const renderTenButtons = (
+    value: number,
+    setValue: (val: number) => void,
+    Icon: React.FC<React.SVGProps<SVGSVGElement>>
+  ) => (
+    <div className="flex flex-wrap gap-3">
       {[...Array(10)].map((_, i) => (
         <button
           key={i}
@@ -83,38 +118,62 @@ export default function DailyParameters() {
         mainParam === id ? activeColor : "bg-gray-700"
       }`}
     >
-      <Icon className="w-6 h-6" fill={mainParam === id ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
+      <Icon
+        className="w-6 h-6"
+        fill={mainParam === id ? "#fff" : "none"}
+        stroke="#fff"
+        strokeWidth={2}
+      />
       <span>{label}</span>
     </button>
   );
 
-  return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-4xl mx-auto space-y-8">
+  // Фиксированная дата под именем
+  const fixedDate = dayjs().format("D MMMM");
+  const formattedFixedDate = fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
 
-        {/* Навигация */}
-        <div className="flex justify-around items-center border-b border-[#1f1f22] pb-2 mb-4">
-          <div className="flex flex-col items-center text-blue-400">
-            <Home size={22} />
-            <span className="text-xs">Главная</span>
+  // Дата со стрелками
+  const formattedDate = selectedDate
+    .format("dddd, DD MMMM")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  return (
+    <div className="min-h-screen bg-[#0e0e10] text-white px-6 py-6">
+      <div className="max-w-5xl mx-auto space-y-8">
+
+        {/* Верхний блок: Лого, имя и кнопка */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full" />
+            <div className="flex flex-col">
+              <h2 className="text-xl font-semibold">{name || "Загрузка..."}</h2>
+              <span className="text-sm text-gray-400">{formattedFixedDate}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-center">
-            <BarChart3 size={22} />
-            <span className="text-xs">Тренировка</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <ClipboardList size={22} />
-            <span className="text-xs">Планирование</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <CalendarDays size={22} />
-            <span className="text-xs">Статистика</span>
-          </div>
+          <button
+            onClick={() => navigate("/profile")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded whitespace-nowrap"
+          >
+            Перейти к тренировкам
+          </button>
         </div>
 
-        {/* Основные параметры (только один) */}
+        {/* Быстрый доступ к предыдущим/следующим дням */}
+        <div className="flex items-center gap-2 mb-6">
+          <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="text-sm text-gray-300">{formattedDate}</span>
+          <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Основные параметры */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
-          <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
+          <h2 className="text-2xl font-semibold text-white">Основные параметры</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
             {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
@@ -127,8 +186,7 @@ export default function DailyParameters() {
 
         {/* Параметры дня */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
-          <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
-          <p className="text-gray-400 capitalize">{today}</p>
+          <h2 className="text-2xl font-semibold text-white">Параметры дня</h2>
 
           {/* Физическая готовность */}
           <div className="space-y-2">
@@ -154,12 +212,13 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Сон */}
+          {/* Качество сна */}
           <div className="space-y-2">
             <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
           </div>
 
+          {/* Продолжительность сна */}
           <div className="space-y-2">
             <p>Продолжительность сна (ч:мин)</p>
             <input
@@ -171,7 +230,7 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Комментарий */}
+          {/* Комментарии */}
           <div className="space-y-2">
             <p>Комментарии</p>
             <textarea
@@ -190,15 +249,7 @@ export default function DailyParameters() {
             Сохранить
           </button>
         </div>
-
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
