@@ -9,6 +9,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Home,
+  BarChart3,
+  ClipboardList,
+  CalendarDays,
 } from "lucide-react";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -48,6 +52,7 @@ export default function ProfilePageMobile() {
     endDate: dayjs().endOf("isoWeek").toDate(),
   });
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<"home" | "training" | "planning" | "stats">("home");
 
   const fetchWorkouts = useCallback(async () => {
     try {
@@ -121,7 +126,8 @@ export default function ProfilePageMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4">
+    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-3">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -136,29 +142,61 @@ export default function ProfilePageMobile() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 px-3 py-1 rounded flex items-center text-sm">
+          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
             <Plus className="w-4 h-4 mr-1" /> Добавить
           </button>
-          <button onClick={handleLogout} className="bg-blue-600 px-3 py-1 rounded flex items-center text-sm">
+          <button onClick={handleLogout} className="bg-blue-600 px-2 py-1 rounded flex items-center text-xs">
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
       </div>
 
+      {/* Горизонтальное меню */}
+      <div className="flex justify-between bg-[#1a1a1d] rounded-xl py-2 px-1">
+        <div
+          onClick={() => setActiveMenu("home")}
+          className={`flex flex-col items-center flex-1 cursor-pointer ${activeMenu === "home" ? "text-blue-400" : "text-white"}`}
+        >
+          <Home className="w-5 h-5" />
+          <span className="text-[10px]">Главная</span>
+        </div>
+        <div
+          onClick={() => setActiveMenu("training")}
+          className={`flex flex-col items-center flex-1 cursor-pointer ${activeMenu === "training" ? "text-blue-400" : "text-white"}`}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[10px]">Тренировка</span>
+        </div>
+        <div
+          onClick={() => setActiveMenu("planning")}
+          className={`flex flex-col items-center flex-1 cursor-pointer ${activeMenu === "planning" ? "text-blue-400" : "text-white"}`}
+        >
+          <ClipboardList className="w-5 h-5" />
+          <span className="text-[10px]">Планирование</span>
+        </div>
+        <div
+          onClick={() => setActiveMenu("stats")}
+          className={`flex flex-col items-center flex-1 cursor-pointer ${activeMenu === "stats" ? "text-blue-400" : "text-white"}`}
+        >
+          <CalendarDays className="w-5 h-5" />
+          <span className="text-[10px]">Статистика</span>
+        </div>
+      </div>
+
       {/* Выбор периода */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onPrevMonth} className="px-2 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         <div
-          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
+          className="px-2 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
 
-        <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
+        <button onClick={onNextMonth} className="px-2 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronRight className="w-4 h-4" />
         </button>
 
@@ -169,7 +207,7 @@ export default function ProfilePageMobile() {
               endDate: dayjs().endOf("isoWeek").toDate(),
             })
           }
-          className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 text-xs"
+          className="px-2 py-1 rounded bg-[#1f1f22] text-gray-300 text-xs"
         >
           Текущая неделя
         </button>
@@ -177,7 +215,7 @@ export default function ProfilePageMobile() {
         <div className="relative">
           <button
             onClick={() => setShowDateRangePicker(prev => !prev)}
-            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
+            className="px-2 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
           >
             <Calendar className="w-4 h-4" /> Произвольный период <ChevronDown className="w-4 h-4" />
           </button>
@@ -196,21 +234,21 @@ export default function ProfilePageMobile() {
       />
 
       {/* Статистика */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <Timer className="w-6 h-6 text-gray-400" />
-          <span className="text-sm mt-1">{totalTimeStr}</span>
-          <span className="text-xs text-gray-500">Время</span>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-[#1a1a1d] p-2 rounded-xl flex flex-col items-center">
+          <Timer className="w-5 h-5 text-gray-400" />
+          <span className="text-xs mt-1">{totalTimeStr}</span>
+          <span className="text-[9px] text-gray-500">Время</span>
         </div>
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <MapPin className="w-6 h-6 text-gray-400" />
-          <span className="text-sm mt-1">{totalDistance.toFixed(1)} км</span>
-          <span className="text-xs text-gray-500">Дистанция</span>
+        <div className="bg-[#1a1a1d] p-2 rounded-xl flex flex-col items-center">
+          <MapPin className="w-5 h-5 text-gray-400" />
+          <span className="text-xs mt-1">{totalDistance.toFixed(1)} км</span>
+          <span className="text-[9px] text-gray-500">Дистанция</span>
         </div>
-        <div className="bg-[#1a1a1d] p-3 rounded-xl flex flex-col items-center">
-          <Zap className="w-6 h-6 text-gray-400" />
-          <span className="text-sm mt-1">{intensiveSessions}</span>
-          <span className="text-xs text-gray-500">Интенсивные</span>
+        <div className="bg-[#1a1a1d] p-2 rounded-xl flex flex-col items-center">
+          <Zap className="w-5 h-5 text-gray-400" />
+          <span className="text-xs mt-1">{intensiveSessions}</span>
+          <span className="text-[9px] text-gray-500">Интенсивные</span>
         </div>
       </div>
 
@@ -234,3 +272,4 @@ export default function ProfilePageMobile() {
     </div>
   );
 }
+
