@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 
 export default function DailyParameters() {
-  // Основные параметры (вкл/выкл)
+  // Основные параметры
   const [skadet, setSkadet] = useState(false);
   const [syk, setSyk] = useState(false);
   const [paReise, setPaReise] = useState(false);
@@ -13,7 +13,7 @@ export default function DailyParameters() {
   const [fridag, setFridag] = useState(false);
   const [konkurranse, setKonkurranse] = useState(false);
 
-  // Параметры дня (10-балльная шкала)
+  // Параметры дня
   const [physical, setPhysical] = useState(0);
   const [mental, setMental] = useState(0);
   const [sleepQuality, setSleepQuality] = useState(0);
@@ -66,7 +66,7 @@ export default function DailyParameters() {
   };
 
   const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
-    <div className="flex space-x-2">
+    <div className="flex flex-wrap gap-2">
       {[...Array(10)].map((_, i) => (
         <button
           key={i}
@@ -95,7 +95,7 @@ export default function DailyParameters() {
   ) => (
     <button
       onClick={() => setActive(!active)}
-      className={`px-4 py-2 rounded-xl flex items-center space-x-2 ${active ? activeColor : "bg-gray-700"}`}
+      className={`px-4 py-3 rounded-xl flex items-center space-x-2 ${active ? activeColor : "bg-gray-700"} transition`}
     >
       <Icon className="w-6 h-6" fill={active ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
       <span>{label}</span>
@@ -104,7 +104,8 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+
         {/* Навигация */}
         <div className="flex justify-around items-center border-b border-[#1f1f22] pb-2 mb-4">
           <div className="flex flex-col items-center text-blue-400">
@@ -126,9 +127,9 @@ export default function DailyParameters() {
         </div>
 
         {/* Основные параметры */}
-        <div className="bg-[#1a1a1d] p-4 rounded-xl space-y-4">
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {renderToggleButton(skadet, setSkadet, AlertTriangle, "Травма", "bg-red-600")}
             {renderToggleButton(syk, setSyk, Thermometer, "Болезнь", "bg-red-500")}
             {renderToggleButton(paReise, setPaReise, Send, "В пути", "bg-blue-500")}
@@ -139,74 +140,76 @@ export default function DailyParameters() {
         </div>
 
         {/* Параметры дня */}
-        <div className="bg-[#1a1a1d] p-4 rounded-xl space-y-4">
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
           <p className="text-gray-400 capitalize">{today}</p>
 
           {/* Физическая готовность */}
-          <div>
-            <p className="mb-2">Физическая готовность</p>
+          <div className="space-y-2">
+            <p>Физическая готовность</p>
             {renderTenButtons(physical, setPhysical, User)}
           </div>
 
           {/* Ментальная готовность */}
-          <div>
-            <p className="mb-2">Ментальная готовность</p>
+          <div className="space-y-2">
+            <p>Ментальная готовность</p>
             {renderTenButtons(mental, setMental, Brain)}
           </div>
 
           {/* Пульс */}
-          <div>
-            <p className="mb-2">Пульс (уд/мин)</p>
+          <div className="space-y-2">
+            <p>Пульс (уд/мин)</p>
             <input
               type="number"
               value={pulse}
               onChange={(e) => setPulse(e.target.value)}
               placeholder="например, 60"
-              className="w-full p-2 rounded-lg bg-[#0e0e10] border border-gray-700 text-white"
+              className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
           {/* Сон */}
-          <div>
-            <p className="mb-2">Качество сна</p>
+          <div className="space-y-2">
+            <p>Качество сна</p>
             {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
           </div>
 
-          <div>
-            <p className="mb-2">Продолжительность сна (ч:мин)</p>
+          <div className="space-y-2">
+            <p>Продолжительность сна (ч:мин)</p>
             <input
               type="text"
               value={sleepDuration}
               onChange={(e) => setSleepDuration(e.target.value)}
               placeholder="например, 07:30"
-              className="w-full p-2 rounded-lg bg-[#0e0e10] border border-gray-700 text-white"
+              className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
           {/* Комментарий */}
-          <div>
-            <p className="mb-2">Комментарии</p>
+          <div className="space-y-2">
+            <p>Комментарии</p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Напишите здесь..."
-              className="w-full p-2 h-24 rounded-lg bg-[#0e0e10] border border-gray-700 text-white"
+              className="w-full p-3 h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
             />
           </div>
 
           {/* Кнопка сохранить */}
           <button
             onClick={handleSave}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
           >
             Сохранить
           </button>
         </div>
+
       </div>
     </div>
   );
 }
+
 
 
 
