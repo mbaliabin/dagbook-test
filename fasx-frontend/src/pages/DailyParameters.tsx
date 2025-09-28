@@ -10,14 +10,13 @@ export default function DailyParameters() {
   const [comment, setComment] = useState("");
 
   // Новые параметры
-  const [skadet, setSkadet] = useState(false); // травма
-  const [syk, setSyk] = useState(false); // болезнь
-  const [paReise, setPaReise] = useState(false); // в пути / командировка
-  const [hoydedogn, setHoydedogn] = useState(false); // смена часового пояса
-  const [fridag, setFridag] = useState(false); // выходной
-  const [konkurranse, setKonkurranse] = useState(false); // соревнование
+  const [skadet, setSkadet] = useState(false);
+  const [syk, setSyk] = useState(false);
+  const [paReise, setPaReise] = useState(false);
+  const [hoydedogn, setHoydedogn] = useState(false);
+  const [fridag, setFridag] = useState(false);
+  const [konkurranse, setKonkurranse] = useState(false);
 
-  // Динамическая дата
   const today = new Date().toLocaleDateString("ru-RU", {
     weekday: "long",
     day: "2-digit",
@@ -26,18 +25,18 @@ export default function DailyParameters() {
 
   const handleSave = () => {
     const data = {
-      physical,
-      mental,
-      sleepQuality,
-      pulse,
-      sleepDuration,
-      comment,
       skadet,
       syk,
       paReise,
       hoydedogn,
       fridag,
       konkurranse,
+      physical,
+      mental,
+      sleepQuality,
+      pulse,
+      sleepDuration,
+      comment,
     };
     console.log("Сохранённые данные:", data);
     alert("Данные сохранены ✅");
@@ -72,6 +71,67 @@ export default function DailyParameters() {
             Параметры дня
           </h2>
           <p className="text-gray-400 capitalize">{today}</p>
+
+          {/* Новый блок с основными параметрами */}
+          <div>
+            <p className="mb-2 font-semibold">Основные параметры</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSkadet(!skadet)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  skadet ? "bg-red-600" : "bg-gray-700"
+                }`}
+              >
+                <span>⚠️</span>
+                <span>Травма</span>
+              </button>
+              <button
+                onClick={() => setSyk(!syk)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  syk ? "bg-red-500" : "bg-gray-700"
+                }`}
+              >
+                <span>🤒</span>
+                <span>Болезнь</span>
+              </button>
+              <button
+                onClick={() => setPaReise(!paReise)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  paReise ? "bg-blue-500" : "bg-gray-700"
+                }`}
+              >
+                <span>✈️</span>
+                <span>В пути</span>
+              </button>
+              <button
+                onClick={() => setHoydedogn(!hoydedogn)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  hoydedogn ? "bg-purple-500" : "bg-gray-700"
+                }`}
+              >
+                <span>🕒</span>
+                <span>Смена часового пояса</span>
+              </button>
+              <button
+                onClick={() => setFridag(!fridag)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  fridag ? "bg-green-500" : "bg-gray-700"
+                }`}
+              >
+                <span>🌴</span>
+                <span>Выходной</span>
+              </button>
+              <button
+                onClick={() => setKonkurranse(!konkurranse)}
+                className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
+                  konkurranse ? "bg-yellow-500" : "bg-gray-700"
+                }`}
+              >
+                <span>🏆</span>
+                <span>Соревнование</span>
+              </button>
+            </div>
+          </div>
 
           {/* Физическая готовность */}
           <div>
@@ -158,67 +218,6 @@ export default function DailyParameters() {
             />
           </div>
 
-          {/* Новые параметры */}
-          <div className="space-y-2">
-            <p className="mb-1 font-semibold">Дополнительно</p>
-            <div className="flex flex-col space-y-1">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={skadet}
-                  onChange={(e) => setSkadet(e.target.checked)}
-                  className="mr-2"
-                />
-                Травма
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={syk}
-                  onChange={(e) => setSyk(e.target.checked)}
-                  className="mr-2"
-                />
-                Болезнь
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={paReise}
-                  onChange={(e) => setPaReise(e.target.checked)}
-                  className="mr-2"
-                />
-                В пути / командировка
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={hoydedogn}
-                  onChange={(e) => setHoydedogn(e.target.checked)}
-                  className="mr-2"
-                />
-                Смена часового пояса
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={fridag}
-                  onChange={(e) => setFridag(e.target.checked)}
-                  className="mr-2"
-                />
-                Выходной
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={konkurranse}
-                  onChange={(e) => setKonkurranse(e.target.checked)}
-                  className="mr-2"
-                />
-                Соревнование
-              </label>
-            </div>
-          </div>
-
           {/* Кнопка сохранить */}
           <button
             onClick={handleSave}
@@ -231,4 +230,5 @@ export default function DailyParameters() {
     </div>
   );
 }
+
 
