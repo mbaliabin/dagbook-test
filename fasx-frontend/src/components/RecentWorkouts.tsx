@@ -28,7 +28,7 @@ function formatDuration(minutes: number) {
   return `${h > 0 ? `${h}ч ` : ""}${m}м`;
 }
 
-// 🔑 Функция для группировки по дате
+// 🔑 Группировка по дате
 function groupByDate(workouts: Workout[]) {
   return workouts.reduce((acc, w) => {
     const date = formatDate(w.date);
@@ -47,6 +47,10 @@ export default function RecentWorkouts({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // 🔑 Пагинация
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Удалить тренировку?")) return;
@@ -75,24 +79,33 @@ export default function RecentWorkouts({
     }
   };
 
+  if (!workouts) {
+    return (
+      <div className="bg-[#1a1a1d] p-4 rounded-xl">
+        <p className="text-gray-500 text-sm">Загрузка...</p>
+      </div>
+    );
+  }
+
+  // 🔑 Сортировка по дате
+  const sorted = [...workouts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // 🔑 Ограничение по количеству
+  const limited = sorted.slice(0, visibleCount);
+
+  const grouped = groupByDate(limited);
+
   return (
     <>
       <div className="bg-[#1a1a1d] p-4 rounded-xl">
         <h2 className="text-lg font-semibold mb-4">Recent Workouts</h2>
         <div className="space-y-4">
-          {!workouts ? (
-            <p className="text-gray-500 text-sm">Загрузка...</p>
-          ) : workouts.length === 0 ? (
+          {limited.length === 0 ? (
             <p className="text-gray-500 text-sm">Пока нет тренировок</p>
           ) : (
-            Object.entries(
-              groupByDate(
-                [...workouts].sort(
-                  (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime()
-                )
-              )
-            ).map(([date, dayWorkouts]) => (
+            Object.entries(grouped).map(([date, dayWorkouts]) => (
               <div
                 key={date}
                 className="bg-[#242428] rounded-xl p-3 border border-gray-700"
@@ -153,6 +166,18 @@ export default function RecentWorkouts({
             ))
           )}
         </div>
+
+        {/* 🔑 Кнопка "Показать ещё" */}
+        {visibleCount < sorted.length && (
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              className="px-4 py-2 bg-[#2a2a2d] text-gray-300 rounded-lg hover:bg-[#3a3a3d]"
+            >
+              Показать ещё
+            </button>
+          </div>
+        )}
       </div>
 
       {isModalOpen && selectedWorkoutId && (
@@ -171,5 +196,6 @@ export default function RecentWorkouts({
     </>
   );
 }
+
 
 
