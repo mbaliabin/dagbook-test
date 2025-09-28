@@ -6,6 +6,9 @@ import {
   Plus,
   LogOut,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
   Home,
   BarChart3,
   ClipboardList,
@@ -122,10 +125,29 @@ export default function ProfilePageMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4 pb-20">
-      {/* pb-20 чтобы контент не перекрывался нижней навигацией */}
+    <div className="min-h-screen bg-[#0d0d0d] text-white p-4 flex flex-col gap-4">
 
-      {/* Header профиля */}
+      {/* Верхнее меню */}
+      <div className="flex justify-around items-center mb-4">
+        <div className="flex flex-col items-center text-blue-400">
+          <Home size={20} />
+          <span className="text-[10px]">Главная</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <BarChart3 size={20} />
+          <span className="text-[10px]">Тренировка</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <ClipboardList size={20} />
+          <span className="text-[10px]">Планирование</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <CalendarDays size={20} />
+          <span className="text-[10px]">Статистика</span>
+        </div>
+      </div>
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
@@ -153,15 +175,18 @@ export default function ProfilePageMobile() {
         <button onClick={onPrevMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronLeft className="w-4 h-4" />
         </button>
+
         <div
           className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 cursor-pointer text-xs"
           onClick={() => setDateRange(null)}
         >
           {selectedMonth.format("MMMM YYYY")}
         </div>
+
         <button onClick={onNextMonth} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300">
           <ChevronRight className="w-4 h-4" />
         </button>
+
         <button
           onClick={() =>
             setDateRange({
@@ -173,6 +198,15 @@ export default function ProfilePageMobile() {
         >
           Текущая неделя
         </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowDateRangePicker(prev => !prev)}
+            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-300 flex items-center gap-1 text-xs"
+          >
+            <Calendar className="w-4 h-4" /> Произвольный период <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Модалка кастомного календаря */}
@@ -222,26 +256,6 @@ export default function ProfilePageMobile() {
         onClose={() => setIsModalOpen(false)}
         onAddWorkout={handleAddWorkout}
       />
-
-      {/* Нижняя панель навигации */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a1d] flex justify-around py-2 border-t border-gray-700">
-        <div className="flex flex-col items-center text-blue-400">
-          <Home size={20} />
-          <span className="text-[10px]">Главная</span>
-        </div>
-        <div className="flex flex-col items-center text-white">
-          <BarChart3 size={20} />
-          <span className="text-[10px]">Тренировка</span>
-        </div>
-        <div className="flex flex-col items-center text-white">
-          <ClipboardList size={20} />
-          <span className="text-[10px]">Планирование</span>
-        </div>
-        <div className="flex flex-col items-center text-white">
-          <CalendarDays size={20} />
-          <span className="text-[10px]">Статистика</span>
-        </div>
-      </div>
     </div>
   );
 }
