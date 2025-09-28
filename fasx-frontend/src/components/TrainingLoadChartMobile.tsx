@@ -78,6 +78,7 @@ const TrainingLoadChartMobile: React.FC<Props> = ({ workouts }) => {
                 fontSize: 13,
                 boxShadow: "0 4px 10px rgba(0,0,0,0.4)",
               }}
+              itemStyle={{ color: "#fff" }}
               cursor={{ fill: "rgba(59,130,246,0.2)" }}
               formatter={(value: any) => [`${value} км`, "Distance"]}
             />
@@ -113,4 +114,5 @@ const TrainingLoadChartMobile: React.FC<Props> = ({ workouts }) => {
 };
 
 export default TrainingLoadChartMobile;
+
 
