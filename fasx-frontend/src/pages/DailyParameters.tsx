@@ -5,13 +5,8 @@ import {
 } from "lucide-react";
 
 export default function DailyParameters() {
-  // Основные параметры
-  const [skadet, setSkadet] = useState(false);
-  const [syk, setSyk] = useState(false);
-  const [paReise, setPaReise] = useState(false);
-  const [hoydedogn, setHoydedogn] = useState(false);
-  const [fridag, setFridag] = useState(false);
-  const [konkurranse, setKonkurranse] = useState(false);
+  // Основные параметры (только один можно выбрать)
+  const [mainParam, setMainParam] = useState<string | null>(null);
 
   // Параметры дня
   const [physical, setPhysical] = useState(0);
@@ -31,12 +26,7 @@ export default function DailyParameters() {
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
-      setSkadet(data.skadet || false);
-      setSyk(data.syk || false);
-      setPaReise(data.paReise || false);
-      setHoydedogn(data.hoydedogn || false);
-      setFridag(data.fridag || false);
-      setKonkurranse(data.konkurranse || false);
+      setMainParam(data.mainParam || null);
       setPhysical(data.physical || 0);
       setMental(data.mental || 0);
       setSleepQuality(data.sleepQuality || 0);
@@ -48,12 +38,7 @@ export default function DailyParameters() {
 
   const handleSave = () => {
     const data = {
-      skadet,
-      syk,
-      paReise,
-      hoydedogn,
-      fridag,
-      konkurranse,
+      mainParam,
       physical,
       mental,
       sleepQuality,
@@ -66,7 +51,7 @@ export default function DailyParameters() {
   };
 
   const renderTenButtons = (value: number, setValue: (val: number) => void, Icon: React.FC<React.SVGProps<SVGSVGElement>>) => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-3"> {/* увеличен gap между иконками */}
       {[...Array(10)].map((_, i) => (
         <button
           key={i}
@@ -86,18 +71,19 @@ export default function DailyParameters() {
     </div>
   );
 
-  const renderToggleButton = (
-    active: boolean,
-    setActive: (val: boolean) => void,
-    Icon: React.FC<React.SVGProps<SVGSVGElement>>,
+  const renderSingleSelectButton = (
+    id: string,
     label: string,
+    Icon: React.FC<React.SVGProps<SVGSVGElement>>,
     activeColor: string
   ) => (
     <button
-      onClick={() => setActive(!active)}
-      className={`px-4 py-3 rounded-xl flex items-center space-x-2 ${active ? activeColor : "bg-gray-700"} transition`}
+      onClick={() => setMainParam(id)}
+      className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition ${
+        mainParam === id ? activeColor : "bg-gray-700"
+      }`}
     >
-      <Icon className="w-6 h-6" fill={active ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
+      <Icon className="w-6 h-6" fill={mainParam === id ? "#fff" : "none"} stroke="#fff" strokeWidth={2} />
       <span>{label}</span>
     </button>
   );
@@ -126,16 +112,16 @@ export default function DailyParameters() {
           </div>
         </div>
 
-        {/* Основные параметры */}
+        {/* Основные параметры (только один) */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
           <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {renderToggleButton(skadet, setSkadet, AlertTriangle, "Травма", "bg-red-600")}
-            {renderToggleButton(syk, setSyk, Thermometer, "Болезнь", "bg-red-500")}
-            {renderToggleButton(paReise, setPaReise, Send, "В пути", "bg-blue-500")}
-            {renderToggleButton(hoydedogn, setHoydedogn, Clock, "Смена часового пояса", "bg-purple-500")}
-            {renderToggleButton(fridag, setFridag, Sun, "Выходной", "bg-green-500")}
-            {renderToggleButton(konkurranse, setKonkurranse, Award, "Соревнование", "bg-yellow-500")}
+            {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
+            {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
+            {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
+            {renderSingleSelectButton("hoydedogn", "Смена часового пояса", Clock, "bg-purple-500")}
+            {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
+            {renderSingleSelectButton("konkurranse", "Соревнование", Award, "bg-yellow-500")}
           </div>
         </div>
 
@@ -209,6 +195,7 @@ export default function DailyParameters() {
     </div>
   );
 }
+
 
 
 
