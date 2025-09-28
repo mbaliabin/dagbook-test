@@ -32,8 +32,8 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
-  // Текущая системная дата (фиксированная)
-  const today = dayjs();
+  // текущая дата всегда сегодняшняя
+  const currentDate = dayjs();
 
   // Подтягиваем имя профиля
   useEffect(() => {
@@ -61,7 +61,15 @@ export default function DailyParametersMobile() {
   }, []);
 
   const handleSave = () => {
-    const data = { mainParam, physical, mental, sleepQuality, pulse, sleepDuration, comment };
+    const data = {
+      mainParam,
+      physical,
+      mental,
+      sleepQuality,
+      pulse,
+      sleepDuration,
+      comment,
+    };
     localStorage.setItem("dailyParameters", JSON.stringify(data));
     alert("Данные сохранены ✅");
   };
@@ -69,7 +77,6 @@ export default function DailyParametersMobile() {
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
 
-  // Форматируем даты
   const formatDate = (date: dayjs.Dayjs) =>
     date
       .format("dddd, DD MMMM")
@@ -88,11 +95,13 @@ export default function DailyParametersMobile() {
           key={i}
           onClick={() => setValue(i + 1)}
           className={`w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition ${
-            i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"
+            i < value
+              ? "bg-blue-500 shadow-md scale-105"
+              : "bg-gray-700"
           }`}
         >
           <Icon
-            className={`w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5`}
+            className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5"
             fill={i < value ? "#fff" : "none"}
             stroke="#fff"
             strokeWidth={2}
@@ -120,7 +129,9 @@ export default function DailyParametersMobile() {
         stroke="#fff"
         strokeWidth={2}
       />
-      <span className="text-xs sm:text-sm md:text-base text-white">{label}</span>
+      <span className="text-xs sm:text-sm md:text-base text-white">
+        {label}
+      </span>
     </button>
   );
 
@@ -129,26 +140,36 @@ export default function DailyParametersMobile() {
       {/* Верхний блок: Лого, имя и кнопка перейти к тренировкам */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <img
+            src="/profile.jpg"
+            alt="Avatar"
+            className="w-10 h-10 rounded-full"
+          />
           <div className="flex flex-col">
-            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
-            <span className="text-xs text-gray-400">{formatDate(today)}</span>
+            <h2 className="text-base font-semibold">
+              {name || "Загрузка..."}
+            </h2>
+            <span className="text-xs text-gray-400">
+              {formatDate(currentDate)}
+            </span>
           </div>
         </div>
         <button
           onClick={() => navigate("/profile")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm whitespace-nowrap"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
         >
           Перейти к тренировкам
         </button>
       </div>
 
       {/* Быстрый доступ к предыдущим/следующим дням */}
-      <div className="flex items-center gap-2 mb-4 justify-center">
+      <div className="flex items-center gap-2 mb-4 justify-start">
         <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <span className="text-xs text-gray-300">{formatDate(selectedDate)}</span>
+        <span className="text-xs text-gray-300">
+          {formatDate(selectedDate)}
+        </span>
         <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -156,20 +177,54 @@ export default function DailyParametersMobile() {
 
       {/* Основные параметры */}
       <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4 mb-4">
-        <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
+        <h2 className="text-white text-sm sm:text-lg font-semibold">
+          Основные параметры
+        </h2>
         <div className="space-y-2 sm:space-y-3">
-          {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
-          {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
-          {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
-          {renderSingleSelectButton("hoydedogn", "Смена часового пояса", Clock, "bg-purple-500")}
-          {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
-          {renderSingleSelectButton("konkurranse", "Соревнование", Award, "bg-yellow-500")}
+          {renderSingleSelectButton(
+            "skadet",
+            "Травма",
+            AlertTriangle,
+            "bg-red-600"
+          )}
+          {renderSingleSelectButton(
+            "syk",
+            "Болезнь",
+            Thermometer,
+            "bg-red-500"
+          )}
+          {renderSingleSelectButton(
+            "paReise",
+            "В пути",
+            Send,
+            "bg-blue-500"
+          )}
+          {renderSingleSelectButton(
+            "hoydedogn",
+            "Смена часового пояса",
+            Clock,
+            "bg-purple-500"
+          )}
+          {renderSingleSelectButton(
+            "fridag",
+            "Выходной",
+            Sun,
+            "bg-green-500"
+          )}
+          {renderSingleSelectButton(
+            "konkurranse",
+            "Соревнование",
+            Award,
+            "bg-yellow-500"
+          )}
         </div>
       </div>
 
       {/* Параметры дня */}
       <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
-        <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
+        <h2 className="text-white text-sm sm:text-lg font-semibold">
+          Параметры дня
+        </h2>
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Физическая готовность</p>
           {renderTenButtons(physical, setPhysical, User)}
