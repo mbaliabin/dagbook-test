@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { Home, BarChart3, ClipboardList, CalendarDays } from "lucide-react";
 
 export default function DailyParameters() {
-  // Основные параметры
-  const [skadet, setSkadet] = useState(false);
-  const [syk, setSyk] = useState(false);
-  const [paReise, setPaReise] = useState(false);
-  const [hoydedogn, setHoydedogn] = useState(false);
-  const [fridag, setFridag] = useState(false);
-  const [konkurranse, setKonkurranse] = useState(false);
+  // Основные параметры с 10-балльной шкалой
+  const [skadet, setSkadet] = useState(0);
+  const [syk, setSyk] = useState(0);
+  const [paReise, setPaReise] = useState(0);
+  const [hoydedogn, setHoydedogn] = useState(0);
+  const [fridag, setFridag] = useState(0);
+  const [konkurranse, setKonkurranse] = useState(0);
 
   // Готовность и сон
   const [physical, setPhysical] = useState(0);
@@ -29,12 +29,12 @@ export default function DailyParameters() {
     const saved = localStorage.getItem("dailyParameters");
     if (saved) {
       const data = JSON.parse(saved);
-      setSkadet(data.skadet || false);
-      setSyk(data.syk || false);
-      setPaReise(data.paReise || false);
-      setHoydedogn(data.hoydedogn || false);
-      setFridag(data.fridag || false);
-      setKonkurranse(data.konkurranse || false);
+      setSkadet(data.skadet || 0);
+      setSyk(data.syk || 0);
+      setPaReise(data.paReise || 0);
+      setHoydedogn(data.hoydedogn || 0);
+      setFridag(data.fridag || 0);
+      setKonkurranse(data.konkurranse || 0);
       setPhysical(data.physical || 0);
       setMental(data.mental || 0);
       setSleepQuality(data.sleepQuality || 0);
@@ -63,6 +63,24 @@ export default function DailyParameters() {
     alert("Данные сохранены ✅");
   };
 
+  const renderTenButtons = (value: number, setValue: (val: number) => void, icon: string) => {
+    return (
+      <div className="flex space-x-2">
+        {[...Array(10)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setValue(i + 1)}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-2xl transition ${
+              i < value ? "bg-blue-500 scale-110" : "bg-gray-700"
+            }`}
+          >
+            {icon}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -88,98 +106,54 @@ export default function DailyParameters() {
 
         {/* Основные параметры */}
         <div className="bg-[#1a1a1d] p-4 rounded-xl space-y-4">
-          <h2 className="text-xl font-semibold text-blue-400">Основные параметры</h2>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSkadet(!skadet)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                skadet ? "bg-red-600" : "bg-gray-700"
-              }`}
-            >
-              ⚠️ <span>Травма</span>
-            </button>
-            <button
-              onClick={() => setSyk(!syk)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                syk ? "bg-red-500" : "bg-gray-700"
-              }`}
-            >
-              🤒 <span>Болезнь</span>
-            </button>
-            <button
-              onClick={() => setPaReise(!paReise)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                paReise ? "bg-blue-500" : "bg-gray-700"
-              }`}
-            >
-              ✈️ <span>В пути</span>
-            </button>
-            <button
-              onClick={() => setHoydedogn(!hoydedogn)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                hoydedogn ? "bg-purple-500" : "bg-gray-700"
-              }`}
-            >
-              🕒 <span>Смена часового пояса</span>
-            </button>
-            <button
-              onClick={() => setFridag(!fridag)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                fridag ? "bg-green-500" : "bg-gray-700"
-              }`}
-            >
-              🌴 <span>Выходной</span>
-            </button>
-            <button
-              onClick={() => setKonkurranse(!konkurranse)}
-              className={`px-3 py-2 rounded-xl flex items-center space-x-1 ${
-                konkurranse ? "bg-yellow-500" : "bg-gray-700"
-              }`}
-            >
-              🏆 <span>Соревнование</span>
-            </button>
+          <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
+
+          <div>
+            <p className="mb-2">Травма</p>
+            {renderTenButtons(skadet, setSkadet, "⚠️")}
+          </div>
+
+          <div>
+            <p className="mb-2">Болезнь</p>
+            {renderTenButtons(syk, setSyk, "🤒")}
+          </div>
+
+          <div>
+            <p className="mb-2">В пути</p>
+            {renderTenButtons(paReise, setPaReise, "✈️")}
+          </div>
+
+          <div>
+            <p className="mb-2">Смена часового пояса</p>
+            {renderTenButtons(hoydedogn, setHoydedogn, "🕒")}
+          </div>
+
+          <div>
+            <p className="mb-2">Выходной</p>
+            {renderTenButtons(fridag, setFridag, "🌴")}
+          </div>
+
+          <div>
+            <p className="mb-2">Соревнование</p>
+            {renderTenButtons(konkurranse, setKonkurranse, "🏆")}
           </div>
         </div>
 
-        {/* Параметры готовности и сна */}
+        {/* Параметры дня */}
         <div className="bg-[#1a1a1d] p-4 rounded-xl space-y-4">
-          <h2 className="text-xl font-semibold text-blue-400">Параметры дня</h2>
+          <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
           <p className="text-gray-400 capitalize">{today}</p>
 
           {/* Физическая готовность */}
           <div>
             <p className="mb-2">Физическая готовность</p>
-            <div className="flex space-x-2">
-              {[...Array(7)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPhysical(i + 1)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
-                    i < physical ? "bg-blue-500 scale-110" : "bg-gray-700"
-                  }`}
-                >
-                  💪
-                </button>
-              ))}
-            </div>
+            {renderTenButtons(physical, setPhysical, "💪")}
           </div>
 
           {/* Ментальная готовность */}
           <div>
             <p className="mb-2">Ментальная готовность</p>
-            <div className="flex space-x-2">
-              {[...Array(7)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setMental(i + 1)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
-                    i < mental ? "bg-blue-500 scale-110" : "bg-gray-700"
-                  }`}
-                >
-                  🧠
-                </button>
-              ))}
-            </div>
+            {renderTenButtons(mental, setMental, "🧠")}
           </div>
 
           {/* Пульс */}
@@ -197,19 +171,7 @@ export default function DailyParameters() {
           {/* Сон */}
           <div>
             <p className="mb-2">Качество сна</p>
-            <div className="flex space-x-2">
-              {[...Array(7)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSleepQuality(i + 1)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
-                    i < sleepQuality ? "bg-blue-500 scale-110" : "bg-gray-700"
-                  }`}
-                >
-                  🌙
-                </button>
-              ))}
-            </div>
+            {renderTenButtons(sleepQuality, setSleepQuality, "🌙")}
           </div>
 
           <div>
@@ -246,5 +208,6 @@ export default function DailyParameters() {
     </div>
   );
 }
+
 
 
