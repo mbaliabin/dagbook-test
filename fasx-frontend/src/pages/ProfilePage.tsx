@@ -12,9 +12,10 @@ import {
   Calendar,
   Home,
   BarChart3,
-  ClipboardList
+  ClipboardList,
+  CalendarDays
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -62,6 +63,7 @@ export default function ProfilePage() {
   })
   const [showDateRangePicker, setShowDateRangePicker] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const fetchWorkouts = useCallback(async () => {
     try {
@@ -146,13 +148,18 @@ export default function ProfilePage() {
   }
 
   const applyDateRange = () => {
-    if (dateRange) {
-      setShowDateRangePicker(false)
-    }
+    if (dateRange) setShowDateRangePicker(false)
   }
 
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/" },
+    { label: "Тренировка", icon: BarChart3, path: "/training" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ]
+
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 pb-24"> {/* pb-24 чтобы меню не перекрывало контент */}
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -202,10 +209,7 @@ export default function ProfilePage() {
 
           <div
             className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
-            onClick={() => {
-              setShowDateRangePicker(false)
-              setDateRange(null)
-            }}
+            onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
             title="Показать текущий месяц"
           >
             {selectedMonth.format('MMMM YYYY')}
@@ -220,10 +224,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => {
-              setDateRange({
-                startDate: dayjs().startOf('isoWeek').toDate(),
-                endDate: dayjs().endOf('isoWeek').toDate()
-              })
+              setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
               setShowDateRangePicker(false)
             }}
             className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
@@ -244,20 +245,11 @@ export default function ProfilePage() {
             {showDateRangePicker && (
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
-                  onChange={item =>
-                    setDateRange({
-                      startDate: item.selection.startDate,
-                      endDate: item.selection.endDate
-                    })
-                  }
+                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
                   showSelectionPreview={true}
                   moveRangeOnFirstSelection={false}
                   months={1}
-                  ranges={[{
-                    startDate: dateRange?.startDate || new Date(),
-                    endDate: dateRange?.endDate || new Date(),
-                    key: 'selection'
-                  }]}
+                  ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
                   direction="horizontal"
                   rangeColors={['#3b82f6']}
                   className="text-white"
@@ -348,22 +340,25 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-    {/* Нижняя панель навигации */}
-     <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
-       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-         <Home className="w-6 h-6" />
-         <span>Главная</span>
-       </button>
-       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-         <BarChart3 className="w-6 h-6" />
-         <span>Тренировка</span>
-       </button>
-       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-         <ClipboardList className="w-6 h-6" />
-         <span>Планирование</span>
-       </button>
-       <button className="flex flex-col items-center text-gray-400 hover:text-white text-sm">
-         <CalendarDays className="w-6 h-6" />
-         <span>Статистика</span>
-       </button>
-     </div>
+      {/* Нижняя навигация */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path
+          const Icon = item.icon
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
