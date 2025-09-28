@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -21,33 +21,23 @@ interface Props {
 }
 
 const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-const barColors = [
-  "#3b82f6",
-  "#2563eb",
-  "#1d4ed8",
-  "#1e40af",
-  "#1e3a8a",
-  "#1e40af",
-  "#2563eb",
-];
+const barColors = ["#3b82f6","#2563eb","#1d4ed8","#1e40af","#1e3a8a","#1e40af","#2563eb"];
 
 const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
   const data = useMemo(() => {
-    const totals: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-
-    workouts.forEach((w) => {
+    const totals: Record<number, number> = {0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+    workouts.forEach(w => {
       const d = dayjs(w.date);
       const dow = d.day();
       totals[dow] += w.distance || 0;
     });
-
-    return [1, 2, 3, 4, 5, 6, 0].map((i) => ({
-      day: daysOfWeek[i === 0 ? 6 : i - 1],
+    return [1,2,3,4,5,6,0].map(i => ({
+      day: daysOfWeek[i===0?6:i-1],
       load: Math.round(totals[i]),
     }));
   }, [workouts]);
 
-  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   return (
     <div className="bg-gradient-to-b from-[#121214] to-[#1a1a1d] rounded-xl text-white shadow-lg px-6 pt-3 pb-4 w-full overflow-x-auto">
@@ -80,16 +70,17 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
             <Tooltip
               wrapperStyle={{ outline: "none" }}
               contentStyle={{
-                backgroundColor: "rgba(30,30,35,0.85)",
+                backgroundColor: "#2a2a2f",
                 borderRadius: 8,
                 border: "none",
                 padding: "8px 12px",
-                color: "#e0e0e0",
+                color: "#fff",
                 fontSize: 15,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
               }}
-              cursor={{ fill: "rgba(59,130,246,0.15)" }}
-              formatter={(value: any) => [`${value}`, "Distance"]}
+              itemStyle={{ color: "#fff" }}
+              cursor={{ fill: "rgba(59,130,246,0.2)" }}
+              formatter={(value: any) => [`${value} км`, "Distance"]}
             />
             <Bar
               dataKey="load"
@@ -123,4 +114,3 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
 };
 
 export default TrainingLoadChart;
-
