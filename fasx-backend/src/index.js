@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js'
 import userRoutes from './routes/user.js'
 import profileRoutes from './routes/profile.js'
 import workoutRoutes from './routes/workouts.js'  // Импорт роутов тренировок
+import dailyInformationRouter from './routes/dailyInformation.js';
 
 dotenv.config()
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
@@ -33,6 +34,7 @@ app.use('/api/user', userRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/workouts', workoutRoutes)
+app.use("/api/daily-information", dailyInformationRouter);
 
 app.get('/api/health', async (req, res) => {
   try {

@@ -33,6 +33,7 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
+  // Загружаем имя пользователя
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -43,33 +44,52 @@ export default function DailyParameters() {
       }
     };
     fetchProfile();
-
-    const saved = localStorage.getItem("dailyParameters");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setMainParam(data.mainParam || null);
-      setPhysical(data.physical || 0);
-      setMental(data.mental || 0);
-      setSleepQuality(data.sleepQuality || 0);
-      setPulse(data.pulse || "");
-      setSleepDuration(data.sleepDuration || "");
-      setComment(data.comment || "");
-    }
   }, []);
 
-  const handleSave = () => {
-    const data = {
-      mainParam,
-      physical,
-      mental,
-      sleepQuality,
-      pulse,
-      sleepDuration,
-      comment,
+  // Загружаем данные выбранного дня
+  useEffect(() => {
+    const fetchDailyInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const dateStr = selectedDate.format("YYYY-MM-DD");
+
+        const response = await fetch(
+          `http://localhost:4000/api/daily-information?date=${dateStr}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          // Если данных нет — сбрасываем поля
+          setMainParam(null);
+          setPhysical(0);
+          setMental(0);
+          setSleepQuality(0);
+          setPulse("");
+          setSleepDuration("");
+          setComment("");
+          return;
+        }
+
+        const data = await response.json();
+
+        setMainParam(data.mainParam || null);
+        setPhysical(data.physical || 0);
+        setMental(data.mental || 0);
+        setSleepQuality(data.sleepQuality || 0);
+        setPulse(data.pulse || "");
+        setSleepDuration(data.sleepDuration || "");
+        setComment(data.comment || "");
+      } catch (err) {
+        console.error(err);
+      }
     };
-    localStorage.setItem("dailyParameters", JSON.stringify(data));
-    alert("Данные сохранены ✅");
-  };
+
+    fetchDailyInfo();
+  }, [selectedDate]);
 
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
@@ -120,6 +140,37 @@ export default function DailyParameters() {
       <span>{label}</span>
     </button>
   );
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token"); // JWT
+
+      const response = await fetch("http://localhost:4000/api/daily-information", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          date: selectedDate.format("YYYY-MM-DD"),
+          mainParam,
+          physical,
+          mental,
+          sleepQuality,
+          pulse,
+          sleepDuration,
+          comment,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Ошибка при сохранении данных");
+
+      alert("Данные успешно сохранены ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Ошибка при сохранении данных ❌");
+    }
+  };
 
   const fixedDate = dayjs().format("D MMMM");
   const formattedFixedDate =
