@@ -79,3 +79,23 @@ enum WorkoutType {
   Bike
 }
 
+model DailyInformation {
+  id            Int      @id @default(autoincrement())  // SERIAL
+  userId        String
+  date          DateTime
+  main_param    String?
+  physical      Int      @default(0)
+  mental        Int      @default(0)
+  sleep_quality Int      @default(0)
+  pulse         Int?
+  sleep_duration String?
+  comment       String?
+  created_at    DateTime @default(now())
+
+  // Связь с таблицей User
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("DailyInformation") // имя таблицы в PostgreSQL
+}
+
+
