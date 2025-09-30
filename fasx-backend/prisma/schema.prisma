@@ -80,7 +80,7 @@ enum WorkoutType {
 }
 
 model DailyInformation {
-  id            Int      @id @default(autoincrement())  // SERIAL
+  id            Int      @id @default(autoincrement())
   userId        String
   date          DateTime
   main_param    String?
@@ -92,10 +92,7 @@ model DailyInformation {
   comment       String?
   created_at    DateTime @default(now())
 
-  // Связь с таблицей User
-  user          User     @relation(fields: [userId], references: [id])
-
-  @@map("DailyInformation") // имя таблицы в PostgreSQL
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_daily_user") // обратное поле не трогаем
 }
 
 
