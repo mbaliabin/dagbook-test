@@ -33,6 +33,8 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Загружаем имя пользователя
   useEffect(() => {
     const fetchProfile = async () => {
@@ -54,10 +56,10 @@ export default function DailyParameters() {
         const dateStr = selectedDate.format("YYYY-MM-DD");
 
         const response = await fetch(
-          `http://localhost:4000/api/daily-information?date=${dateStr}`,
+          `${API_URL}/api/daily-information?date=${dateStr}`,
           {
             headers: {
-              "Authorization": `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -76,12 +78,12 @@ export default function DailyParameters() {
 
         const data = await response.json();
 
-        setMainParam(data.mainParam || null);
+        setMainParam(data.main_param || null);
         setPhysical(data.physical || 0);
         setMental(data.mental || 0);
-        setSleepQuality(data.sleepQuality || 0);
+        setSleepQuality(data.sleep_quality || 0);
         setPulse(data.pulse || "");
-        setSleepDuration(data.sleepDuration || "");
+        setSleepDuration(data.sleep_duration || "");
         setComment(data.comment || "");
       } catch (err) {
         console.error(err);
@@ -89,7 +91,7 @@ export default function DailyParameters() {
     };
 
     fetchDailyInfo();
-  }, [selectedDate]);
+  }, [selectedDate, API_URL]);
 
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
@@ -145,11 +147,11 @@ export default function DailyParameters() {
     try {
       const token = localStorage.getItem("token"); // JWT
 
-      const response = await fetch("http://localhost:4000/api/daily-information", {
+      const response = await fetch(`${API_URL}/api/daily-information`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           date: selectedDate.format("YYYY-MM-DD"),
