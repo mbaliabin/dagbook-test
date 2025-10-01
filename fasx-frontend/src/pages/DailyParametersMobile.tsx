@@ -53,13 +53,11 @@ export default function DailyParametersMobile() {
         const token = localStorage.getItem("token");
         const dateStr = selectedDate.format("YYYY-MM-DD");
 
-        const response = await fetch(
-          `${API_URL}/api/daily-information?date=${dateStr}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await fetch(`${API_URL}/api/daily-information/${dateStr}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        if (!response.ok) {
-          // Сброс полей при отсутствии данных
+        if (response.status === 404) {
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -69,6 +67,8 @@ export default function DailyParametersMobile() {
           setComment("");
           return;
         }
+
+        if (!response.ok) throw new Error("Ошибка при загрузке данных");
 
         const data = await response.json();
 
