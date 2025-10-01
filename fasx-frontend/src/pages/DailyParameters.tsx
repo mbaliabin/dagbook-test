@@ -25,7 +25,6 @@ import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.locale("ru");
 
-// Кнопки с hover, scale и тенями
 const TenButtons = ({
   value,
   onChange,
@@ -36,27 +35,22 @@ const TenButtons = ({
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }) => (
   <div className="flex flex-wrap gap-3">
-    {[...Array(10)].map((_, i) => {
-      const active = i < value;
-      return (
-        <button
-          key={i}
-          onClick={() => onChange(i + 1)}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 ${
-            active
-              ? "bg-blue-500 shadow-lg scale-110 hover:scale-125"
-              : "bg-gray-700 hover:bg-gray-600"
-          }`}
-        >
-          <Icon
-            className="w-6 h-6"
-            fill={active ? "#fff" : "none"}
-            stroke="#fff"
-            strokeWidth={2}
-          />
-        </button>
-      );
-    })}
+    {[...Array(10)].map((_, i) => (
+      <button
+        key={i}
+        onClick={() => onChange(i + 1)}
+        className={`w-12 h-12 rounded-full flex items-center justify-center transition ${
+          i < value ? "bg-blue-500 shadow-lg scale-110" : "bg-gray-700"
+        }`}
+      >
+        <Icon
+          className="w-6 h-6"
+          fill={i < value ? "#fff" : "none"}
+          stroke="#fff"
+          strokeWidth={2}
+        />
+      </button>
+    ))}
   </div>
 );
 
@@ -74,27 +68,22 @@ const SingleSelectButton = ({
   activeId: string | null;
   onClick: (id: string) => void;
   activeColor: string;
-}) => {
-  const active = activeId === id;
-  return (
-    <button
-      onClick={() => onClick(id)}
-      className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition-transform duration-200 ${
-        active
-          ? `${activeColor} shadow-lg scale-105 hover:scale-110`
-          : "bg-gray-700 hover:bg-gray-600"
-      }`}
-    >
-      <Icon
-        className="w-6 h-6"
-        fill={active ? "#fff" : "none"}
-        stroke="#fff"
-        strokeWidth={2}
-      />
-      <span>{label}</span>
-    </button>
-  );
-};
+}) => (
+  <button
+    onClick={() => onClick(id)}
+    className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition ${
+      activeId === id ? activeColor : "bg-gray-700"
+    }`}
+  >
+    <Icon
+      className="w-6 h-6"
+      fill={activeId === id ? "#fff" : "none"}
+      stroke="#fff"
+      strokeWidth={2}
+    />
+    <span>{label}</span>
+  </button>
+);
 
 export default function DailyParameters() {
   const navigate = useNavigate();
@@ -111,7 +100,7 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // Загрузка профиля пользователя
+  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -124,7 +113,7 @@ export default function DailyParameters() {
     fetchProfile();
   }, []);
 
-  // Загрузка данных выбранного дня
+  // --- Загрузка данных выбранного дня ---
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -217,24 +206,24 @@ export default function DailyParameters() {
     navigate("/login");
   };
 
+  const menuItems = [
+    { label: "Главная", icon: Timer, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-          {[
-            { label: "Главная", icon: Timer, path: "/daily" },
-            { label: "Тренировки", icon: BarChart3, path: "/profile" },
-            { label: "Планирование", icon: ClipboardList, path: "/planning" },
-            { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-          ].map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               (item.path === "/daily" && location.pathname === "/daily") ||
               (item.path === "/profile" && location.pathname === "/profile") ||
-              (item.path !== "/daily" &&
-                item.path !== "/profile" &&
-                location.pathname === item.path);
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
 
             return (
               <button
@@ -281,22 +270,24 @@ export default function DailyParameters() {
           </div>
         </div>
 
-        {/* Выбор даты */}
-        <div className="flex items-center gap-2 mb-4">
+        {/* Выбор даты — стиль как в ProfilePage */}
+        <div className="flex items-center gap-2 mb-4 justify-center">
           <button
             onClick={prevDay}
-            className="flex items-center justify-center p-2 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] transition-colors"
+            className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-300" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer hover:bg-[#2a2a2d] transition-colors">
+
+          <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer select-none">
             {formattedDate}
           </div>
+
           <button
             onClick={nextDay}
-            className="flex items-center justify-center p-2 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] transition-colors"
+            className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
           >
-            <ChevronRight className="w-5 h-5 text-gray-300" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
