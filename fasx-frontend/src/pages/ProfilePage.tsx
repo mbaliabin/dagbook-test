@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    navigate('/daily') // при выходе идём на главную
+    navigate('/login') // при выходе идём на главную
   }
 
   const filteredWorkouts = workouts.filter(w => {
