@@ -53,11 +53,14 @@ export default function DailyParametersMobile() {
         const token = localStorage.getItem("token");
         const dateStr = selectedDate.format("YYYY-MM-DD");
 
-        const response = await fetch(`${API_URL}/api/daily-information/${dateStr}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Path вместо query
+        const response = await fetch(
+          `${API_URL}/api/daily-information/${dateStr}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-        if (response.status === 404) {
+        if (!response.ok) {
+          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -67,8 +70,6 @@ export default function DailyParametersMobile() {
           setComment("");
           return;
         }
-
-        if (!response.ok) throw new Error("Ошибка при загрузке данных");
 
         const data = await response.json();
 
@@ -90,20 +91,21 @@ export default function DailyParametersMobile() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
+      const dateStr = selectedDate.format("YYYY-MM-DD");
+
       const body = {
-        date: selectedDate.format("YYYY-MM-DD"),
-        mainParam,
+        main_param: mainParam,
         physical,
         mental,
-        sleepQuality,
+        sleep_quality: sleepQuality,
         pulse: pulse ? Number(pulse) : null,
-        sleepDuration: sleepDuration || null,
+        sleep_duration: sleepDuration || null,
         comment: comment || null,
       };
 
       console.log("Отправка данных:", body);
 
-      const response = await fetch(`${API_URL}/api/daily-information`, {
+      const response = await fetch(`${API_URL}/api/daily-information/${dateStr}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
