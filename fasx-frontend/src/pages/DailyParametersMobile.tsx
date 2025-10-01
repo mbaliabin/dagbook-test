@@ -21,6 +21,7 @@ dayjs.locale("ru");
 
 export default function DailyParametersMobile() {
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [name, setName] = useState("");
   const [selectedDate, setSelectedDate] = useState(dayjs());
@@ -32,42 +33,97 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState("");
   const [comment, setComment] = useState("");
 
+  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getUserProfile();
         setName(data.name || "Пользователь");
       } catch (err) {
-        console.error(err);
+        console.error("Ошибка загрузки профиля:", err);
       }
     };
     fetchProfile();
-
-    const saved = localStorage.getItem("dailyParameters");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setMainParam(data.mainParam || null);
-      setPhysical(data.physical || 0);
-      setMental(data.mental || 0);
-      setSleepQuality(data.sleepQuality || 0);
-      setPulse(data.pulse || "");
-      setSleepDuration(data.sleepDuration || "");
-      setComment(data.comment || "");
-    }
   }, []);
 
-  const handleSave = () => {
-    const data = {
-      mainParam,
-      physical,
-      mental,
-      sleepQuality,
-      pulse,
-      sleepDuration,
-      comment,
+  // --- Загрузка данных выбранного дня ---
+  useEffect(() => {
+    const fetchDailyInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const dateStr = selectedDate.format("YYYY-MM-DD");
+
+        const response = await fetch(
+          `${API_URL}/api/daily-information?date=${dateStr}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (!response.ok) {
+          // Сброс полей при отсутствии данных
+          setMainParam(null);
+          setPhysical(0);
+          setMental(0);
+          setSleepQuality(0);
+          setPulse("");
+          setSleepDuration("");
+          setComment("");
+          return;
+        }
+
+        const data = await response.json();
+
+        setMainParam(data.main_param || null);
+        setPhysical(Number(data.physical) || 0);
+        setMental(Number(data.mental) || 0);
+        setSleepQuality(Number(data.sleep_quality) || 0);
+        setPulse(data.pulse != null ? String(data.pulse) : "");
+        setSleepDuration(data.sleep_duration || "");
+        setComment(data.comment || "");
+      } catch (err) {
+        console.error("Ошибка загрузки данных дня:", err);
+      }
     };
-    localStorage.setItem("dailyParameters", JSON.stringify(data));
-    alert("Данные сохранены ✅");
+
+    fetchDailyInfo();
+  }, [selectedDate, API_URL]);
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const body = {
+        date: selectedDate.format("YYYY-MM-DD"),
+        mainParam,
+        physical,
+        mental,
+        sleepQuality,
+        pulse: pulse ? Number(pulse) : null,
+        sleepDuration: sleepDuration || null,
+        comment: comment || null,
+      };
+
+      console.log("Отправка данных:", body);
+
+      const response = await fetch(`${API_URL}/api/daily-information`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Ошибка при сохранении");
+      }
+
+      const saved = await response.json();
+      console.log("Сохранено:", saved);
+      alert("Данные успешно сохранены ✅");
+    } catch (err: any) {
+      console.error("Ошибка сохранения:", err);
+      alert(`Ошибка при сохранении ❌: ${err.message}`);
+    }
   };
 
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
@@ -116,18 +172,12 @@ export default function DailyParametersMobile() {
         stroke="#fff"
         strokeWidth={2}
       />
-      <span className="text-xs sm:text-sm md:text-base text-white">
-        {label}
-      </span>
+      <span className="text-xs sm:text-sm md:text-base text-white">{label}</span>
     </button>
   );
 
-  // фиксированная дата под именем
   const fixedDate = dayjs().format("D MMMM");
-  const formattedFixedDate =
-    fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
-
-  // дата со стрелками
+  const formattedFixedDate = fixedDate.charAt(0).toUpperCase() + fixedDate.slice(1);
   const formattedDate = selectedDate
     .format("dddd, DD MMMM")
     .split(" ")
@@ -136,14 +186,10 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 sm:px-4 py-4 sm:py-6">
-      {/* Верхний блок: Лого, имя и кнопка перейти к тренировкам */}
+      {/* Верхний блок */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <img
-            src="/profile.jpg"
-            alt="Avatar"
-            className="w-10 h-10 rounded-full"
-          />
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
           <div className="flex flex-col">
             <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
             <span className="text-xs text-gray-400">{formattedFixedDate}</span>
@@ -157,7 +203,7 @@ export default function DailyParametersMobile() {
         </button>
       </div>
 
-      {/* Быстрый доступ к предыдущим/следующим дням */}
+      {/* Выбор даты */}
       <div className="flex items-center gap-2 mb-4">
         <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
           <ChevronLeft className="w-4 h-4" />
@@ -170,44 +216,28 @@ export default function DailyParametersMobile() {
 
       {/* Основные параметры */}
       <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4 mb-4">
-        <h2 className="text-white text-sm sm:text-lg font-semibold">
-          Основные параметры
-        </h2>
+        <h2 className="text-white text-sm sm:text-lg font-semibold">Основные параметры</h2>
         <div className="space-y-2 sm:space-y-3">
           {renderSingleSelectButton("skadet", "Травма", AlertTriangle, "bg-red-600")}
           {renderSingleSelectButton("syk", "Болезнь", Thermometer, "bg-red-500")}
           {renderSingleSelectButton("paReise", "В пути", Send, "bg-blue-500")}
-          {renderSingleSelectButton(
-            "hoydedogn",
-            "Смена часового пояса",
-            Clock,
-            "bg-purple-500"
-          )}
+          {renderSingleSelectButton("hoydedogn", "Смена часового пояса", Clock, "bg-purple-500")}
           {renderSingleSelectButton("fridag", "Выходной", Sun, "bg-green-500")}
-          {renderSingleSelectButton(
-            "konkurranse",
-            "Соревнование",
-            Award,
-            "bg-yellow-500"
-          )}
+          {renderSingleSelectButton("konkurranse", "Соревнование", Award, "bg-yellow-500")}
         </div>
       </div>
 
       {/* Параметры дня */}
       <div className="bg-[#1a1a1d] p-3 sm:p-4 rounded-2xl shadow-md space-y-3 sm:space-y-4">
-        <h2 className="text-white text-sm sm:text-lg font-semibold">
-          Параметры дня
-        </h2>
+        <h2 className="text-white text-sm sm:text-lg font-semibold">Параметры дня</h2>
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Физическая готовность</p>
           {renderTenButtons(physical, setPhysical, User)}
         </div>
-
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Ментальная готовность</p>
           {renderTenButtons(mental, setMental, Brain)}
         </div>
-
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Пульс (уд/мин)</p>
           <input
@@ -218,12 +248,10 @@ export default function DailyParametersMobile() {
             className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
           />
         </div>
-
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Качество сна</p>
           {renderTenButtons(sleepQuality, setSleepQuality, Moon)}
         </div>
-
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Продолжительность сна (ч:мин)</p>
           <input
@@ -234,7 +262,6 @@ export default function DailyParametersMobile() {
             className="w-full p-2 sm:p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
           />
         </div>
-
         <div className="space-y-1 sm:space-y-2">
           <p className="text-xs sm:text-sm">Комментарии</p>
           <textarea
@@ -244,7 +271,6 @@ export default function DailyParametersMobile() {
             className="w-full p-2 sm:p-3 h-24 sm:h-28 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs sm:text-sm"
           />
         </div>
-
         <button
           onClick={handleSave}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-3 rounded-xl text-xs sm:text-sm"
