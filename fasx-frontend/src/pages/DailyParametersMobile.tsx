@@ -18,6 +18,8 @@ import {
   BarChart3,
   ClipboardList,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { getUserProfile } from "../api/getUserProfile";
 
@@ -201,23 +203,7 @@ export default function DailyParametersMobile() {
             <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
             <div>
               <h1 className="text-base font-bold">{name || "Пользователь"}</h1>
-              <div className="flex items-center space-x-1 mt-0.5">
-                <button
-                  onClick={prevDay}
-                  className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-1 py-0.5 rounded hover:bg-[#2a2a2d] transition-colors"
-                >
-                  ‹
-                </button>
-                <div className="px-2 py-0.5 rounded bg-[#1f1f22] text-white text-xs flex items-center justify-center cursor-pointer select-none">
-                  {formattedDate}
-                </div>
-                <button
-                  onClick={nextDay}
-                  className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-1 py-0.5 rounded hover:bg-[#2a2a2d] transition-colors"
-                >
-                  ›
-                </button>
-              </div>
+              <p className="text-xs text-gray-400">{dayjs().format("D MMMM")}</p>
             </div>
           </div>
           <div className="flex space-x-1">
@@ -236,13 +222,29 @@ export default function DailyParametersMobile() {
           </div>
         </div>
 
-        {/* Кнопка выбора периода */}
-        <button
-          onClick={() => alert("Открыть выбор периода")}
-          className="mt-1 bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded w-fit"
-        >
-          Сегодня ▾
-        </button>
+        {/* Выбор периода — как в полной версии */}
+        <div className="flex items-center justify-between mt-1">
+          <button
+            onClick={prevDay}
+            className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div
+            className="px-3 py-1 rounded bg-[#1f1f22] text-white text-xs flex items-center justify-center cursor-pointer select-none"
+            onClick={() => alert("Открыть выбор периода")}
+          >
+            {formattedDate}
+          </div>
+
+          <button
+            onClick={nextDay}
+            className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Основные параметры */}
