@@ -217,7 +217,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-4">
             {/* Выбор периода */}
             <div className="flex items-center space-x-2 flex-wrap">
               <button
