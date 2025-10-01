@@ -53,9 +53,8 @@ export default function DailyParametersMobile() {
         const token = localStorage.getItem("token");
         const dateStr = selectedDate.format("YYYY-MM-DD");
 
-        // Исправлено: используем query-параметр ?date=
         const response = await fetch(
-          `${API_URL}/api/daily-information?date=${dateStr}`,
+          `${API_URL}/api/daily-information/${dateStr}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -87,12 +86,14 @@ export default function DailyParametersMobile() {
     fetchDailyInfo();
   }, [selectedDate, API_URL]);
 
+  // --- Сохранение ---
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
       const dateStr = selectedDate.format("YYYY-MM-DD");
 
       const body = {
+        date: dateStr,
         main_param: mainParam,
         physical,
         mental,
@@ -102,28 +103,20 @@ export default function DailyParametersMobile() {
         comment: comment || null,
       };
 
-      console.log("Отправка данных:", body);
-
-      // Исправлено: сохраняем через query-параметр ?date=
-      const response = await fetch(
-        `${API_URL}/api/daily-information?date=${dateStr}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/daily-information`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.error || "Ошибка при сохранении");
       }
 
-      const saved = await response.json();
-      console.log("Сохранено:", saved);
       alert("Данные успешно сохранены ✅");
     } catch (err: any) {
       console.error("Ошибка сохранения:", err);
