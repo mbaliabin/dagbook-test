@@ -1,78 +1,171 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import "dayjs/locale/ru";
+import {
+  User,
+  Brain,
+  Moon,
+  AlertTriangle,
+  Thermometer,
+  Send,
+  Clock,
+  Sun,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { getUserProfile } from "../api/getUserProfile";
 
-const API_URL = "http://46.173.18.36:4000";
+dayjs.locale("ru");
 
-const DailyParametersMobile: React.FC = () => {
+const TenButtons = ({
+  value,
+  onChange,
+  Icon,
+}: {
+  value: number;
+  onChange: (val: number) => void;
+  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+}) => (
+  <div className="flex flex-wrap gap-2">
+    {[...Array(10)].map((_, i) => (
+      <button
+        key={i}
+        onClick={() => onChange(i + 1)}
+        className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
+          i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"
+        }`}
+      >
+        <Icon
+          className="w-4 h-4"
+          fill={i < value ? "#fff" : "none"}
+          stroke="#fff"
+          strokeWidth={2}
+        />
+      </button>
+    ))}
+  </div>
+);
+
+const SingleSelectButton = ({
+  id,
+  label,
+  Icon,
+  activeId,
+  onClick,
+  activeColor,
+}: {
+  id: string;
+  label: string;
+  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  activeId: string | null;
+  onClick: (id: string) => void;
+  activeColor: string;
+}) => (
+  <button
+    onClick={() => onClick(id)}
+    className={`w-full flex items-center px-3 py-2 space-x-2 rounded-xl transition ${
+      activeId === id ? activeColor : "bg-gray-700"
+    }`}
+  >
+    <Icon
+      className="w-5 h-5"
+      fill={activeId === id ? "#fff" : "none"}
+      stroke="#fff"
+      strokeWidth={2}
+    />
+    <span className="text-xs text-white">{label}</span>
+  </button>
+);
+
+export default function DailyParametersMobile() {
+  const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const [name, setName] = useState("");
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [mainParam, setMainParam] = useState<string | null>(null);
-  const [physical, setPhysical] = useState<number>(0);
-  const [mental, setMental] = useState<number>(0);
-  const [sleepQuality, setSleepQuality] = useState<number>(0);
+  const [physical, setPhysical] = useState(0);
+  const [mental, setMental] = useState(0);
+  const [sleepQuality, setSleepQuality] = useState(0);
   const [pulse, setPulse] = useState<string>("");
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // Загрузка данных
-  const fetchDailyInfo = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const dateStr = selectedDate.format("YYYY-MM-DD");
+  // --- Загрузка профиля ---
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        setName(data.name || "Пользователь");
+      } catch (err) {
+        console.error("Ошибка загрузки профиля:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
-      const response = await fetch(
-        `${API_URL}/api/daily-information?date=${dateStr}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+  // --- Загрузка данных дня ---
+  useEffect(() => {
+    const fetchDailyInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const dateStr = selectedDate.format("YYYY-MM-DD");
+
+        const response = await fetch(
+          `${API_URL}/api/daily-information?date=${dateStr}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.status === 404) {
+          // данных нет — сбрасываем состояния
+          setMainParam(null);
+          setPhysical(0);
+          setMental(0);
+          setSleepQuality(0);
+          setPulse("");
+          setSleepDuration("");
+          setComment("");
+          return;
         }
-      );
 
-      if (response.status === 404) {
-        // Нет данных — сбрасываем поля и выходим без ошибок
-        setMainParam(null);
-        setPhysical(0);
-        setMental(0);
-        setSleepQuality(0);
-        setPulse("");
-        setSleepDuration("");
-        setComment("");
-        return;
+        if (!response.ok) {
+          throw new Error("Ошибка загрузки данных");
+        }
+
+        const data = await response.json();
+        setMainParam(data.main_param || null);
+        setPhysical(Number(data.physical) || 0);
+        setMental(Number(data.mental) || 0);
+        setSleepQuality(Number(data.sleep_quality) || 0);
+        setPulse(data.pulse != null ? String(data.pulse) : "");
+        setSleepDuration(data.sleep_duration || "");
+        setComment(data.comment || "");
+      } catch (err) {
+        console.error("Ошибка загрузки данных дня:", err);
       }
+    };
+    fetchDailyInfo();
+  }, [selectedDate, API_URL]);
 
-      if (!response.ok) {
-        throw new Error("Ошибка загрузки данных");
-      }
-
-      const data = await response.json();
-      setMainParam(data.main_param || null);
-      setPhysical(Number(data.physical) || 0);
-      setMental(Number(data.mental) || 0);
-      setSleepQuality(Number(data.sleep_quality) || 0);
-      setPulse(data.pulse != null ? String(data.pulse) : "");
-      setSleepDuration(data.sleep_duration || "");
-      setComment(data.comment || "");
-    } catch (err) {
-      console.error("Ошибка загрузки данных дня:", err);
-    }
-  };
-
-  // Сохранение данных
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      const dateStr = selectedDate.format("YYYY-MM-DD");
-
-      const payload = {
-        date: dateStr,
+      const body = {
+        date: selectedDate.format("YYYY-MM-DD"),
         main_param: mainParam,
         physical,
         mental,
         sleep_quality: sleepQuality,
         pulse: pulse ? Number(pulse) : null,
-        sleep_duration: sleepDuration,
-        comment,
+        sleep_duration: sleepDuration || null,
+        comment: comment || null,
       };
 
-      console.log("Отправка данных:", payload);
+      console.log("Отправка данных:", body);
 
       const response = await fetch(`${API_URL}/api/daily-information`, {
         method: "POST",
@@ -80,89 +173,167 @@ const DailyParametersMobile: React.FC = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
-        throw new Error("Ошибка сохранения");
+        const errData = await response.json();
+        throw new Error(errData.error || "Ошибка при сохранении");
       }
 
-      const data = await response.json();
-      console.log("Сохранено:", data);
-    } catch (err) {
+      const saved = await response.json();
+      console.log("Сохранено:", saved);
+      alert("Данные успешно сохранены ✅");
+    } catch (err: any) {
       console.error("Ошибка сохранения:", err);
+      alert(`Ошибка при сохранении ❌: ${err.message}`);
     }
   };
 
-  useEffect(() => {
-    fetchDailyInfo();
-  }, [selectedDate]);
+  const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
+  const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
+
+  const formattedFixedDate = dayjs()
+    .format("D MMMM")
+    .replace(/^./, (c) => c.toUpperCase());
+  const formattedDate = selectedDate
+    .format("dddd, DD MMMM")
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
   return (
-    <div className="p-4 text-white bg-gray-900">
-      <h2 className="text-lg font-bold mb-2">
-        Параметры за {selectedDate.format("DD.MM.YYYY")}
-      </h2>
-
-      <div className="space-y-2">
-        <input
-          type="text"
-          placeholder="Главный параметр"
-          value={mainParam || ""}
-          onChange={(e) => setMainParam(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <input
-          type="number"
-          placeholder="Физическое состояние"
-          value={physical}
-          onChange={(e) => setPhysical(Number(e.target.value))}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <input
-          type="number"
-          placeholder="Ментальное состояние"
-          value={mental}
-          onChange={(e) => setMental(Number(e.target.value))}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <input
-          type="number"
-          placeholder="Качество сна"
-          value={sleepQuality}
-          onChange={(e) => setSleepQuality(Number(e.target.value))}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <input
-          type="number"
-          placeholder="Пульс"
-          value={pulse}
-          onChange={(e) => setPulse(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <input
-          type="text"
-          placeholder="Длительность сна (ч:м)"
-          value={sleepDuration}
-          onChange={(e) => setSleepDuration(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800"
-        />
-        <textarea
-          placeholder="Комментарий"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800"
-        />
+    <div className="min-h-screen bg-[#0e0e10] text-white px-3 py-4">
+      {/* Верхний блок */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <div className="flex flex-col">
+            <h2 className="text-base font-semibold">{name || "Загрузка..."}</h2>
+            <span className="text-xs text-gray-400">{formattedFixedDate}</span>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate("/profile")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm whitespace-nowrap"
+        >
+          Перейти к тренировкам
+        </button>
       </div>
 
-      <button
-        onClick={handleSave}
-        className="mt-4 w-full bg-blue-600 py-2 rounded"
-      >
-        Сохранить
-      </button>
+      {/* Выбор даты */}
+      <div className="flex items-center gap-2 mb-4">
+        <button onClick={prevDay} className="p-1 rounded bg-[#1f1f22]">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-xs text-gray-300">{formattedDate}</span>
+        <button onClick={nextDay} className="p-1 rounded bg-[#1f1f22]">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Основные параметры */}
+      <div className="bg-[#1a1a1d] p-3 rounded-2xl shadow-md space-y-3 mb-4">
+        <h2 className="text-white text-sm font-semibold">Основные параметры</h2>
+        <div className="space-y-2">
+          <SingleSelectButton
+            id="skadet"
+            label="Травма"
+            Icon={AlertTriangle}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-red-600"
+          />
+          <SingleSelectButton
+            id="syk"
+            label="Болезнь"
+            Icon={Thermometer}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-red-500"
+          />
+          <SingleSelectButton
+            id="paReise"
+            label="В пути"
+            Icon={Send}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-blue-500"
+          />
+          <SingleSelectButton
+            id="hoydedogn"
+            label="Смена часового пояса"
+            Icon={Clock}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-purple-500"
+          />
+          <SingleSelectButton
+            id="fridag"
+            label="Выходной"
+            Icon={Sun}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-green-500"
+          />
+          <SingleSelectButton
+            id="konkurranse"
+            label="Соревнование"
+            Icon={Award}
+            activeId={mainParam}
+            onClick={setMainParam}
+            activeColor="bg-yellow-500"
+          />
+        </div>
+      </div>
+
+      {/* Параметры дня */}
+      <div className="bg-[#1a1a1d] p-3 rounded-2xl shadow-md space-y-3">
+        <h2 className="text-white text-sm font-semibold">Параметры дня</h2>
+        <div className="space-y-2">
+          <p className="text-xs">Физическая готовность</p>
+          <TenButtons value={physical} onChange={setPhysical} Icon={User} />
+
+          <p className="text-xs">Ментальная готовность</p>
+          <TenButtons value={mental} onChange={setMental} Icon={Brain} />
+
+          <p className="text-xs">Пульс (уд/мин)</p>
+          <input
+            type="number"
+            value={pulse}
+            onChange={(e) => setPulse(e.target.value)}
+            placeholder="например, 60"
+            className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs"
+          />
+
+          <p className="text-xs">Качество сна</p>
+          <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
+
+          <p className="text-xs">Продолжительность сна (ч:мин)</p>
+          <input
+            type="text"
+            value={sleepDuration}
+            onChange={(e) => setSleepDuration(e.target.value)}
+            placeholder="например, 07:30"
+            className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs"
+          />
+
+          <p className="text-xs">Комментарии</p>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Напишите здесь..."
+            className="w-full p-2 h-24 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-xs"
+          />
+        </div>
+
+        <button
+          onClick={handleSave}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl mt-2 text-xs"
+        >
+          Сохранить
+        </button>
+      </div>
     </div>
   );
-};
-
-export default DailyParametersMobile;
+}
