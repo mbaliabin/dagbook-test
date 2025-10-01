@@ -53,14 +53,13 @@ export default function DailyParametersMobile() {
         const token = localStorage.getItem("token");
         const dateStr = selectedDate.format("YYYY-MM-DD");
 
-        // Path вместо query
+        // Исправлено: используем query-параметр ?date=
         const response = await fetch(
-          `${API_URL}/api/daily-information/${dateStr}`,
+          `${API_URL}/api/daily-information?date=${dateStr}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (!response.ok) {
-          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -105,14 +104,18 @@ export default function DailyParametersMobile() {
 
       console.log("Отправка данных:", body);
 
-      const response = await fetch(`${API_URL}/api/daily-information/${dateStr}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+      // Исправлено: сохраняем через query-параметр ?date=
+      const response = await fetch(
+        `${API_URL}/api/daily-information?date=${dateStr}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       if (!response.ok) {
         const errData = await response.json();
