@@ -196,7 +196,7 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-3 pt-3 pb-24">
-      {/* Аватар и кнопки справа */}
+      {/* Аватар, имя, кнопки и выбор периода */}
       <div className="flex flex-col mb-2">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center space-x-3">
@@ -222,8 +222,8 @@ export default function DailyParametersMobile() {
           </div>
         </div>
 
-        {/* Выбор периода — как в полной версии */}
-        <div className="flex items-center justify-between mt-1">
+        {/* Дата и выбор периода слева под аватаром */}
+        <div className="flex items-center gap-1 mt-1">
           <button
             onClick={prevDay}
             className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
@@ -232,7 +232,7 @@ export default function DailyParametersMobile() {
           </button>
 
           <div
-            className="px-3 py-1 rounded bg-[#1f1f22] text-white text-xs flex items-center justify-center cursor-pointer select-none"
+            className="px-2 py-1 rounded bg-[#1f1f22] text-white text-xs flex items-center justify-center cursor-pointer select-none"
             onClick={() => alert("Открыть выбор периода")}
           >
             {formattedDate}
