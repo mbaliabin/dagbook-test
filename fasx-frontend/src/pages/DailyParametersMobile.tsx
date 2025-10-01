@@ -121,7 +121,7 @@ export default function DailyParametersMobile() {
         );
 
         if (response.status === 404) {
-          // данных нет — сбрасываем состояния
+          // нет данных на эту дату → просто очищаем стейт и не кидаем ошибку
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -133,7 +133,7 @@ export default function DailyParametersMobile() {
         }
 
         if (!response.ok) {
-          throw new Error("Ошибка загрузки данных");
+          throw new Error(`Ошибка сервера: ${response.status}`);
         }
 
         const data = await response.json();
@@ -236,54 +236,12 @@ export default function DailyParametersMobile() {
       <div className="bg-[#1a1a1d] p-3 rounded-2xl shadow-md space-y-3 mb-4">
         <h2 className="text-white text-sm font-semibold">Основные параметры</h2>
         <div className="space-y-2">
-          <SingleSelectButton
-            id="skadet"
-            label="Травма"
-            Icon={AlertTriangle}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-red-600"
-          />
-          <SingleSelectButton
-            id="syk"
-            label="Болезнь"
-            Icon={Thermometer}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-red-500"
-          />
-          <SingleSelectButton
-            id="paReise"
-            label="В пути"
-            Icon={Send}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-blue-500"
-          />
-          <SingleSelectButton
-            id="hoydedogn"
-            label="Смена часового пояса"
-            Icon={Clock}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-purple-500"
-          />
-          <SingleSelectButton
-            id="fridag"
-            label="Выходной"
-            Icon={Sun}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-green-500"
-          />
-          <SingleSelectButton
-            id="konkurranse"
-            label="Соревнование"
-            Icon={Award}
-            activeId={mainParam}
-            onClick={setMainParam}
-            activeColor="bg-yellow-500"
-          />
+          <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
+          <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-500" />
+          <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-500" />
+          <SingleSelectButton id="hoydedogn" label="Смена часового пояса" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-500" />
+          <SingleSelectButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-500" />
+          <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-500" />
         </div>
       </div>
 
