@@ -159,6 +159,7 @@ export default function ProfilePage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ]
 
+  // Появление нижнего меню при скролле
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -196,119 +197,119 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* Header + аватар + имя + выбор периода сверху + кнопки снизу */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <img
-              src="/profile.jpg"
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {loadingProfile ? 'Загрузка...' : name}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 md:items-end">
-            {/* Плашка выбора периода */}
-            <div className="flex flex-wrap items-center space-x-2 mt-2">
-              <button
-                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
-                onClick={onPrevMonth}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <div
-                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
-                onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
-                title="Показать текущий месяц"
-              >
-                {selectedMonth.format('MMMM YYYY')}
-              </div>
-
-              <button
-                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
-                onClick={onNextMonth}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
-                  setShowDateRangePicker(false)
-                }}
-                className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
-              >
-                Текущая неделя
-              </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowDateRangePicker(prev => !prev)}
-                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
-                >
-                  <Calendar className="w-4 h-4 mr-1" />
-                  Произвольный период
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </button>
-
-                {showDateRangePicker && (
-                  <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-                    <DateRange
-                      onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                      showSelectionPreview={true}
-                      moveRangeOnFirstSelection={false}
-                      months={1}
-                      ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
-                      direction="horizontal"
-                      rangeColors={['#3b82f6']}
-                      className="text-white"
-                      locale={ru}
-                      weekStartsOn={1}
-                    />
-                    <div className="flex justify-end mt-2 space-x-2">
-                      <button
-                        onClick={() => setShowDateRangePicker(false)}
-                        className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
-                      >
-                        Отмена
-                      </button>
-                      <button
-                        onClick={applyDateRange}
-                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Применить
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Кнопки добавления тренировки и выхода */}
-            <div className="flex items-center space-x-2 mt-2">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" /> Выйти
-              </button>
+        {/* Header + дата */}
+        <div className="flex items-center space-x-4">
+          <img
+            src="/profile.jpg"
+            alt="Avatar"
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-white">
+              {loadingProfile ? 'Загрузка...' : name}
+            </h1>
+            {/* Текущая дата */}
+            <div className="text-gray-400 text-sm mt-1">
+              {dayjs().format('DD MMMM YYYY')}
             </div>
           </div>
         </div>
 
+        {/* Выбор периода */}
+        <div className="flex flex-wrap items-center space-x-2 mt-4">
+          <button
+            className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+            onClick={onPrevMonth}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div
+            className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+            onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
+            title="Показать текущий месяц"
+          >
+            {selectedMonth.format('MMMM YYYY')}
+          </div>
+
+          <button
+            className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+            onClick={onNextMonth}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => {
+              setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
+              setShowDateRangePicker(false)
+            }}
+            className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
+          >
+            Текущая неделя
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowDateRangePicker(prev => !prev)}
+              className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              Произвольный период
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+
+            {showDateRangePicker && (
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                <DateRange
+                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                  showSelectionPreview={true}
+                  moveRangeOnFirstSelection={false}
+                  months={1}
+                  ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
+                  direction="horizontal"
+                  rangeColors={['#3b82f6']}
+                  className="text-white"
+                  locale={ru}
+                  weekStartsOn={1}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button
+                    onClick={() => setShowDateRangePicker(false)}
+                    className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={applyDateRange}
+                    className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Применить
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Кнопки Добавить тренировку и Выйти */}
+        <div className="flex items-center space-x-2 mt-4">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+          >
+            <LogOut className="w-4 h-4 mr-1" /> Выйти
+          </button>
+        </div>
+
         {/* Статистика */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <div className="bg-[#1a1a1d] p-4 rounded-xl">
             <p className="text-sm text-gray-400 flex items-center">
               <Timer className="w-4 h-4 mr-1" /> Total Training
@@ -340,7 +341,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Графики и таблицы */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
           <div className="space-y-6">
             <TrainingLoadChart workouts={filteredWorkouts} />
             <IntensityZones workouts={filteredWorkouts} />
@@ -352,7 +353,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Список тренировок */}
-        <div>
+        <div className="mt-6">
           {loadingWorkouts ? (
             <p className="text-gray-400">Загрузка тренировок...</p>
           ) : (
