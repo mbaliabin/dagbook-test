@@ -67,12 +67,12 @@ const SingleSelectButtonMobile = ({
 }) => (
   <button
     onClick={() => onClick(id)}
-    className={`px-3 py-2 rounded-lg flex items-center space-x-1 text-sm transition ${
+    className={`flex flex-col items-center justify-center w-full aspect-square rounded-lg p-2 transition text-xs ${
       activeId === id ? activeColor : "bg-gray-700"
     }`}
   >
     <Icon
-      className="w-4 h-4"
+      className="w-5 h-5 mb-1"
       fill={activeId === id ? "#fff" : "none"}
       stroke="#fff"
       strokeWidth={2}
@@ -192,52 +192,35 @@ export default function DailyParametersMobile() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-4">
-      {/* Заголовок с аватаром и именем */}
-      <div className="flex items-center space-x-3 mb-4">
-        <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
-        <div>
-          <h1 className="text-lg font-bold">{name || "Пользователь"}</h1>
-          <p className="text-xs text-gray-400">{dayjs().format("D MMMM")}</p>
+      {/* Аватар, имя и кнопки справа */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-3">
+          <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
+          <div>
+            <h1 className="text-lg font-bold">{name || "Пользователь"}</h1>
+            <p className="text-xs text-gray-400">{formattedDate}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("/profile/settings")}
+            className="bg-gray-700 py-2 px-3 rounded flex items-center justify-center text-xs"
+          >
+            <Settings className="w-4 h-4 mr-1" /> Настройка
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 py-2 px-3 rounded flex items-center justify-center text-xs"
+          >
+            <LogOut className="w-4 h-4 mr-1" /> Выйти
+          </button>
         </div>
       </div>
 
-      {/* Выбор даты */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={prevDay}
-          className="p-1 bg-gray-700 rounded"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <div className="flex-1 text-center bg-gray-800 rounded py-1 text-sm">{formattedDate}</div>
-        <button
-          onClick={nextDay}
-          className="p-1 bg-gray-700 rounded"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Кнопки Настройка профиля и Выйти */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => navigate("/profile/settings")}
-          className="flex-1 bg-gray-700 py-2 rounded flex items-center justify-center text-sm"
-        >
-          <Settings className="w-4 h-4 mr-1" /> Настройка
-        </button>
-        <button
-          onClick={handleLogout}
-          className="flex-1 bg-blue-600 py-2 rounded flex items-center justify-center text-sm"
-        >
-          <LogOut className="w-4 h-4 mr-1" /> Выйти
-        </button>
-      </div>
-
       {/* Основные параметры */}
-      <div className="bg-[#1a1a1d] p-4 rounded-xl mb-4 space-y-2">
-        <h2 className="text-sm font-semibold">Основные параметры</h2>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="bg-[#1a1a1d] p-4 rounded-xl mb-4">
+        <h2 className="text-sm font-semibold mb-2">Основные параметры</h2>
+        <div className="grid grid-cols-3 gap-2">
           <SingleSelectButtonMobile id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
           <SingleSelectButtonMobile id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-500" />
           <SingleSelectButtonMobile id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-500" />
