@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    navigate('/login') // при выходе идём на страницу login
+    navigate('/login')
   }
 
   const filteredWorkouts = workouts.filter(w => {
@@ -161,11 +161,33 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Верхнее меню */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
 
-        {/* Верхний блок: аватар, имя, кнопки, выбор периода */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 mb-6">
-          {/* Левая часть: аватар и имя */}
-          <div className="flex items-center gap-4">
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Header + кнопки + выбор периода на одной линии */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-4">
             <img
               src="/profile.jpg"
               alt="Avatar"
@@ -175,7 +197,7 @@ export default function ProfilePage() {
               <h1 className="text-2xl font-bold text-white">
                 {loadingProfile ? 'Загрузка...' : name}
               </h1>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-white">
                 {!dateRange
                   ? selectedMonth.format('MMMM YYYY')
                   : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
@@ -184,26 +206,9 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Правая часть: кнопки + выбор периода */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            {/* Кнопки */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" /> Выйти
-              </button>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-2">
             {/* Выбор периода */}
-            <div className="flex items-center gap-2 flex-wrap mt-2 sm:mt-0">
+            <div className="flex items-center space-x-2 flex-wrap">
               <button
                 className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
                 onClick={onPrevMonth}
@@ -278,6 +283,22 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+
+            {/* Кнопки */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
           </div>
         </div>
 
@@ -346,8 +367,8 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Верхнее меню (прилипшее) */}
-      <div className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-b border-gray-700 flex justify-around py-2 px-4 z-50">
+      {/* Нижняя навигация */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive =
