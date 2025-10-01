@@ -273,23 +273,43 @@ export default function DailyParametersMobile() {
             <TenButtons value={mental} onChange={setMental} Icon={Brain} />
           </div>
           <div>
+            <p className="mb-1">Пульс (уд/мин)</p>
+            <input
+              type="number"
+              value={pulse}
+              onChange={(e) => setPulse(e.target.value)}
+              placeholder="например, 60"
+              className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"
+            />
+          </div>
+          <div>
             <p className="mb-1">Качество сна</p>
             <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
           </div>
           <div>
-            <p className="mb-1">Пульс (уд/мин)</p>
-            <input type="number" value={pulse} onChange={(e) => setPulse(e.target.value)} placeholder="например, 60" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
-          </div>
-          <div>
             <p className="mb-1">Продолжительность сна (ч:мин)</p>
-            <input type="text" value={sleepDuration} onChange={(e) => setSleepDuration(e.target.value)} placeholder="например, 07:30" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
+            <input
+              type="text"
+              value={sleepDuration}
+              onChange={(e) => setSleepDuration(e.target.value)}
+              placeholder="например, 07:30"
+              className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"
+            />
           </div>
           <div>
             <p className="mb-1">Комментарии</p>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Напишите здесь..." className="w-full p-1.5 h-20 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"/>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Напишите здесь..."
+              className="w-full p-1.5 h-20 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"
+            />
           </div>
         </div>
-        <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold mt-3">
+        <button
+          onClick={handleSave}
+          className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold mt-3"
+        >
           Сохранить
         </button>
       </div>
