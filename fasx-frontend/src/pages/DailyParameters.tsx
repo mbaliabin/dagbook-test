@@ -128,7 +128,6 @@ export default function DailyParameters() {
         );
 
         if (!response.ok) {
-          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -376,10 +375,9 @@ export default function DailyParameters() {
             <div>
               <p className="mb-2">Продолжительность сна (ч:мин)</p>
               <input
-                type="text"
+                type="time"
                 value={sleepDuration}
                 onChange={(e) => setSleepDuration(e.target.value)}
-                placeholder="например, 07:30"
                 className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
               />
             </div>
