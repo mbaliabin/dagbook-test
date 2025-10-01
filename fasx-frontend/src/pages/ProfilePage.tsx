@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    navigate('/login')
+    navigate('/login') // при выходе идём на страницу login
   }
 
   const filteredWorkouts = workouts.filter(w => {
@@ -160,35 +160,12 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      {/* Верхнее меню */}
-      <div className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-b border-gray-700 flex justify-around py-2 px-4 z-50">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          const isActive =
-            (item.path === "/daily" && location.pathname === "/daily") ||
-            (item.path === "/profile" && location.pathname === "/profile") ||
-            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+      <div className="max-w-7xl mx-auto space-y-6">
 
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center text-sm transition-colors ${
-                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Icon className="w-6 h-6" />
-              <span>{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Контент с отступом сверху, чтобы меню не перекрывало */}
-      <div className="max-w-7xl mx-auto space-y-6 pt-20">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        {/* Верхний блок: аватар, имя, кнопки, выбор периода */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 mb-6">
+          {/* Левая часть: аватар и имя */}
+          <div className="flex items-center gap-4">
             <img
               src="/profile.jpg"
               alt="Avatar"
@@ -198,7 +175,7 @@ export default function ProfilePage() {
               <h1 className="text-2xl font-bold text-white">
                 {loadingProfile ? 'Загрузка...' : name}
               </h1>
-              <p className="text-sm text-white">
+              <p className="text-sm text-gray-400">
                 {!dateRange
                   ? selectedMonth.format('MMMM YYYY')
                   : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
@@ -207,96 +184,100 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
-          </div>
-        </div>
+          {/* Правая часть: кнопки + выбор периода */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            {/* Кнопки */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
 
-        {/* Выбор периода */}
-        <div className="flex items-center space-x-2 flex-wrap">
-          <button
-            className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
-            onClick={onPrevMonth}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+            {/* Выбор периода */}
+            <div className="flex items-center gap-2 flex-wrap mt-2 sm:mt-0">
+              <button
+                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onPrevMonth}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-          <div
-            className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
-            onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
-            title="Показать текущий месяц"
-          >
-            {selectedMonth.format('MMMM YYYY')}
-          </div>
-
-          <button
-            className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
-            onClick={onNextMonth}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => {
-              setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
-              setShowDateRangePicker(false)
-            }}
-            className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
-          >
-            Текущая неделя
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowDateRangePicker(prev => !prev)}
-              className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
-            >
-              <Calendar className="w-4 h-4 mr-1" />
-              Произвольный период
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </button>
-
-            {showDateRangePicker && (
-              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-                <DateRange
-                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                  showSelectionPreview={true}
-                  moveRangeOnFirstSelection={false}
-                  months={1}
-                  ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
-                  direction="horizontal"
-                  rangeColors={['#3b82f6']}
-                  className="text-white"
-                  locale={ru}
-                  weekStartsOn={1}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button
-                    onClick={() => setShowDateRangePicker(false)}
-                    className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    onClick={applyDateRange}
-                    className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Применить
-                  </button>
-                </div>
+              <div
+                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+                onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
+                title="Показать текущий месяц"
+              >
+                {selectedMonth.format('MMMM YYYY')}
               </div>
-            )}
+
+              <button
+                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onNextMonth}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
+                  setShowDateRangePicker(false)
+                }}
+                className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
+              >
+                Текущая неделя
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowDateRangePicker(prev => !prev)}
+                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+                >
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Произвольный период
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {showDateRangePicker && (
+                  <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                    <DateRange
+                      onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                      showSelectionPreview={true}
+                      moveRangeOnFirstSelection={false}
+                      months={1}
+                      ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
+                      direction="horizontal"
+                      rangeColors={['#3b82f6']}
+                      className="text-white"
+                      locale={ru}
+                      weekStartsOn={1}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={() => setShowDateRangePicker(false)}
+                        className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={applyDateRange}
+                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Применить
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -364,6 +345,30 @@ export default function ProfilePage() {
         onClose={() => setIsModalOpen(false)}
         onAddWorkout={handleAddWorkout}
       />
+
+      {/* Верхнее меню (прилипшее) */}
+      <div className="fixed top-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-b border-gray-700 flex justify-around py-2 px-4 z-50">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
