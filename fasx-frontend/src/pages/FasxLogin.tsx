@@ -18,7 +18,7 @@ export default function FasxLogin() {
     try {
       const { token } = await loginUser(email, password);
       localStorage.setItem("token", token);
-      navigate("/profile"); // редирект после успешного входа
+      navigate("/daily"); // редирект после успешного входа
     } catch (err: any) {
       setError(err.message || "Ошибка входа");
     } finally {
