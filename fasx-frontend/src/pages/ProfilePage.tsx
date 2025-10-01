@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Timer,
   MapPin,
@@ -63,6 +63,8 @@ export default function ProfilePage() {
   })
   const [showDateRangePicker, setShowDateRangePicker] = useState(false)
   const [showBottomMenu, setShowBottomMenu] = useState(false)
+  const topMenuRef = useRef<HTMLDivElement>(null)
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -152,6 +154,16 @@ export default function ProfilePage() {
     if (dateRange) setShowDateRangePicker(false)
   }
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!topMenuRef.current) return
+      const rect = topMenuRef.current.getBoundingClientRect()
+      setShowBottomMenu(rect.bottom <= 0)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
     { label: "Тренировки", icon: BarChart3, path: "/profile" },
@@ -159,20 +171,14 @@ export default function ProfilePage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ]
 
-  // Scroll listener для показа нижнего меню
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      setShowBottomMenu(scrollY > 150)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      {/* Верхнее меню */}
-      <div className="fixed top-0 left-0 w-full bg-[#1a1a1d] border-b border-gray-700 flex justify-around py-2 px-4 z-50">
+
+      {/* Верхнее меню НЕ фиксированное */}
+      <div
+        ref={topMenuRef}
+        className="w-full bg-[#1a1a1d] border-b border-gray-700 flex justify-around py-2 px-4 mb-4"
+      >
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive =
@@ -196,8 +202,8 @@ export default function ProfilePage() {
       </div>
 
       {/* Контент страницы */}
-      <div className="max-w-7xl mx-auto space-y-6 pt-20">
-        {/* Header с лого и кнопками */}
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <img
@@ -234,8 +240,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Период и выбор диапазона */}
-        <div className="flex items-center space-x-2 flex-wrap mt-4">
+        {/* Выбор периода */}
+        <div className="flex items-center space-x-2 flex-wrap">
           <button
             className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
             onClick={onPrevMonth}
@@ -312,7 +318,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Статистика */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-xl">
             <p className="text-sm text-gray-400 flex items-center">
               <Timer className="w-4 h-4 mr-1" /> Total Training
@@ -344,7 +350,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Графики и таблицы */}
-        <div className="grid md:grid-cols-2 gap-6 mt-4">
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <TrainingLoadChart workouts={filteredWorkouts} />
             <IntensityZones workouts={filteredWorkouts} />
@@ -356,7 +362,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Список тренировок */}
-        <div className="mt-4">
+        <div>
           {loadingWorkouts ? (
             <p className="text-gray-400">Загрузка тренировок...</p>
           ) : (
@@ -376,31 +382,33 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Нижнее меню появляется при прокрутке */}
-      {showBottomMenu && (
-        <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 z-50 transition-all">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive =
-              (item.path === "/daily" && location.pathname === "/daily") ||
-              (item.path === "/profile" && location.pathname === "/profile") ||
-              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+      {/* Нижнее меню с плавным появлением */}
+      <div
+        className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 z-50 transition-all duration-300 ${
+          showBottomMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+      >
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
 
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                <Icon className="w-6 h-6" />
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
