@@ -34,7 +34,7 @@ const TenButtons = ({
   onChange: (val: number) => void;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }) => (
-  <div className="flex gap-1 flex-wrap">
+  <div className="flex gap-2 flex-wrap">
     {[...Array(10)].map((_, i) => (
       <button
         key={i}
