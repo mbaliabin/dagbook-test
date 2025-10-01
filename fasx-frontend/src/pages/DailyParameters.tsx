@@ -25,6 +25,7 @@ import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.locale("ru");
 
+// Кнопки с hover, scale и тенями
 const TenButtons = ({
   value,
   onChange,
@@ -35,22 +36,27 @@ const TenButtons = ({
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }) => (
   <div className="flex flex-wrap gap-3">
-    {[...Array(10)].map((_, i) => (
-      <button
-        key={i}
-        onClick={() => onChange(i + 1)}
-        className={`w-12 h-12 rounded-full flex items-center justify-center transition ${
-          i < value ? "bg-blue-500 shadow-lg scale-110" : "bg-gray-700"
-        }`}
-      >
-        <Icon
-          className="w-6 h-6"
-          fill={i < value ? "#fff" : "none"}
-          stroke="#fff"
-          strokeWidth={2}
-        />
-      </button>
-    ))}
+    {[...Array(10)].map((_, i) => {
+      const active = i < value;
+      return (
+        <button
+          key={i}
+          onClick={() => onChange(i + 1)}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-200 ${
+            active
+              ? "bg-blue-500 shadow-lg scale-110 hover:scale-125"
+              : "bg-gray-700 hover:bg-gray-600"
+          }`}
+        >
+          <Icon
+            className="w-6 h-6"
+            fill={active ? "#fff" : "none"}
+            stroke="#fff"
+            strokeWidth={2}
+          />
+        </button>
+      );
+    })}
   </div>
 );
 
@@ -68,22 +74,27 @@ const SingleSelectButton = ({
   activeId: string | null;
   onClick: (id: string) => void;
   activeColor: string;
-}) => (
-  <button
-    onClick={() => onClick(id)}
-    className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition ${
-      activeId === id ? activeColor : "bg-gray-700"
-    }`}
-  >
-    <Icon
-      className="w-6 h-6"
-      fill={activeId === id ? "#fff" : "none"}
-      stroke="#fff"
-      strokeWidth={2}
-    />
-    <span>{label}</span>
-  </button>
-);
+}) => {
+  const active = activeId === id;
+  return (
+    <button
+      onClick={() => onClick(id)}
+      className={`px-4 py-3 rounded-xl flex items-center space-x-2 transition-transform duration-200 ${
+        active
+          ? `${activeColor} shadow-lg scale-105 hover:scale-110`
+          : "bg-gray-700 hover:bg-gray-600"
+      }`}
+    >
+      <Icon
+        className="w-6 h-6"
+        fill={active ? "#fff" : "none"}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+      <span>{label}</span>
+    </button>
+  );
+};
 
 export default function DailyParameters() {
   const navigate = useNavigate();
@@ -100,7 +111,7 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // --- Загрузка профиля пользователя ---
+  // Загрузка профиля пользователя
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -113,7 +124,7 @@ export default function DailyParameters() {
     fetchProfile();
   }, []);
 
-  // --- Загрузка данных выбранного дня ---
+  // Загрузка данных выбранного дня
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -128,7 +139,6 @@ export default function DailyParameters() {
         );
 
         if (!response.ok) {
-          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -210,76 +220,83 @@ export default function DailyParameters() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Верхний блок с меню, аватаром и кнопками */}
-        <div className="space-y-4">
-          {/* Верхнее меню */}
-          <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-            {[
-              { label: "Главная", icon: Timer, path: "/daily" },
-              { label: "Тренировки", icon: BarChart3, path: "/profile" },
-              { label: "Планирование", icon: ClipboardList, path: "/planning" },
-              { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                (item.path === "/daily" && location.pathname === "/daily") ||
-                (item.path === "/profile" && location.pathname === "/profile") ||
-                (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+        {/* Верхнее меню */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
+          {[
+            { label: "Главная", icon: Timer, path: "/daily" },
+            { label: "Тренировки", icon: BarChart3, path: "/profile" },
+            { label: "Планирование", icon: ClipboardList, path: "/planning" },
+            { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" &&
+                item.path !== "/profile" &&
+                location.pathname === item.path);
 
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className={`flex flex-col items-center text-sm transition-colors ${
-                    isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Аватар, имя и кнопки */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
+              <p className="text-sm text-gray-400">{formattedFixedDate}</p>
+            </div>
           </div>
 
-          {/* Аватар, имя и кнопки */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src="/profile.jpg"
-                alt="Avatar"
-                className="w-16 h-16 rounded-full object-cover"
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
-                <p className="text-sm text-gray-400">{formattedFixedDate}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => navigate("/profile/settings")}
-                className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-1" /> Настройка профиля
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" /> Выйти
-              </button>
-            </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => navigate("/profile/settings")}
+              className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded flex items-center"
+            >
+              <Settings className="w-4 h-4 mr-1" /> Настройка профиля
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+            >
+              <LogOut className="w-4 h-4 mr-1" /> Выйти
+            </button>
           </div>
         </div>
 
         {/* Выбор даты */}
         <div className="flex items-center gap-2 mb-4">
-          <button onClick={prevDay} className="p-2 rounded bg-[#1f1f22]">
-            <ChevronLeft className="w-5 h-5" />
+          <button
+            onClick={prevDay}
+            className="flex items-center justify-center p-2 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-300" />
           </button>
-          <span className="text-sm text-gray-300">{formattedDate}</span>
-          <button onClick={nextDay} className="p-2 rounded bg-[#1f1f22]">
-            <ChevronRight className="w-5 h-5" />
+          <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer hover:bg-[#2a2a2d] transition-colors">
+            {formattedDate}
+          </div>
+          <button
+            onClick={nextDay}
+            className="flex items-center justify-center p-2 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] transition-colors"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>
         </div>
 
