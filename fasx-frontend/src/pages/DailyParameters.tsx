@@ -100,6 +100,7 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
+  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -112,6 +113,7 @@ export default function DailyParameters() {
     fetchProfile();
   }, []);
 
+  // --- Загрузка данных выбранного дня ---
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -126,6 +128,7 @@ export default function DailyParameters() {
         );
 
         if (!response.ok) {
+          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -203,21 +206,23 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      {/* Основная обёртка с уменьшением масштаба */}
-      <div className="max-w-7xl mx-auto space-y-6 transform scale-75 origin-top-left">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Верхний блок с меню, аватаром и кнопками */}
         <div className="space-y-4">
           {/* Верхнее меню */}
           <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-            {[{ label: "Главная", icon: Timer, path: "/daily" },
+            {[
+              { label: "Главная", icon: Timer, path: "/daily" },
               { label: "Тренировки", icon: BarChart3, path: "/profile" },
               { label: "Планирование", icon: ClipboardList, path: "/planning" },
-              { label: "Статистика", icon: CalendarDays, path: "/statistics" }].map((item) => {
+              { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+            ].map((item) => {
               const Icon = item.icon;
               const isActive =
                 (item.path === "/daily" && location.pathname === "/daily") ||
                 (item.path === "/profile" && location.pathname === "/profile") ||
                 (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+
               return (
                 <button
                   key={item.path}
@@ -286,8 +291,116 @@ export default function DailyParameters() {
           </div>
         </div>
 
-        {/* Основные параметры и Параметры дня остались без изменений */}
-        {/* ... оставляем код блоков ниже без изменений ... */}
+        {/* Основные параметры */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
+          <h2 className="text-xl font-semibold text-white">Основные параметры</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <SingleSelectButton
+              id="skadet"
+              label="Травма"
+              Icon={AlertTriangle}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-red-600"
+            />
+            <SingleSelectButton
+              id="syk"
+              label="Болезнь"
+              Icon={Thermometer}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-red-500"
+            />
+            <SingleSelectButton
+              id="paReise"
+              label="В пути"
+              Icon={Send}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-blue-500"
+            />
+            <SingleSelectButton
+              id="hoydedogn"
+              label="Смена часового пояса"
+              Icon={Clock}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-purple-500"
+            />
+            <SingleSelectButton
+              id="fridag"
+              label="Выходной"
+              Icon={Sun}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-green-500"
+            />
+            <SingleSelectButton
+              id="konkurranse"
+              label="Соревнование"
+              Icon={Award}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-yellow-500"
+            />
+          </div>
+        </div>
+
+        {/* Параметры дня */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md space-y-6">
+          <h2 className="text-xl font-semibold text-white">Параметры дня</h2>
+
+          <div className="space-y-6">
+            <div>
+              <p className="mb-2">Физическая готовность</p>
+              <TenButtons value={physical} onChange={setPhysical} Icon={User} />
+            </div>
+            <div>
+              <p className="mb-2">Ментальная готовность</p>
+              <TenButtons value={mental} onChange={setMental} Icon={Brain} />
+            </div>
+            <div>
+              <p className="mb-2">Пульс (уд/мин)</p>
+              <input
+                type="number"
+                value={pulse}
+                onChange={(e) => setPulse(e.target.value)}
+                placeholder="например, 60"
+                className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
+              />
+            </div>
+            <div>
+              <p className="mb-2">Качество сна</p>
+              <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
+            </div>
+            <div>
+              <p className="mb-2">Продолжительность сна (ч:мин)</p>
+              <input
+                type="text"
+                value={sleepDuration}
+                onChange={(e) => setSleepDuration(e.target.value)}
+                placeholder="например, 07:30"
+                className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
+              />
+            </div>
+            <div>
+              <p className="mb-2">Комментарии</p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Напишите здесь..."
+                className="w-full p-3 h-24 rounded-xl bg-[#0e0e10] border border-gray-700 text-white resize-none"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl text-white font-semibold"
+          >
+            Сохранить
+          </button>
+        </div>
       </div>
     </div>
   );
