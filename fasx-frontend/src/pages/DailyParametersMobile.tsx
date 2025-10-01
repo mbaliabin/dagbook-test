@@ -14,8 +14,6 @@ import {
   Award,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   Timer,
   BarChart3,
   ClipboardList,
@@ -34,17 +32,17 @@ const TenButtons = ({
   onChange: (val: number) => void;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }) => (
-  <div className="flex flex-wrap gap-3">
+  <div className="flex gap-1 flex-wrap">
     {[...Array(10)].map((_, i) => (
       <button
         key={i}
         onClick={() => onChange(i + 1)}
-        className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
-          i < value ? "bg-blue-500 shadow-lg scale-105" : "bg-gray-700"
+        className={`w-7 h-7 rounded-full flex items-center justify-center transition ${
+          i < value ? "bg-blue-500 shadow-md scale-105" : "bg-gray-700"
         }`}
       >
         <Icon
-          className="w-5 h-5"
+          className="w-3.5 h-3.5"
           fill={i < value ? "#fff" : "none"}
           stroke="#fff"
           strokeWidth={2}
@@ -71,12 +69,12 @@ const SingleSelectButton = ({
 }) => (
   <button
     onClick={() => onClick(id)}
-    className={`w-full h-16 flex flex-col items-center justify-center rounded-xl transition ${
+    className={`w-full h-14 flex flex-col items-center justify-center rounded-lg transition ${
       activeId === id ? activeColor : "bg-gray-700"
     }`}
   >
     <Icon
-      className="w-5 h-5 mb-1"
+      className="w-4 h-4 mb-1"
       fill={activeId === id ? "#fff" : "none"}
       stroke="#fff"
       strokeWidth={2}
@@ -195,9 +193,81 @@ export default function DailyParametersMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-4">
-      {/* Верхнее меню */}
-      <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-2 rounded-xl mb-4">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-3 pt-3 pb-24">
+      {/* Аватар и кнопки справа */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-3">
+          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
+          <div>
+            <h1 className="text-base font-bold">{name || "Пользователь"}</h1>
+            <p className="text-xs text-gray-400">{formattedDate}</p>
+          </div>
+        </div>
+        <div className="flex space-x-1">
+          <button
+            onClick={() => navigate("/profile/settings")}
+            className="bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded flex items-center"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center"
+          >
+            <LogOut className="w-4 h-4 mr-1" />
+          </button>
+        </div>
+      </div>
+
+      {/* Основные параметры */}
+      <div className="bg-[#1a1a1d] p-3 rounded-xl shadow-md mb-3">
+        <h2 className="text-base font-semibold mb-2">Основные параметры</h2>
+        <div className="grid grid-cols-3 gap-1">
+          <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
+          <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-500" />
+          <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-500" />
+          <SingleSelectButton id="hoydedogn" label="Смена часового пояса" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-500" />
+          <SingleSelectButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-500" />
+          <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-500" />
+        </div>
+      </div>
+
+      {/* Параметры дня */}
+      <div className="bg-[#1a1a1d] p-3 rounded-xl shadow-md">
+        <h2 className="text-base font-semibold mb-2">Параметры дня</h2>
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="mb-1">Физическая готовность</p>
+            <TenButtons value={physical} onChange={setPhysical} Icon={User} />
+          </div>
+          <div>
+            <p className="mb-1">Ментальная готовность</p>
+            <TenButtons value={mental} onChange={setMental} Icon={Brain} />
+          </div>
+          <div>
+            <p className="mb-1">Качество сна</p>
+            <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
+          </div>
+          <div>
+            <p className="mb-1">Пульс (уд/мин)</p>
+            <input type="number" value={pulse} onChange={(e) => setPulse(e.target.value)} placeholder="например, 60" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
+          </div>
+          <div>
+            <p className="mb-1">Продолжительность сна (ч:мин)</p>
+            <input type="text" value={sleepDuration} onChange={(e) => setSleepDuration(e.target.value)} placeholder="например, 07:30" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
+          </div>
+          <div>
+            <p className="mb-1">Комментарии</p>
+            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Напишите здесь..." className="w-full p-1.5 h-20 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"/>
+          </div>
+        </div>
+        <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold mt-3">
+          Сохранить
+        </button>
+      </div>
+
+      {/* Нижнее меню */}
+      <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 z-50">
         {[
           { label: "Главная", icon: Timer, path: "/daily" },
           { label: "Тренировки", icon: BarChart3, path: "/profile" },
@@ -205,10 +275,7 @@ export default function DailyParametersMobile() {
           { label: "Статистика", icon: CalendarDays, path: "/statistics" },
         ].map((item) => {
           const Icon = item.icon;
-          const isActive =
-            (item.path === "/daily" && location.pathname === "/daily") ||
-            (item.path === "/profile" && location.pathname === "/profile") ||
-            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+          const isActive = location.pathname === item.path;
           return (
             <button
               key={item.path}
@@ -222,79 +289,6 @@ export default function DailyParametersMobile() {
             </button>
           );
         })}
-      </div>
-
-      {/* Аватар и кнопки справа */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-12 h-12 rounded-full" />
-          <div>
-            <h1 className="text-lg font-bold">{name || "Пользователь"}</h1>
-            <p className="text-xs text-gray-400">{formattedDate}</p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => navigate("/profile/settings")}
-            className="bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded flex items-center"
-          >
-            <Settings className="w-4 h-4 mr-1" /> Настройка
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center"
-          >
-            <LogOut className="w-4 h-4 mr-1" /> Выйти
-          </button>
-        </div>
-      </div>
-
-      {/* Основные параметры */}
-      <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md mb-4">
-        <h2 className="text-lg font-semibold mb-2">Основные параметры</h2>
-        <div className="grid grid-cols-3 gap-2">
-          <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
-          <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-500" />
-          <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-500" />
-          <SingleSelectButton id="hoydedogn" label="Смена часового пояса" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-500" />
-          <SingleSelectButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-500" />
-          <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-500" />
-        </div>
-      </div>
-
-      {/* Параметры дня */}
-      <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md">
-        <h2 className="text-lg font-semibold mb-2">Параметры дня</h2>
-        <div className="space-y-4">
-          <div>
-            <p className="mb-1 text-sm">Физическая готовность</p>
-            <TenButtons value={physical} onChange={setPhysical} Icon={User} />
-          </div>
-          <div>
-            <p className="mb-1 text-sm">Ментальная готовность</p>
-            <TenButtons value={mental} onChange={setMental} Icon={Brain} />
-          </div>
-          <div>
-            <p className="mb-1 text-sm">Пульс (уд/мин)</p>
-            <input type="number" value={pulse} onChange={(e) => setPulse(e.target.value)} placeholder="например, 60" className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
-          </div>
-          <div>
-            <p className="mb-1 text-sm">Качество сна</p>
-            <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
-          </div>
-          <div>
-            <p className="mb-1 text-sm">Продолжительность сна (ч:мин)</p>
-            <input type="text" value={sleepDuration} onChange={(e) => setSleepDuration(e.target.value)} placeholder="например, 07:30" className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
-          </div>
-          <div>
-            <p className="mb-1 text-sm">Комментарии</p>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Напишите здесь..." className="w-full p-2 h-20 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"/>
-          </div>
-        </div>
-
-        <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold mt-4">
-          Сохранить
-        </button>
       </div>
     </div>
   );
