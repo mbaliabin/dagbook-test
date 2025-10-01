@@ -201,7 +201,23 @@ export default function DailyParametersMobile() {
             <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
             <div>
               <h1 className="text-base font-bold">{name || "Пользователь"}</h1>
-              <p className="text-xs text-gray-400">{formattedDate}</p>
+              <div className="flex items-center space-x-1 mt-0.5">
+                <button
+                  onClick={prevDay}
+                  className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-1 py-0.5 rounded hover:bg-[#2a2a2d] transition-colors"
+                >
+                  ‹
+                </button>
+                <div className="px-2 py-0.5 rounded bg-[#1f1f22] text-white text-xs flex items-center justify-center cursor-pointer select-none">
+                  {formattedDate}
+                </div>
+                <button
+                  onClick={nextDay}
+                  className="flex items-center justify-center text-xs text-gray-300 bg-[#1f1f22] px-1 py-0.5 rounded hover:bg-[#2a2a2d] transition-colors"
+                >
+                  ›
+                </button>
+              </div>
             </div>
           </div>
           <div className="flex space-x-1">
