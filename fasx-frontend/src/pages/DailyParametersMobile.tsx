@@ -32,7 +32,7 @@ const TenButtons = ({
   onChange: (val: number) => void;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }) => (
-  <div className="flex gap-1 flex-wrap">
+  <div className="flex flex-wrap gap-2 p-2 bg-[#1f1f22] rounded-xl shadow-md">
     {[...Array(10)].map((_, i) => (
       <button
         key={i}
@@ -69,17 +69,17 @@ const SingleSelectButton = ({
 }) => (
   <button
     onClick={() => onClick(id)}
-    className={`w-full h-14 flex flex-col items-center justify-center rounded-lg transition ${
+    className={`flex-1 flex items-center justify-center px-3 py-2 rounded-xl space-x-2 transition text-center ${
       activeId === id ? activeColor : "bg-gray-700"
     }`}
   >
     <Icon
-      className="w-4 h-4 mb-1"
+      className="w-5 h-5"
       fill={activeId === id ? "#fff" : "none"}
       stroke="#fff"
       strokeWidth={2}
     />
-    <span className="text-xs">{label}</span>
+    <span className="text-sm">{label}</span>
   </button>
 );
 
@@ -115,12 +115,14 @@ export default function DailyParametersMobile() {
       try {
         const token = localStorage.getItem("token");
         const dateStr = selectedDate.format("YYYY-MM-DD");
+
         const response = await fetch(
           `${API_URL}/api/daily-information?date=${dateStr}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
         if (!response.ok) {
           setMainParam(null);
           setPhysical(0);
@@ -131,6 +133,7 @@ export default function DailyParametersMobile() {
           setComment("");
           return;
         }
+
         const data = await response.json();
         setMainParam(data.main_param || null);
         setPhysical(Number(data.physical) || 0);
@@ -159,6 +162,7 @@ export default function DailyParametersMobile() {
         sleepDuration: sleepDuration || null,
         comment: comment || null,
       };
+
       const response = await fetch(`${API_URL}/api/daily-information`, {
         method: "POST",
         headers: {
@@ -167,10 +171,12 @@ export default function DailyParametersMobile() {
         },
         body: JSON.stringify(body),
       });
+
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.error || "Ошибка при сохранении");
       }
+
       alert("Данные успешно сохранены ✅");
     } catch (err: any) {
       console.error("Ошибка сохранения:", err);
@@ -193,81 +199,153 @@ export default function DailyParametersMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-3 pt-3 pb-24">
-      {/* Аватар и кнопки справа */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-3">
-          <img src="/profile.jpg" alt="Avatar" className="w-10 h-10 rounded-full" />
-          <div>
-            <h1 className="text-base font-bold">{name || "Пользователь"}</h1>
-            <p className="text-xs text-gray-400">{formattedDate}</p>
-          </div>
-        </div>
-        <div className="flex space-x-1">
-          <button
-            onClick={() => navigate("/profile/settings")}
-            className="bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded flex items-center"
-          >
-            <Settings className="w-4 h-4 mr-1" />
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center"
-          >
-            <LogOut className="w-4 h-4 mr-1" />
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 pb-24">
+      <div className="max-w-md mx-auto space-y-6">
 
-      {/* Основные параметры */}
-      <div className="bg-[#1a1a1d] p-3 rounded-xl shadow-md mb-3">
-        <h2 className="text-base font-semibold mb-2">Основные параметры</h2>
-        <div className="grid grid-cols-3 gap-1">
-          <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
-          <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-500" />
-          <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-500" />
-          <SingleSelectButton id="hoydedogn" label="Смена часового пояса" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-500" />
-          <SingleSelectButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-500" />
-          <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-500" />
-        </div>
-      </div>
+        {/* Аватар, имя, дата и кнопки */}
+        <div className="flex flex-col items-start gap-3">
+          <div className="flex items-center space-x-3">
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-14 h-14 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-xl font-bold">{name || "Пользователь"}</h1>
+              <p className="text-sm text-gray-400">{formattedDate}</p>
+            </div>
+          </div>
 
-      {/* Параметры дня */}
-      <div className="bg-[#1a1a1d] p-3 rounded-xl shadow-md">
-        <h2 className="text-base font-semibold mb-2">Параметры дня</h2>
-        <div className="space-y-3 text-sm">
-          <div>
-            <p className="mb-1">Физическая готовность</p>
-            <TenButtons value={physical} onChange={setPhysical} Icon={User} />
-          </div>
-          <div>
-            <p className="mb-1">Ментальная готовность</p>
-            <TenButtons value={mental} onChange={setMental} Icon={Brain} />
-          </div>
-          <div>
-            <p className="mb-1">Качество сна</p>
-            <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
-          </div>
-          <div>
-            <p className="mb-1">Пульс (уд/мин)</p>
-            <input type="number" value={pulse} onChange={(e) => setPulse(e.target.value)} placeholder="например, 60" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
-          </div>
-          <div>
-            <p className="mb-1">Продолжительность сна (ч:мин)</p>
-            <input type="text" value={sleepDuration} onChange={(e) => setSleepDuration(e.target.value)} placeholder="например, 07:30" className="w-full p-1.5 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm"/>
-          </div>
-          <div>
-            <p className="mb-1">Комментарии</p>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Напишите здесь..." className="w-full p-1.5 h-20 rounded-lg bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"/>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => navigate("/profile/settings")}
+              className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded flex items-center text-sm"
+            >
+              <Settings className="w-4 h-4 mr-1" /> Настройка профиля
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded flex items-center text-sm"
+            >
+              <LogOut className="w-4 h-4 mr-1" /> Выйти
+            </button>
           </div>
         </div>
-        <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold mt-3">
-          Сохранить
-        </button>
+
+        {/* Основные параметры */}
+        <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md space-y-4">
+          <h2 className="text-lg font-semibold">Основные параметры</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <SingleSelectButton
+              id="skadet"
+              label="Травма"
+              Icon={AlertTriangle}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-red-600"
+            />
+            <SingleSelectButton
+              id="syk"
+              label="Болезнь"
+              Icon={Thermometer}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-red-500"
+            />
+            <SingleSelectButton
+              id="paReise"
+              label="В пути"
+              Icon={Send}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-blue-500"
+            />
+            <SingleSelectButton
+              id="hoydedogn"
+              label="Смена часового пояса"
+              Icon={Clock}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-purple-500"
+            />
+            <SingleSelectButton
+              id="fridag"
+              label="Выходной"
+              Icon={Sun}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-green-500"
+            />
+            <SingleSelectButton
+              id="konkurranse"
+              label="Соревнование"
+              Icon={Award}
+              activeId={mainParam}
+              onClick={setMainParam}
+              activeColor="bg-yellow-500"
+            />
+          </div>
+        </div>
+
+        {/* Параметры дня */}
+        <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md space-y-4">
+          <h2 className="text-lg font-semibold">Параметры дня</h2>
+
+          <div className="space-y-3">
+            <div>
+              <p className="mb-1">Физическая готовность</p>
+              <TenButtons value={physical} onChange={setPhysical} Icon={User} />
+            </div>
+            <div>
+              <p className="mb-1">Ментальная готовность</p>
+              <TenButtons value={mental} onChange={setMental} Icon={Brain} />
+            </div>
+            <div>
+              <p className="mb-1">Пульс (уд/мин)</p>
+              <input
+                type="number"
+                value={pulse}
+                onChange={(e) => setPulse(e.target.value)}
+                placeholder="например, 60"
+                className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm"
+              />
+            </div>
+            <div>
+              <p className="mb-1">Качество сна</p>
+              <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
+            </div>
+            <div>
+              <p className="mb-1">Продолжительность сна (ч:мин)</p>
+              <input
+                type="text"
+                value={sleepDuration}
+                onChange={(e) => setSleepDuration(e.target.value)}
+                placeholder="например, 07:30"
+                className="w-full p-2 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm"
+              />
+            </div>
+            <div>
+              <p className="mb-1">Комментарии</p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Напишите здесь..."
+                className="w-full p-2 h-20 rounded-xl bg-[#0e0e10] border border-gray-700 text-white text-sm resize-none"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-white font-semibold"
+          >
+            Сохранить
+          </button>
+        </div>
       </div>
 
       {/* Нижнее меню */}
-      <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 z-50">
+      <div className="fixed bottom-0 left-0 w-full bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2">
         {[
           { label: "Главная", icon: Timer, path: "/daily" },
           { label: "Тренировки", icon: BarChart3, path: "/profile" },
@@ -275,7 +353,11 @@ export default function DailyParametersMobile() {
           { label: "Статистика", icon: CalendarDays, path: "/statistics" },
         ].map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+
           return (
             <button
               key={item.path}
