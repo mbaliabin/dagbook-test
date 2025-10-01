@@ -147,43 +147,43 @@ export default function DailyParametersMobile() {
   }, [selectedDate, API_URL]);
 
   const handleSave = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const body = {
-        date: selectedDate.format("YYYY-MM-DD"),
-        main_param: mainParam,
-        physical,
-        mental,
-        sleep_quality: sleepQuality,
-        pulse: pulse ? Number(pulse) : null,
-        sleep_duration: sleepDuration || null,
-        comment: comment || null,
-      };
+      try {
+        const token = localStorage.getItem("token");
+        const body = {
+          date: selectedDate.format("YYYY-MM-DD"),
+          mainParam,
+          physical,
+          mental,
+          sleepQuality,
+          pulse: pulse ? Number(pulse) : null,
+          sleepDuration: sleepDuration || null,
+          comment: comment || null,
+        };
 
-      console.log("Отправка данных:", body);
+        console.log("Отправка данных:", body);
 
-      const response = await fetch(`${API_URL}/api/daily-information`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+        const response = await fetch(`${API_URL}/api/daily-information`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Ошибка при сохранении");
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || "Ошибка при сохранении");
+        }
+
+        const saved = await response.json();
+        console.log("Сохранено:", saved);
+        alert("Данные успешно сохранены ✅");
+      } catch (err: any) {
+        console.error("Ошибка сохранения:", err);
+        alert(`Ошибка при сохранении ❌: ${err.message}`);
       }
-
-      const saved = await response.json();
-      console.log("Сохранено:", saved);
-      alert("Данные успешно сохранены ✅");
-    } catch (err: any) {
-      console.error("Ошибка сохранения:", err);
-      alert(`Ошибка при сохранении ❌: ${err.message}`);
-    }
-  };
+    };
 
   const prevDay = () => setSelectedDate(selectedDate.subtract(1, "day"));
   const nextDay = () => setSelectedDate(selectedDate.add(1, "day"));
