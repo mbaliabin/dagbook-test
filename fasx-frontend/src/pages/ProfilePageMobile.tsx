@@ -87,7 +87,7 @@ export default function ProfilePageMobile() {
   const handleDeleteWorkout = (id: string) => setWorkouts(prev => prev.filter(w => w.id !== id));
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/daily");
+    navigate("/login");
   };
 
   const filteredWorkouts = workouts.filter(w => {
