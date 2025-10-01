@@ -163,7 +163,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
-      setShowBottomMenu(scrollY > 300)
+      setShowBottomMenu(scrollY > 300) // например, после 300px
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -172,7 +172,6 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6 pb-24">
-
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
@@ -197,8 +196,8 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* Header + кнопки сверху + выбор периода снизу */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        {/* Header + кнопки + выбор периода */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
               src="/profile.jpg"
@@ -209,28 +208,18 @@ export default function ProfilePage() {
               <h1 className="text-2xl font-bold text-white">
                 {loadingProfile ? 'Загрузка...' : name}
               </h1>
+              <p className="text-sm text-white">
+                {!dateRange
+                  ? selectedMonth.format('MMMM YYYY')
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
+                }
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 md:items-end">
-            {/* Кнопки */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" /> Выйти
-              </button>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-4">
             {/* Выбор периода */}
-            <div className="flex flex-wrap items-center space-x-2 mt-2">
+            <div className="flex items-center space-x-2 flex-wrap">
               <button
                 className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
                 onClick={onPrevMonth}
@@ -305,6 +294,22 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+
+            {/* Кнопки */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
           </div>
         </div>
 
@@ -373,7 +378,7 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Нижняя навигация */}
+      {/* Нижняя навигация — появляется при скролле */}
       <div
         className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
           showBottomMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
