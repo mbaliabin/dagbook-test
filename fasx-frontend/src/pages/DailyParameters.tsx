@@ -100,7 +100,6 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -113,7 +112,6 @@ export default function DailyParameters() {
     fetchProfile();
   }, []);
 
-  // --- Загрузка данных выбранного дня ---
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -205,23 +203,21 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      {/* Основная обёртка с уменьшением масштаба */}
+      <div className="max-w-7xl mx-auto space-y-6 transform scale-75 origin-top-left">
         {/* Верхний блок с меню, аватаром и кнопками */}
         <div className="space-y-4">
           {/* Верхнее меню */}
           <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-            {[
-              { label: "Главная", icon: Timer, path: "/daily" },
+            {[{ label: "Главная", icon: Timer, path: "/daily" },
               { label: "Тренировки", icon: BarChart3, path: "/profile" },
               { label: "Планирование", icon: ClipboardList, path: "/planning" },
-              { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-            ].map((item) => {
+              { label: "Статистика", icon: CalendarDays, path: "/statistics" }].map((item) => {
               const Icon = item.icon;
               const isActive =
                 (item.path === "/daily" && location.pathname === "/daily") ||
                 (item.path === "/profile" && location.pathname === "/profile") ||
                 (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
-
               return (
                 <button
                   key={item.path}
@@ -375,9 +371,10 @@ export default function DailyParameters() {
             <div>
               <p className="mb-2">Продолжительность сна (ч:мин)</p>
               <input
-                type="time"
+                type="text"
                 value={sleepDuration}
                 onChange={(e) => setSleepDuration(e.target.value)}
+                placeholder="например, 07:30"
                 className="w-full p-3 rounded-xl bg-[#0e0e10] border border-gray-700 text-white"
               />
             </div>
