@@ -94,7 +94,7 @@ export default function DailyParametersMobile() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // --- Профиль ---
+  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -107,7 +107,7 @@ export default function DailyParametersMobile() {
     fetchProfile();
   }, []);
 
-  // --- Данные выбранного дня ---
+  // --- Загрузка данных выбранного дня ---
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -119,6 +119,7 @@ export default function DailyParametersMobile() {
         );
 
         if (!response.ok) {
+          // Если данных нет, сбросить поля на значения по умолчанию
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -139,22 +140,31 @@ export default function DailyParametersMobile() {
         setComment(data.comment || "");
       } catch (err) {
         console.error("Ошибка загрузки данных дня:", err);
+        // На случай ошибки также сбросить поля
+        setMainParam(null);
+        setPhysical(0);
+        setMental(0);
+        setSleepQuality(0);
+        setPulse("");
+        setSleepDuration("");
+        setComment("");
       }
     };
     fetchDailyInfo();
   }, [selectedDate, API_URL]);
 
+  // --- Сохранение ---
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
       const body = {
         date: selectedDate.format("YYYY-MM-DD"),
-        mainParam,
+        main_param: mainParam,
         physical,
         mental,
-        sleepQuality,
+        sleep_quality: sleepQuality,
         pulse: pulse ? Number(pulse) : null,
-        sleepDuration: sleepDuration || null,
+        sleep_duration: sleepDuration || null,
         comment: comment || null,
       };
 
