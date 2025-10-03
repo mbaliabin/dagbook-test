@@ -16,6 +16,9 @@ model User {
   avatarUrl String?
   createdAt DateTime  @default(now())
 
+  isVerified        Boolean   @default(false)       // новое поле
+  verificationToken String?                        // новое поле
+
   profile   Profile?
   workouts  Workout[]
 
