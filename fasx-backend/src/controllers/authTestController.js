@@ -1,17 +1,33 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-// import nodemailer from "nodemailer"; // временно не используем
+import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
 // Проверка переменных окружения
-const { FRONTEND_URL } = process.env;
+const { EMAIL_USER, EMAIL_PASS, SMTP_HOST, SMTP_PORT, FRONTEND_URL } = process.env;
 
-if (!FRONTEND_URL) {
-  console.error("Ошибка: пропущена переменная окружения FRONTEND_URL!");
+if (!EMAIL_USER || !EMAIL_PASS || !SMTP_HOST || !SMTP_PORT || !FRONTEND_URL) {
+  console.error("Ошибка: пропущены переменные окружения для email или фронтенда!");
   process.exit(1);
 }
+
+console.log("EMAIL_USER:", EMAIL_USER);
+console.log("SMTP_HOST:", SMTP_HOST);
+console.log("SMTP_PORT:", SMTP_PORT);
+console.log("FRONTEND_URL:", FRONTEND_URL);
+
+// Настройка транспортера для отправки писем через SMTPS (порт 465)
+const transporter = nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: Number(SMTP_PORT),
+  secure: Number(SMTP_PORT) === 465, // true для SMTPS (465)
+  auth: {
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
+  },
+});
 
 export const registerTest = async (req, res) => {
   try {
@@ -27,7 +43,7 @@ export const registerTest = async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
     // Создание пользователя в БД
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name,
         email,
@@ -37,16 +53,29 @@ export const registerTest = async (req, res) => {
       },
     });
 
-    // Генерация ссылки для подтверждения
-    const verifyUrl = `${FRONTEND_URL}/verify-test?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+    // Формируем ссылку с encodeURIComponent для безопасности
+    const verifyUrl = `${FRONTEND_URL}/verify-test?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(email)}`;
 
-    // Логируем ссылку вместо отправки письма
-    console.log(`=== ТЕСТОВАЯ ССЫЛКА ДЛЯ ПОДТВЕРЖДЕНИЯ ===`);
-    console.log(verifyUrl);
-    console.log(`==========================================`);
+    // Логируем ссылку в консоль для тестов
+    console.log("Ссылка для подтверждения:", verifyUrl);
+
+    try {
+      // Отправка письма
+      await transporter.sendMail({
+        from: EMAIL_USER,
+        to: email,
+        subject: "Подтвердите регистрацию на Fasx",
+        html: `<p>Привет, ${name}! Чтобы подтвердить аккаунт, перейдите по ссылке:</p>
+               <a href="${verifyUrl}">${verifyUrl}</a>`,
+      });
+      console.log(`Письмо успешно отправлено на ${email}`);
+    } catch (mailErr) {
+      console.warn("Письмо не отправлено:", mailErr);
+      // Пользователь создан, но письмо не ушло
+    }
 
     return res.status(201).json({
-      message: "Пользователь создан. Ссылка для подтверждения выведена в консоль (тест).",
+      message: "Пользователь создан. Проверьте почту для подтверждения аккаунта",
     });
   } catch (err) {
     console.error("RegisterTest Error:", err);
