@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
-// Настройка транспортера для отправки писем
+// Настройка транспортера для отправки писем (используй свои данные SMTP)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
@@ -21,8 +21,9 @@ export const registerTest = async (req, res) => {
     const { name, email, password } = req.body;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "Email уже зарегистрирован" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -48,7 +49,7 @@ export const registerTest = async (req, res) => {
     });
 
     return res.status(201).json({ message: "Проверьте почту для подтверждения аккаунта" });
-  } catch (err: any) {
+  } catch (err) {
     console.error("RegisterTest Error:", err);
     return res.status(500).json({ message: "Ошибка сервера", error: err.message });
   }
@@ -58,7 +59,9 @@ export const verifyTest = async (req, res) => {
   try {
     const { token, email } = req.query;
 
-    if (!token || !email) return res.status(400).send("Неверный запрос");
+    if (!token || !email) {
+      return res.status(400).send("Неверный запрос");
+    }
 
     const user = await prisma.user.findUnique({ where: { email: String(email) } });
     if (!user) return res.status(404).send("Пользователь не найден");
@@ -73,7 +76,7 @@ export const verifyTest = async (req, res) => {
 
     return res.send("Аккаунт успешно подтверждён!");
   } catch (err) {
-    console.error(err);
+    console.error("VerifyTest Error:", err);
     return res.status(500).send("Ошибка сервера");
   }
 };
