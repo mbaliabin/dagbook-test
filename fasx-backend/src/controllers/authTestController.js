@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
+  secure: Number(process.env.SMTP_PORT) === 465, // true для SMTPS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -28,7 +28,8 @@ export const registerTest = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    await prisma.user.create({
+    // Создание пользователя в БД
+    const newUser = await prisma.user.create({
       data: {
         name,
         email,
@@ -40,13 +41,19 @@ export const registerTest = async (req, res) => {
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-test?token=${verificationToken}&email=${email}`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Подтвердите регистрацию на Fasx",
-      html: `<p>Привет, ${name}! Чтобы подтвердить аккаунт, перейдите по ссылке:</p>
-             <a href="${verifyUrl}">${verifyUrl}</a>`,
-    });
+    try {
+      // Попытка отправки письма
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Подтвердите регистрацию на Fasx",
+        html: `<p>Привет, ${name}! Чтобы подтвердить аккаунт, перейдите по ссылке:</p>
+               <a href="${verifyUrl}">${verifyUrl}</a>`,
+      });
+    } catch (mailErr) {
+      console.warn("Письмо не отправлено:", mailErr);
+      // Пользователь создан, но почта не отправлена
+    }
 
     return res.status(201).json({ message: "Проверьте почту для подтверждения аккаунта" });
   } catch (err) {
