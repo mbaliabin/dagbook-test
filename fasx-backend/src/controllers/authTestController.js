@@ -18,7 +18,7 @@ console.log("SMTP_HOST:", SMTP_HOST);
 console.log("SMTP_PORT:", SMTP_PORT);
 console.log("FRONTEND_URL:", FRONTEND_URL);
 
-// Настройка транспортера для отправки писем
+// Настройка транспортера для отправки писем через SMTPS (порт 465)
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
