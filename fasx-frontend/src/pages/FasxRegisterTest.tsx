@@ -16,8 +16,8 @@ export default function FasxRegisterTest() {
     setLoading(true);
 
     try {
-      const res = await registerUserTest(name, email, password);
-      setSuccess(res.message || "Проверьте почту для подтверждения.");
+      const data = await registerUserTest(name, email, password);
+      setSuccess(data.message || "Проверьте почту для подтверждения.");
     } catch (err: any) {
       setError(err.message || "Произошла ошибка при регистрации");
     } finally {
