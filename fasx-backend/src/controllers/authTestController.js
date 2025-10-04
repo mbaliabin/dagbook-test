@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
-// Настройка транспортера для отправки писем (замени на свои данные SMTP)
+// Настройка транспортера для отправки писем
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
@@ -48,9 +48,9 @@ export const registerTest = async (req, res) => {
     });
 
     return res.status(201).json({ message: "Проверьте почту для подтверждения аккаунта" });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Ошибка сервера" });
+  } catch (err: any) {
+    console.error("RegisterTest Error:", err);
+    return res.status(500).json({ message: "Ошибка сервера", error: err.message });
   }
 };
 
