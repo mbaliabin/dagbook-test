@@ -21,5 +21,15 @@ export default defineConfig({
         },
       },
     },
+    build: {
+        outDir: 'dist',
+      },
+      // вот это нужно для React Router
+      preview: {
+        port: 5173,
+        strictPort: true,
+        // чтобы любые пути отдавали index.html
+        historyApiFallback: true,
+      },
 })
 
