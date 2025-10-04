@@ -24,6 +24,7 @@ model User {
 
   followers Follow[]  @relation("following")
   following Follow[]  @relation("follower")
+  dailyInformation DailyInformation[] // <-- добавлено
 }
 
 model Workout {
