@@ -11,22 +11,27 @@ import dailyInformationRouter from './routes/dailyInformation.js';
 import authTestRoutes from "./routes/authTestRoutes.js";
 
 dotenv.config()
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
-console.log('DATABASE_URL =', process.env.DATABASE_URL)
+// Проверка ключевых переменных окружения
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+console.log('DATABASE_URL =', process.env.DATABASE_URL);
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('SMTP_HOST:', process.env.SMTP_HOST);
+console.log('SMTP_PORT:', process.env.SMTP_PORT);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '***' : undefined);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const app = express()
 const PORT = process.env.PORT || 4000
-
 const prisma = new PrismaClient()
 
-const frontendUrl = 'http://87.249.50.183:5173'
+// Используем FRONTEND_URL из .env или дефолт
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
 
 app.use(cors({
   origin: true,   // разрешаем все источники
   credentials: true,
 }))
-
 
 app.use(express.json())
 
@@ -38,9 +43,10 @@ app.use('/api/workouts', workoutRoutes)
 app.use("/api/daily-information", dailyInformationRouter);
 app.use("/api/auth", authTestRoutes);
 
+// Проверка соединения с БД
 app.get('/api/health', async (req, res) => {
   try {
-    await prisma.$queryRaw`SELECT 1`  // проверка базы
+    await prisma.$queryRaw`SELECT 1`
     res.json({ status: 'ok', database: 'connected', timestamp: new Date() })
   } catch (err) {
     console.error('Database connection error:', err)
@@ -52,7 +58,7 @@ app.get('/', (req, res) => {
   res.send('🚀 FASX API работает!')
 })
 
-// Пример API для получения всех пользователей (можно убрать, если не нужно)
+// Пример API для получения всех пользователей
 app.get('/api/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany()
@@ -66,4 +72,3 @@ app.get('/api/users', async (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Сервер запущен на http://0.0.0.0:${PORT}`)
 })
-
