@@ -92,7 +92,7 @@ export default function FasxLogin() {
 
           <div className="text-center mt-6 text-sm text-gray-400">
             Нет аккаунта?{" "}
-            <Link to="/register-test" className="text-blue-500 hover:underline">
+            <Link to="/register" className="text-blue-500 hover:underline">
               Зарегистрироваться
             </Link>
           </div>
