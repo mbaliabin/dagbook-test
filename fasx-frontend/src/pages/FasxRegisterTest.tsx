@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { registerUserTest } from "@/api/registerUserTest"; // тестовый API
+import { registerUserTest } from "@/api/registerUserTest"; // API для тестовой регистрации
 
 export default function FasxRegisterTest() {
   const [name, setName] = useState("");
@@ -17,7 +17,11 @@ export default function FasxRegisterTest() {
 
     try {
       const data = await registerUserTest(name, email, password);
-      setSuccess(data.message || "Проверьте почту для подтверждения.");
+
+      // Сообщение пользователю с инструкцией
+      setSuccess(
+        data.message || "Проверьте почту. Ссылка для подтверждения должна работать на любом устройстве."
+      );
     } catch (err: any) {
       setError(err.message || "Произошла ошибка при регистрации");
     } finally {

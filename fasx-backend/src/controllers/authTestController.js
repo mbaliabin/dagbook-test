@@ -5,7 +5,6 @@ import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
-// Проверка переменных окружения
 const { EMAIL_USER, EMAIL_PASS, SMTP_HOST, SMTP_PORT, FRONTEND_URL } = process.env;
 
 if (!EMAIL_USER || !EMAIL_PASS || !SMTP_HOST || !SMTP_PORT || !FRONTEND_URL) {
@@ -18,11 +17,10 @@ console.log("SMTP_HOST:", SMTP_HOST);
 console.log("SMTP_PORT:", SMTP_PORT);
 console.log("FRONTEND_URL:", FRONTEND_URL);
 
-// Настройка транспортера для отправки писем через SMTPS (порт 465)
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: Number(SMTP_PORT),
-  secure: Number(SMTP_PORT) === 465, // true для SMTPS (465)
+  secure: Number(SMTP_PORT) === 465,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
@@ -53,10 +51,10 @@ export const registerTest = async (req, res) => {
       },
     });
 
-    const verifyUrl = `${FRONTEND_URL}/verify-test?token=${verificationToken}&email=${email}`;
+    // Ссылка с безопасным URL-кодированием
+    const verifyUrl = `${FRONTEND_URL.replace(/:\d+$/, "")}/verify-test?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(email)}`;
 
     try {
-      // Отправка письма
       await transporter.sendMail({
         from: EMAIL_USER,
         to: email,
@@ -67,7 +65,6 @@ export const registerTest = async (req, res) => {
       console.log(`Письмо успешно отправлено на ${email}`);
     } catch (mailErr) {
       console.warn("Письмо не отправлено:", mailErr);
-      // Пользователь создан, но письмо не ушло
     }
 
     return res.status(201).json({
@@ -83,9 +80,7 @@ export const verifyTest = async (req, res) => {
   try {
     const { token, email } = req.query;
 
-    if (!token || !email) {
-      return res.status(400).send("Неверный запрос");
-    }
+    if (!token || !email) return res.status(400).send("Неверный запрос");
 
     const user = await prisma.user.findUnique({ where: { email: String(email) } });
     if (!user) return res.status(404).send("Пользователь не найден");
