@@ -5,7 +5,13 @@ import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
-// Настройка транспортера для отправки писем (используй свои данные SMTP)
+// Логируем SMTP-конфигурацию для проверки
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("SMTP_HOST:", process.env.SMTP_HOST);
+console.log("SMTP_PORT:", process.env.SMTP_PORT);
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+
+// Настройка транспортера для отправки писем
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
@@ -50,12 +56,13 @@ export const registerTest = async (req, res) => {
         html: `<p>Привет, ${name}! Чтобы подтвердить аккаунт, перейдите по ссылке:</p>
                <a href="${verifyUrl}">${verifyUrl}</a>`,
       });
+      console.log(`Письмо отправлено на ${email}`);
     } catch (mailErr) {
       console.warn("Письмо не отправлено:", mailErr);
       // Пользователь создан, но почта не отправлена
     }
 
-    return res.status(201).json({ message: "Проверьте почту для подтверждения аккаунта" });
+    return res.status(201).json({ message: "Пользователь создан. Проверьте почту для подтверждения аккаунта" });
   } catch (err) {
     console.error("RegisterTest Error:", err);
     return res.status(500).json({ message: "Ошибка сервера", error: err.message });
