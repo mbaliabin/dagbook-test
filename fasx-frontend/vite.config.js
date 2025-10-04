@@ -10,6 +10,9 @@ export default defineConfig({
     },
   },
   server: {
+      host: true, // слушать 0.0.0.0, чтобы был доступ с внешних устройств
+      port: 5173, // твой dev-порт
+      strictPort: true, // если порт занят, не подбирать другой
       proxy: {
         '/api': {
           target: 'http://46.173.18.36:4000',
