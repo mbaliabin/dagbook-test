@@ -107,33 +107,25 @@ export default function StatisticsPage() {
               data={mockData}
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                stroke="#ccc"
-              />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1a1a1d", // тёмный фон
+                  backgroundColor: "#1a1a1d",
                   border: "1px solid #333",
                   color: "#fff",
                   boxShadow: "none",
                   borderRadius: "8px",
                   padding: "6px 10px",
                 }}
-                itemStyle={{ color: "#fff" }}  // текст значений
-                labelStyle={{ color: "#ccc", fontWeight: 500 }} // текст подписи
+                itemStyle={{ color: "#fff" }}
+                labelStyle={{ color: "#ccc", fontWeight: 500 }}
               />
-              <Legend
-                formatter={(value) => value}
-                wrapperStyle={{ color: "#fff" }}
-              />
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} />
+              <Legend wrapperStyle={{ color: "#fff" }} />
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
