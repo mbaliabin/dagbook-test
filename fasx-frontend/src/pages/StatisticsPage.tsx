@@ -50,6 +50,15 @@ export default function StatisticsPage() {
     return toTimeString(totalMinutes);
   });
 
+  // Новый расчёт: общее время по каждой зоне (все месяцы)
+  const totalByZone = enduranceData.map((zone) => {
+    const totalMinutes = zone.data.reduce(
+      (sum, time) => sum + toMinutes(time),
+      0
+    );
+    return toTimeString(totalMinutes);
+  });
+
   return (
     <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -170,15 +179,18 @@ export default function StatisticsPage() {
                   {months.map((month) => (
                     <th
                       key={month}
-                      className="py-2 px-2 text-center border-r border-gray-800 last:border-r-0"
+                      className="py-2 px-2 text-center border-r border-gray-800"
                     >
                       {month}
                     </th>
                   ))}
+                  <th className="py-2 px-2 text-center border-l border-gray-800 text-blue-400">
+                    Общее время
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {enduranceData.map(({ zone, color, data }) => (
+                {enduranceData.map(({ zone, color, data }, idx) => (
                   <tr
                     key={zone}
                     className="border-t border-gray-800 hover:bg-[#1b1c1f] transition"
@@ -193,11 +205,14 @@ export default function StatisticsPage() {
                     {data.map((time, i) => (
                       <td
                         key={i}
-                        className="py-3 text-center text-gray-100 font-semibold border-r border-gray-800 last:border-r-0"
+                        className="py-3 text-center text-gray-100 font-semibold border-r border-gray-800"
                       >
                         {time}
                       </td>
                     ))}
+                    <td className="py-3 text-center font-semibold text-blue-400 border-l border-gray-800">
+                      {totalByZone[idx]}
+                    </td>
                   </tr>
                 ))}
 
@@ -209,11 +224,21 @@ export default function StatisticsPage() {
                   {totalByMonth.map((time, i) => (
                     <td
                       key={i}
-                      className="py-3 text-center border-r border-gray-800 last:border-r-0"
+                      className="py-3 text-center border-r border-gray-800"
                     >
                       {time}
                     </td>
                   ))}
+                  <td className="py-3 text-center text-blue-400 border-l border-gray-800">
+                    {/* Сумма всех totalByMonth */}
+                    {(() => {
+                      const totalMinutes = totalByMonth.reduce(
+                        (sum, t) => sum + toMinutes(t),
+                        0
+                      );
+                      return toTimeString(totalMinutes);
+                    })()}
+                  </td>
                 </tr>
               </tbody>
             </table>
