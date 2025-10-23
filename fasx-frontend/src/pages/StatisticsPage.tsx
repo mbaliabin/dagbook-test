@@ -131,24 +131,13 @@ export default function StatisticsPage() {
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
               {/* Сетка */}
-              <CartesianGrid stroke="#222" vertical={false} />
+              <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
 
               {/* Оси */}
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                stroke="#ccc"
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                stroke="#ccc"
-                tick={{ fontSize: 12 }}
-              />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
+              <YAxis axisLine={false} tickLine={false} stroke="#ccc" />
 
-              {/* Tooltip тёмный */}
+              {/* Tooltip */}
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1a1a1d",
@@ -162,63 +151,22 @@ export default function StatisticsPage() {
                 labelStyle={{ color: "#ccc", fontWeight: 500 }}
               />
 
-              {/* Легенда компактная */}
+              {/* Легенда */}
               <Legend
-                verticalAlign="top"
-                align="right"
-                iconSize={12}
+                formatter={(value) => value}
                 wrapperStyle={{ color: "#fff", paddingBottom: 10 }}
               />
 
-              {/* Полностью «неактивные» бары */}
-              <Bar
-                dataKey="I1"
-                stackId="a"
-                fill="#3b82f6"
-                barSize={24}
-                isAnimationActive={false}
-                cursor="default"
-                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
-              />
-              <Bar
-                dataKey="I2"
-                stackId="a"
-                fill="#10b981"
-                barSize={24}
-                isAnimationActive={false}
-                cursor="default"
-                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
-              />
-              <Bar
-                dataKey="I3"
-                stackId="a"
-                fill="#facc15"
-                barSize={24}
-                isAnimationActive={false}
-                cursor="default"
-                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
-              />
-              <Bar
-                dataKey="I4"
-                stackId="a"
-                fill="#f97316"
-                barSize={24}
-                isAnimationActive={false}
-                cursor="default"
-                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
-              />
-              <Bar
-                dataKey="I5"
-                stackId="a"
-                fill="#ef4444"
-                barSize={24}
-                isAnimationActive={false}
-                cursor="default"
-                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
-              />
+              {/* Бары */}
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
