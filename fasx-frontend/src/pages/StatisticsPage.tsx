@@ -146,7 +146,6 @@ export default function StatisticsPage() {
             <Bar dataKey="зона5" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-        </div>
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
