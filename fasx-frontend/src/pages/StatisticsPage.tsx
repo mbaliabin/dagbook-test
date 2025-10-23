@@ -121,51 +121,13 @@ export default function StatisticsPage() {
                 labelStyle={{ color: "#ccc", fontWeight: 500 }}
               />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar
-                dataKey="I1"
-                stackId="a"
-                fill="#3b82f6"
-                barSize={32}
-                cursor={({ x, y, width, height }) => (
-                  <rect x={x} y={y} width={width} height={height} fill="transparent" />
-                )}
-              />
-              <Bar
-                dataKey="I2"
-                stackId="a"
-                fill="#10b981"
-                barSize={32}
-                cursor={({ x, y, width, height }) => (
-                  <rect x={x} y={y} width={width} height={height} fill="transparent" />
-                )}
-              />
-              <Bar
-                dataKey="I3"
-                stackId="a"
-                fill="#facc15"
-                barSize={32}
-                cursor={({ x, y, width, height }) => (
-                  <rect x={x} y={y} width={width} height={height} fill="transparent" />
-                )}
-              />
-              <Bar
-                dataKey="I4"
-                stackId="a"
-                fill="#f97316"
-                barSize={32}
-                cursor={({ x, y, width, height }) => (
-                  <rect x={x} y={y} width={width} height={height} fill="transparent" />
-                )}
-              />
-              <Bar
-                dataKey="I5"
-                stackId="a"
-                fill="#ef4444"
-                barSize={32}
-                cursor={({ x, y, width, height }) => (
-                  <rect x={x} y={y} width={width} height={height} fill="transparent" />
-                )}
-              />
+
+              {/* Вот тут ключ: isAnimationActive={false} и на hover ничего не происходит */}
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
