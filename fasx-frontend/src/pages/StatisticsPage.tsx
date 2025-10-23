@@ -1,4 +1,3 @@
-// src/pages/StatisticsPage.tsx
 import React, { useState } from "react";
 import {
   BarChart,
@@ -106,7 +105,7 @@ export default function StatisticsPage() {
             <table className="w-full text-sm">
               <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
-                  <th className="text-left py-2"> </th>
+                  <th className="text-left py-2"></th>
                   <th>Май 2025</th>
                   <th>Июль 2025</th>
                   <th>Авг 2025</th>
@@ -142,28 +141,32 @@ export default function StatisticsPage() {
             <table className="w-full text-sm">
               <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
-                  <th className="text-left py-2">Активность</th>
-                  <th>Май 2025</th>
-                  <th>Июль 2025</th>
-                  <th>Авг 2025</th>
-                  <th>Сен 2025</th>
-                  <th>Среднее/мес</th>
+                  <th className="text-left py-2">Зоны интенсивности</th>
+                  <th className="text-right py-2">Месяц</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  ["Бег / ходьба", "23:37", "19:22", "3:10", "2:18", "21:18"],
-                  ["Лыжи, классика", "11:17", "12:27", "1:07", "11:21", "9:33"],
-                  ["Лыжи, коньковый", "2:28", "3:38", "13:00", "4:31", "2:34"],
-                  ["Роликовые лыжи", "0:01", "0:12", "2:20", "1:35", "0:37"],
-                ].map(([name, m1, m2, m3, m4, avg]) => (
-                  <tr key={name} className="border-b border-gray-800">
-                    <td className="py-2">{name}</td>
-                    <td className="text-center">{m1}</td>
-                    <td className="text-center">{m2}</td>
-                    <td className="text-center">{m3}</td>
-                    <td className="text-center">{m4}</td>
-                    <td className="text-center">{avg}</td>
+                  { zone: "I1", time: "03:20:00", color: "#3b82f6" },
+                  { zone: "I2", time: "02:15:00", color: "#10b981" },
+                  { zone: "I3", time: "01:40:00", color: "#facc15" },
+                  { zone: "I4", time: "00:45:00", color: "#f97316" },
+                  { zone: "I5", time: "00:20:00", color: "#ef4444" },
+                ].map(({ zone, time, color }) => (
+                  <tr
+                    key={zone}
+                    className="border-b border-gray-800 hover:bg-[#1b1c1f] transition"
+                  >
+                    <td className="py-3 flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: color }}
+                      ></div>
+                      <span className="font-medium text-gray-300">{zone}</span>
+                    </td>
+                    <td className="py-3 text-right font-semibold text-gray-100">
+                      {time}
+                    </td>
                   </tr>
                 ))}
               </tbody>
