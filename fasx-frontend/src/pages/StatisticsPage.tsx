@@ -3,18 +3,10 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
   Tooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
-const mockData = [
-  { month: "Май 2025", зона1: 30, зона2: 5, зона3: 2 },
-  { month: "Июль 2025", зона1: 28, зона2: 6, зона3: 3 },
-  { month: "Авг 2025", зона1: 25, зона2: 8, зона3: 4 },
-  { month: "Сен 2025", зона1: 22, зона2: 6, зона3: 5 },
-];
 
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState("Общий отчёт");
@@ -52,10 +44,26 @@ export default function StatisticsPage() {
     ),
   }));
 
+  const mockData = [
+    { month: "Янв", I1: 30, I2: 15, I3: 10, I4: 5, I5: 2 },
+    { month: "Фев", I1: 25, I2: 10, I3: 12, I4: 6, I5: 3 },
+    { month: "Мар", I1: 28, I2: 12, I3: 14, I4: 7, I5: 4 },
+    { month: "Апр", I1: 22, I2: 15, I3: 11, I4: 8, I5: 5 },
+    { month: "Май", I1: 30, I2: 18, I3: 12, I4: 6, I5: 4 },
+    { month: "Июн", I1: 27, I2: 16, I3: 13, I4: 7, I5: 3 },
+    { month: "Июл", I1: 32, I2: 20, I3: 15, I4: 8, I5: 5 },
+    { month: "Авг", I1: 28, I2: 18, I3: 14, I4: 6, I5: 4 },
+    { month: "Сен", I1: 26, I2: 15, I3: 12, I4: 7, I5: 3 },
+    { month: "Окт", I1: 30, I2: 17, I3: 13, I4: 8, I5: 4 },
+    { month: "Ноя", I1: 29, I2: 16, I3: 14, I4: 6, I5: 3 },
+    { month: "Дек", I1: 31, I2: 18, I3: 15, I4: 7, I5: 4 },
+  ];
+
   const toMinutes = (time: string) => {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
+
   const toTimeString = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -116,37 +124,15 @@ export default function StatisticsPage() {
         </div>
 
         {/* Диаграмма */}
-        {/* Диаграмма */}
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
-            data={[
-              { month: "Янв", I1: 30, I2: 15, I3: 10, I4: 5, I5: 2 },
-              { month: "Фев", I1: 25, I2: 10, I3: 12, I4: 6, I5: 3 },
-              { month: "Мар", I1: 28, I2: 12, I3: 14, I4: 7, I5: 4 },
-              { month: "Апр", I1: 22, I2: 15, I3: 11, I4: 8, I5: 5 },
-              { month: "Май", I1: 30, I2: 18, I3: 12, I4: 6, I5: 4 },
-              { month: "Июн", I1: 27, I2: 16, I3: 13, I4: 7, I5: 3 },
-              { month: "Июл", I1: 32, I2: 20, I3: 15, I4: 8, I5: 5 },
-              { month: "Авг", I1: 28, I2: 18, I3: 14, I4: 6, I5: 4 },
-              { month: "Сен", I1: 26, I2: 15, I3: 12, I4: 7, I5: 3 },
-              { month: "Окт", I1: 30, I2: 17, I3: 13, I4: 8, I5: 4 },
-              { month: "Ноя", I1: 29, I2: 16, I3: 14, I4: 6, I5: 3 },
-              { month: "Дек", I1: 31, I2: 18, I3: 15, I4: 7, I5: 4 },
-            ]}
+            data={mockData}
             margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             style={{ backgroundColor: "#1a1a1d", borderRadius: 12 }}
           >
-            <XAxis
-              dataKey="month"
-              axisLine={false}
-              tickLine={false}
-              stroke="#ccc"
-            />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
-            />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
+            <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
             <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
-
             <Bar dataKey="I1" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={32} />
             <Bar dataKey="I2" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} barSize={32} />
             <Bar dataKey="I3" stackId="a" fill="#facc15" radius={[6, 6, 0, 0]} barSize={32} />
@@ -171,12 +157,10 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(
-                  <tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
-                    <td className="py-2">{row}</td>
-                    <td colSpan={5} className="text-center text-gray-600">—</td>
-                  </tr>
-                ))}
+                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(<tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
+                  <td className="py-2">{row}</td>
+                  <td colSpan={5} className="text-center text-gray-600">—</td>
+                </tr>))}
               </tbody>
             </table>
           </div>
@@ -190,34 +174,24 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
-                  {months.map((m,i)=>(
-                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
-                  ))}
+                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
               <tbody>
                 {enduranceData.map(({zone,color,data},idx)=>(
-                  <tr
-                    key={zone}
-                    className={`border-t border-gray-800 cursor-pointer transition-colors duration-200 ${selectedRow===zone?"bg-[#1a1b1e]/90":"hover:bg-[#1d1e22]/80"}`}
-                    onClick={()=>setSelectedRow(zone)}
-                  >
+                  <tr key={zone} className={`border-t border-gray-800 cursor-pointer transition-colors duration-200 ${selectedRow===zone?"bg-[#1a1b1e]/90":"hover:bg-[#1d1e22]/80"}`} onClick={()=>setSelectedRow(zone)}>
                     <td className="py-3 px-3 flex items-center gap-2 border-r border-gray-800">
-                      <span className="inline-block w-3 h-3 rounded-full shadow-[0_0_6px] " style={{backgroundColor:color}}></span>
+                      <span className="inline-block w-3 h-3 rounded-full shadow-[0_0_6px]" style={{backgroundColor:color}}></span>
                       {zone}
                     </td>
-                    {data.map((t,i)=>(
-                      <td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>
-                    ))}
+                    {data.map((t,i)=>(<td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>))}
                     <td className="py-3 text-center text-blue-400 border-l border-gray-800">{totalByZone[idx]}</td>
                   </tr>
                 ))}
                 <tr className="bg-[#18191c] border-t border-gray-700 font-semibold text-blue-400">
                   <td className="py-3 px-3 text-left border-r border-gray-800">Общее время</td>
-                  {totalByMonth.map((t,i)=>(
-                    <td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>
-                  ))}
+                  {totalByMonth.map((t,i)=>(<td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>))}
                   <td className="py-3 text-center border-l border-gray-800">{toTimeString(totalByMonth.reduce((s,t)=>s+toMinutes(t),0))}</td>
                 </tr>
               </tbody>
@@ -233,9 +207,7 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
-                  {months.map((m,i)=>(
-                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
-                  ))}
+                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
@@ -243,17 +215,13 @@ export default function StatisticsPage() {
                 {trainingTypeData.map((row,idx)=>(
                   <tr key={row.type} className={`border-t border-gray-800 cursor-pointer transition-colors duration-200 ${selectedRow===row.type?"bg-[#1a1b1e]/90":"hover:bg-[#1d1e22]/80"}`} onClick={()=>setSelectedRow(row.type)}>
                     <td className="py-3 px-3 text-left border-r border-gray-800 font-medium">{row.type}</td>
-                    {row.data.map((time,i)=>(
-                      <td key={i} className="py-3 text-center border-r border-gray-800">{time}</td>
-                    ))}
+                    {row.data.map((time,i)=>(<td key={i} className="py-3 text-center border-r border-gray-800">{time}</td>))}
                     <td className="py-3 text-center text-blue-400 border-l border-gray-800">{totalTrainingByType[idx]}</td>
                   </tr>
                 ))}
                 <tr className="bg-[#18191c] border-t border-gray-700 font-semibold text-blue-400">
                   <td className="py-3 px-3 text-left border-r border-gray-800">Общее время</td>
-                  {totalTrainingByMonth.map((t,i)=>(
-                    <td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>
-                  ))}
+                  {totalTrainingByMonth.map((t,i)=>(<td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>))}
                   <td className="py-3 text-center border-l border-gray-800">{toTimeString(totalTrainingByMonth.reduce((s,t)=>s+toMinutes(t),0))}</td>
                 </tr>
               </tbody>
