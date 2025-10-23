@@ -21,6 +21,7 @@ export default function StatisticsPage() {
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
 
+  // Данные по зонам
   const enduranceData = [
     { zone: "I1", color: "#3b82f6", data: ["3:20", "2:50", "4:10", "3:45", "2:30", "4:00", "3:10", "2:55", "3:35", "4:20", "3:00", "3:10"] },
     { zone: "I2", color: "#10b981", data: ["2:15", "1:50", "2:00", "1:40", "1:35", "1:50", "2:10", "2:05", "2:20", "2:30", "2:15", "2:00"] },
@@ -31,17 +32,20 @@ export default function StatisticsPage() {
 
   const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
 
+  // Функция для перевода времени в минуты
   const toMinutes = (time: string) => {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
 
+  // Функция для перевода минут обратно в строку "ч:мм"
   const toTimeString = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
+  // Подсчет суммы по каждой колонке (месяцу)
   const totalByMonth = months.map((_, monthIndex) => {
     const totalMinutes = enduranceData.reduce(
       (sum, zone) => sum + toMinutes(zone.data[monthIndex]),
@@ -50,19 +54,9 @@ export default function StatisticsPage() {
     return toTimeString(totalMinutes);
   });
 
-  // Новый расчёт: общее время по каждой зоне (все месяцы)
-  const totalByZone = enduranceData.map((zone) => {
-    const totalMinutes = zone.data.reduce(
-      (sum, time) => sum + toMinutes(time),
-      0
-    );
-    return toTimeString(totalMinutes);
-  });
-
   return (
     <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-
         {/* ФИЛЬТРЫ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#111214] p-4 rounded-2xl border border-gray-800">
@@ -170,82 +164,45 @@ export default function StatisticsPage() {
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
           <h2 className="text-lg font-semibold mb-3">ВЫНОСЛИВОСТЬ</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800">
-              <thead className="text-gray-400 bg-[#141518]">
+            <table className="w-full text-sm text-gray-300 border-collapse">
+              <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
-                  <th className="text-left py-2 px-3 border-r border-gray-800">
-                    Зоны интенсивности
-                  </th>
+                  <th className="text-left py-2 px-3">Зоны интенсивности</th>
                   {months.map((month) => (
-                    <th
-                      key={month}
-                      className="py-2 px-2 text-center border-r border-gray-800"
-                    >
+                    <th key={month} className="py-2 px-2 text-center">
                       {month}
                     </th>
                   ))}
-                  <th className="py-2 px-2 text-center border-l border-gray-800 text-blue-400">
-                    Общее время
-                  </th>
                 </tr>
               </thead>
               <tbody>
-                {enduranceData.map(({ zone, color, data }, idx) => (
-                  <tr
-                    key={zone}
-                    className="border-t border-gray-800 hover:bg-[#1b1c1f] transition"
-                  >
-                    <td className="py-3 px-3 flex items-center gap-3 border-r border-gray-800">
-                      <div
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: color }}
-                      ></div>
+                {enduranceData.map(({ zone, color, data }) => (
+                  <tr key={zone} className="border-b border-gray-800 hover:bg-[#1b1c1f] transition">
+                    <td className="py-3 px-3 flex items-center gap-3">
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: color }}></div>
                       <span className="font-medium">{zone}</span>
                     </td>
                     {data.map((time, i) => (
-                      <td
-                        key={i}
-                        className="py-3 text-center text-gray-100 font-semibold border-r border-gray-800"
-                      >
+                      <td key={i} className="py-3 text-center text-gray-100 font-semibold">
                         {time}
                       </td>
                     ))}
-                    <td className="py-3 text-center font-semibold text-blue-400 border-l border-gray-800">
-                      {totalByZone[idx]}
-                    </td>
                   </tr>
                 ))}
 
                 {/* ОБЩЕЕ ВРЕМЯ */}
                 <tr className="bg-[#1a1b1e] border-t border-gray-700 font-semibold text-gray-100">
-                  <td className="py-3 px-3 text-left border-r border-gray-800">
-                    Общее время
-                  </td>
+                  <td className="py-3 px-3 text-left">Общее время</td>
                   {totalByMonth.map((time, i) => (
-                    <td
-                      key={i}
-                      className="py-3 text-center border-r border-gray-800"
-                    >
+                    <td key={i} className="py-3 text-center">
                       {time}
                     </td>
                   ))}
-                  <td className="py-3 text-center text-blue-400 border-l border-gray-800">
-                    {/* Сумма всех totalByMonth */}
-                    {(() => {
-                      const totalMinutes = totalByMonth.reduce(
-                        (sum, t) => sum + toMinutes(t),
-                        0
-                      );
-                      return toTimeString(totalMinutes);
-                    })()}
-                  </td>
-
-               </tr>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
