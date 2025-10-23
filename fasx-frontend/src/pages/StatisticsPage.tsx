@@ -7,12 +7,24 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { Home, BarChart3, ClipboardList, CalendarDays } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState("Общий отчёт");
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
 
   const months = [
     "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
@@ -85,8 +97,29 @@ export default function StatisticsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6 flex flex-col">
+
+      {/* Верхнее меню */}
+      <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex-1 max-w-6xl mx-auto space-y-6">
 
         {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -142,7 +175,6 @@ export default function StatisticsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
