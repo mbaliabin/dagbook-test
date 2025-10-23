@@ -130,19 +130,95 @@ export default function StatisticsPage() {
               data={mockData}
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
-              <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
-              <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
+              {/* Сетка */}
+              <CartesianGrid stroke="#222" vertical={false} />
 
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} />
+              {/* Оси */}
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                stroke="#ccc"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                stroke="#ccc"
+                tick={{ fontSize: 12 }}
+              />
+
+              {/* Tooltip тёмный */}
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1a1a1d",
+                  border: "1px solid #333",
+                  color: "#fff",
+                  boxShadow: "none",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                }}
+                itemStyle={{ color: "#fff" }}
+                labelStyle={{ color: "#ccc", fontWeight: 500 }}
+              />
+
+              {/* Легенда компактная */}
+              <Legend
+                verticalAlign="top"
+                align="right"
+                iconSize={12}
+                wrapperStyle={{ color: "#fff", paddingBottom: 10 }}
+              />
+
+              {/* Полностью «неактивные» бары */}
+              <Bar
+                dataKey="I1"
+                stackId="a"
+                fill="#3b82f6"
+                barSize={24}
+                isAnimationActive={false}
+                cursor="default"
+                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
+              />
+              <Bar
+                dataKey="I2"
+                stackId="a"
+                fill="#10b981"
+                barSize={24}
+                isAnimationActive={false}
+                cursor="default"
+                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
+              />
+              <Bar
+                dataKey="I3"
+                stackId="a"
+                fill="#facc15"
+                barSize={24}
+                isAnimationActive={false}
+                cursor="default"
+                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
+              />
+              <Bar
+                dataKey="I4"
+                stackId="a"
+                fill="#f97316"
+                barSize={24}
+                isAnimationActive={false}
+                cursor="default"
+                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
+              />
+              <Bar
+                dataKey="I5"
+                stackId="a"
+                fill="#ef4444"
+                barSize={24}
+                isAnimationActive={false}
+                cursor="default"
+                label={{ position: 'top', fill: '#fff', fontSize: 11 }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
