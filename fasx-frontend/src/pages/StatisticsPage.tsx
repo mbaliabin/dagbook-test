@@ -108,6 +108,8 @@ export default function StatisticsPage() {
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
+
+              {/* Tooltip можно убрать или оставить */}
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1a1a1d",
@@ -120,17 +122,19 @@ export default function StatisticsPage() {
                 itemStyle={{ color: "#fff" }}
                 labelStyle={{ color: "#ccc", fontWeight: 500 }}
               />
+
               <Legend wrapperStyle={{ color: "#fff" }} />
 
-              {/* Вот тут ключ: isAnimationActive={false} и на hover ничего не происходит */}
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
+              {/* Полностью неактивные бары */}
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} pointerEvents="none" />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} pointerEvents="none" />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} pointerEvents="none" />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} pointerEvents="none" />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} pointerEvents="none" />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
 
         {/* Таблицы */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
