@@ -69,8 +69,8 @@ export default function ProfilePage() {
   const fetchWorkouts = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(${import.meta.env.VITE_API_URL}/api/workouts/user, {
-        headers: { Authorization: Bearer ${token} },
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error("Ошибка загрузки тренировок")
       const data: Workout[] = await res.json()
@@ -124,7 +124,7 @@ export default function ProfilePage() {
   const totalDistance = filteredWorkouts.reduce((sum, w) => sum + (w.distance || 0), 0)
   const hours = Math.floor(totalDuration / 60)
   const minutes = totalDuration % 60
-  const totalTimeStr = ${hours}:${minutes.toString().padStart(2, '0')}
+  const totalTimeStr = `${hours}:${minutes.toString().padStart(2, '0')}`
 
   const intensiveSessions = filteredWorkouts.filter(w => {
     const zones = [
@@ -185,9 +185,9 @@ export default function ProfilePage() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={flex flex-col items-center text-sm transition-colors ${
+                className={`flex flex-col items-center text-sm transition-colors ${
                   isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }}
+                }`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -211,7 +211,7 @@ export default function ProfilePage() {
               <p className="text-sm text-white">
                 {!dateRange
                   ? selectedMonth.format('MMMM YYYY')
-                  : ${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
                 }
               </p>
             </div>
@@ -380,9 +380,9 @@ export default function ProfilePage() {
 
       {/* Нижняя навигация — появляется при скролле */}
       <div
-        className={fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
+        className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
           showBottomMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
-        }}
+        }`}
       >
         {menuItems.map((item) => {
           const Icon = item.icon
@@ -395,9 +395,9 @@ export default function ProfilePage() {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={flex flex-col items-center text-sm transition-colors ${
+              className={`flex flex-col items-center text-sm transition-colors ${
                 isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-              }}
+              }`}
             >
               <Icon className="w-6 h-6" />
               <span>{item.label}</span>
