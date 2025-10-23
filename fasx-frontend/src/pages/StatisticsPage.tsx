@@ -116,25 +116,27 @@ export default function StatisticsPage() {
         </div>
 
         {/* Диаграмма */}
-        <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={mockData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-              style={{ backgroundColor: "#111214" }} // вот здесь фон
-            >
-              <XAxis dataKey="month" stroke="#aaa" />
-              <YAxis stroke="#aaa" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333" }} />
-              <Legend />
-              <Bar dataKey="зона1" stackId="a" fill="#d1d5db" radius={[6,6,0,0]} barSize={20}/>
-              <Bar dataKey="зона2" stackId="a" fill="#3b82f6" radius={[6,6,0,0]} barSize={20}/>
-              <Bar dataKey="зона3" stackId="a" fill="#facc15" radius={[6,6,0,0]} barSize={20}/>
-              <Bar dataKey="зона4" stackId="a" fill="#f97316" radius={[6,6,0,0]} barSize={20}/>
-              <Bar dataKey="зона5" stackId="a" fill="#ef4444" radius={[6,6,0,0]} barSize={20}/>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={mockData} // здесь нужно 12 месяцев с данными зон
+            margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+          >
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              stroke="#aaa"
+            />
+            <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333" }} />
+            <Legend formatter={(value) => value} />
+
+            <Bar dataKey="I1" stackId="a" fill="#3b82f6" radius={[6,6,0,0]} barSize={24} />
+            <Bar dataKey="I2" stackId="a" fill="#10b981" radius={[6,6,0,0]} barSize={24} />
+            <Bar dataKey="I3" stackId="a" fill="#facc15" radius={[6,6,0,0]} barSize={24} />
+            <Bar dataKey="I4" stackId="a" fill="#f97316" radius={[6,6,0,0]} barSize={24} />
+            <Bar dataKey="I5" stackId="a" fill="#ef4444" radius={[6,6,0,0]} barSize={24} />
+          </BarChart>
+        </ResponsiveContainer>
 
 
         {/* Параметры дня */}
