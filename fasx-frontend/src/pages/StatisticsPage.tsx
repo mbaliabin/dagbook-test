@@ -134,39 +134,48 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* ВЫНОСЛИВОСТЬ */}
+        {/* ВЫНОСЛИВОСТЬ (12 месяцев) */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
           <h2 className="text-lg font-semibold mb-3">ВЫНОСЛИВОСТЬ</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm text-gray-300 border-collapse">
               <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
-                  <th className="text-left py-2">Зоны интенсивности</th>
-                  <th className="text-right py-2">Месяц</th>
+                  <th className="text-left py-2 px-3">Зоны интенсивности</th>
+                  {[
+                    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
+                    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
+                  ].map((month) => (
+                    <th key={month} className="py-2 px-2 text-center">
+                      {month}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { zone: "I1", time: "03:20:00", color: "#3b82f6" },
-                  { zone: "I2", time: "02:15:00", color: "#10b981" },
-                  { zone: "I3", time: "01:40:00", color: "#facc15" },
-                  { zone: "I4", time: "00:45:00", color: "#f97316" },
-                  { zone: "I5", time: "00:20:00", color: "#ef4444" },
-                ].map(({ zone, time, color }) => (
-                  <tr
-                    key={zone}
-                    className="border-b border-gray-800 hover:bg-[#1b1c1f] transition"
-                  >
-                    <td className="py-3 flex items-center gap-3">
+                  { zone: "I1", color: "#3b82f6", data: ["3:20", "2:50", "4:10", "3:45", "2:30", "4:00", "3:10", "2:55", "3:35", "4:20", "3:00", "3:10"] },
+                  { zone: "I2", color: "#10b981", data: ["2:15", "1:50", "2:00", "1:40", "1:35", "1:50", "2:10", "2:05", "2:20", "2:30", "2:15", "2:00"] },
+                  { zone: "I3", color: "#facc15", data: ["1:40", "1:30", "1:20", "1:25", "1:10", "1:30", "1:45", "1:25", "1:40", "1:50", "1:35", "1:25"] },
+                  { zone: "I4", color: "#f97316", data: ["0:45", "0:50", "0:35", "0:40", "0:30", "0:35", "0:50", "0:45", "0:55", "0:50", "0:40", "0:35"] },
+                  { zone: "I5", color: "#ef4444", data: ["0:20", "0:15", "0:25", "0:20", "0:18", "0:20", "0:22", "0:19", "0:25", "0:30", "0:20", "0:18"] },
+                ].map(({ zone, color, data }) => (
+                  <tr key={zone} className="border-b border-gray-800 hover:bg-[#1b1c1f] transition">
+                    <td className="py-3 px-3 flex items-center gap-3">
                       <div
                         className="w-4 h-4 rounded"
                         style={{ backgroundColor: color }}
                       ></div>
-                      <span className="font-medium text-gray-300">{zone}</span>
+                      <span className="font-medium">{zone}</span>
                     </td>
-                    <td className="py-3 text-right font-semibold text-gray-100">
-                      {time}
-                    </td>
+                    {data.map((time, i) => (
+                      <td
+                        key={i}
+                        className="py-3 text-center text-gray-100 font-semibold"
+                      >
+                        {time}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
