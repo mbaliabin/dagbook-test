@@ -118,25 +118,29 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
-            data={mockData} // здесь нужно 12 месяцев с данными зон
+            data={mockData} // данные за 12 месяцев
             margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+            style={{ backgroundColor: "#1a1a1d", borderRadius: 12 }} // тёмный фон с закруглёнными углами
           >
             <XAxis
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              stroke="#aaa"
+              stroke="#ccc" // цвет подписей месяцев
             />
-            <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333" }} />
-            <Legend formatter={(value) => value} />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
+            />
+            <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
 
-            <Bar dataKey="I1" stackId="a" fill="#3b82f6" radius={[6,6,0,0]} barSize={24} />
-            <Bar dataKey="I2" stackId="a" fill="#10b981" radius={[6,6,0,0]} barSize={24} />
-            <Bar dataKey="I3" stackId="a" fill="#facc15" radius={[6,6,0,0]} barSize={24} />
-            <Bar dataKey="I4" stackId="a" fill="#f97316" radius={[6,6,0,0]} barSize={24} />
-            <Bar dataKey="I5" stackId="a" fill="#ef4444" radius={[6,6,0,0]} barSize={24} />
+            <Bar dataKey="I1" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
+            <Bar dataKey="I2" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
+            <Bar dataKey="I3" stackId="a" fill="#facc15" radius={[6, 6, 0, 0]} barSize={24} />
+            <Bar dataKey="I4" stackId="a" fill="#f97316" radius={[6, 6, 0, 0]} barSize={24} />
+            <Bar dataKey="I5" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={24} />
           </BarChart>
         </ResponsiveContainer>
+
 
 
         {/* Параметры дня */}
