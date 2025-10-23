@@ -134,15 +134,15 @@ export default function StatisticsPage() {
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
 
-              {/* Закругляем только верхний конец стека */}
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} radius={[6,6,0,0]} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} radius={0} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} radius={0} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} radius={0} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} radius={0} />
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
