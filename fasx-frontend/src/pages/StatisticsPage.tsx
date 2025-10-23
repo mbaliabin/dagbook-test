@@ -21,6 +21,39 @@ export default function StatisticsPage() {
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
 
+  // Данные по зонам
+  const enduranceData = [
+    { zone: "I1", color: "#3b82f6", data: ["3:20", "2:50", "4:10", "3:45", "2:30", "4:00", "3:10", "2:55", "3:35", "4:20", "3:00", "3:10"] },
+    { zone: "I2", color: "#10b981", data: ["2:15", "1:50", "2:00", "1:40", "1:35", "1:50", "2:10", "2:05", "2:20", "2:30", "2:15", "2:00"] },
+    { zone: "I3", color: "#facc15", data: ["1:40", "1:30", "1:20", "1:25", "1:10", "1:30", "1:45", "1:25", "1:40", "1:50", "1:35", "1:25"] },
+    { zone: "I4", color: "#f97316", data: ["0:45", "0:50", "0:35", "0:40", "0:30", "0:35", "0:50", "0:45", "0:55", "0:50", "0:40", "0:35"] },
+    { zone: "I5", color: "#ef4444", data: ["0:20", "0:15", "0:25", "0:20", "0:18", "0:20", "0:22", "0:19", "0:25", "0:30", "0:20", "0:18"] },
+  ];
+
+  const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
+
+  // Функция для перевода времени в минуты
+  const toMinutes = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  // Функция для перевода минут обратно в строку "ч:мм"
+  const toTimeString = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${m.toString().padStart(2, "0")}`;
+  };
+
+  // Подсчет суммы по каждой колонке (месяцу)
+  const totalByMonth = months.map((_, monthIndex) => {
+    const totalMinutes = enduranceData.reduce(
+      (sum, zone) => sum + toMinutes(zone.data[monthIndex]),
+      0
+    );
+    return toTimeString(totalMinutes);
+  });
+
   return (
     <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -114,14 +147,7 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  "Болезнь",
-                  "Травма",
-                  "Соревнования",
-                  "Высота",
-                  "В поездке",
-                  "Выходной",
-                ].map((row) => (
+                {["Болезнь", "Травма", "Соревнования", "Высота", "В поездке", "Выходной"].map((row) => (
                   <tr key={row} className="border-b border-gray-800">
                     <td className="py-2">{row}</td>
                     <td colSpan={5} className="text-center text-gray-600">
@@ -134,7 +160,7 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* ВЫНОСЛИВОСТЬ (12 месяцев) */}
+        {/* ВЫНОСЛИВОСТЬ */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
           <h2 className="text-lg font-semibold mb-3">ВЫНОСЛИВОСТЬ</h2>
           <div className="overflow-x-auto">
@@ -142,10 +168,7 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
                   <th className="text-left py-2 px-3">Зоны интенсивности</th>
-                  {[
-                    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-                    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
-                  ].map((month) => (
+                  {months.map((month) => (
                     <th key={month} className="py-2 px-2 text-center">
                       {month}
                     </th>
@@ -153,31 +176,29 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { zone: "I1", color: "#3b82f6", data: ["3:20", "2:50", "4:10", "3:45", "2:30", "4:00", "3:10", "2:55", "3:35", "4:20", "3:00", "3:10"] },
-                  { zone: "I2", color: "#10b981", data: ["2:15", "1:50", "2:00", "1:40", "1:35", "1:50", "2:10", "2:05", "2:20", "2:30", "2:15", "2:00"] },
-                  { zone: "I3", color: "#facc15", data: ["1:40", "1:30", "1:20", "1:25", "1:10", "1:30", "1:45", "1:25", "1:40", "1:50", "1:35", "1:25"] },
-                  { zone: "I4", color: "#f97316", data: ["0:45", "0:50", "0:35", "0:40", "0:30", "0:35", "0:50", "0:45", "0:55", "0:50", "0:40", "0:35"] },
-                  { zone: "I5", color: "#ef4444", data: ["0:20", "0:15", "0:25", "0:20", "0:18", "0:20", "0:22", "0:19", "0:25", "0:30", "0:20", "0:18"] },
-                ].map(({ zone, color, data }) => (
+                {enduranceData.map(({ zone, color, data }) => (
                   <tr key={zone} className="border-b border-gray-800 hover:bg-[#1b1c1f] transition">
                     <td className="py-3 px-3 flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: color }}
-                      ></div>
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: color }}></div>
                       <span className="font-medium">{zone}</span>
                     </td>
                     {data.map((time, i) => (
-                      <td
-                        key={i}
-                        className="py-3 text-center text-gray-100 font-semibold"
-                      >
+                      <td key={i} className="py-3 text-center text-gray-100 font-semibold">
                         {time}
                       </td>
                     ))}
                   </tr>
                 ))}
+
+                {/* ОБЩЕЕ ВРЕМЯ */}
+                <tr className="bg-[#1a1b1e] border-t border-gray-700 font-semibold text-gray-100">
+                  <td className="py-3 px-3 text-left">Общее время</td>
+                  {totalByMonth.map((time, i) => (
+                    <td key={i} className="py-3 text-center">
+                      {time}
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>
