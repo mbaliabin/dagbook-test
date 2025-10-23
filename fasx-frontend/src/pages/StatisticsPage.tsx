@@ -9,27 +9,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const months = [
-  "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
-];
-
-const enduranceData = [
-  { zone: "I1", color: "#3b82f6", data: ["3:20","2:50","4:10","3:45","2:30","4:00","3:10","2:55","3:35","4:20","3:00","3:10"] },
-  { zone: "I2", color: "#10b981", data: ["2:15","1:50","2:00","1:40","1:35","1:50","2:10","2:05","2:20","2:30","2:15","2:00"] },
-  { zone: "I3", color: "#facc15", data: ["1:40","1:30","1:20","1:25","1:10","1:30","1:45","1:25","1:40","1:50","1:35","1:25"] },
-  { zone: "I4", color: "#f97316", data: ["0:45","0:50","0:35","0:40","0:30","0:35","0:50","0:45","0:55","0:50","0:40","0:35"] },
-  { zone: "I5", color: "#ef4444", data: ["0:20","0:15","0:25","0:20","0:18","0:20","0:22","0:19","0:25","0:30","0:20","0:18"] },
-];
-
-const trainingTypes = [
-  "Бег",
-  "Лыжи классическим стилем",
-  "Лыжи коньковым стилем",
-  "Лыжероллеры классическим стилем",
-  "Лыжероллеры коньковым стилем",
-  "Силовая тренировка",
-  "Велосипед",
-  "Другое",
+const mockData = [
+  { month: "Май 2025", зона1: 30, зона2: 5, зона3: 2 },
+  { month: "Июль 2025", зона1: 28, зона2: 6, зона3: 3 },
+  { month: "Авг 2025", зона1: 25, зона2: 8, зона3: 4 },
+  { month: "Сен 2025", зона1: 22, зона2: 6, зона3: 5 },
 ];
 
 export default function StatisticsPage() {
@@ -37,6 +21,29 @@ export default function StatisticsPage() {
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
+
+  const months = [
+    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
+  ];
+
+  const enduranceData = [
+    { zone: "I1", color: "#3b82f6", data: ["3:20","2:50","4:10","3:45","2:30","4:00","3:10","2:55","3:35","4:20","3:00","3:10"] },
+    { zone: "I2", color: "#10b981", data: ["2:15","1:50","2:00","1:40","1:35","1:50","2:10","2:05","2:20","2:30","2:15","2:00"] },
+    { zone: "I3", color: "#facc15", data: ["1:40","1:30","1:20","1:25","1:10","1:30","1:45","1:25","1:40","1:50","1:35","1:25"] },
+    { zone: "I4", color: "#f97316", data: ["0:45","0:50","0:35","0:40","0:30","0:35","0:50","0:45","0:55","0:50","0:40","0:35"] },
+    { zone: "I5", color: "#ef4444", data: ["0:20","0:15","0:25","0:20","0:18","0:20","0:22","0:19","0:25","0:30","0:20","0:18"] },
+  ];
+
+  const trainingTypes = [
+    "Бег",
+    "Лыжи классическим стилем",
+    "Лыжи коньковым стилем",
+    "Лыжероллеры классическим стилем",
+    "Лыжероллеры коньковым стилем",
+    "Силовая тренировка",
+    "Велосипед",
+    "Другое",
+  ];
 
   const trainingTypeData = trainingTypes.map((type) => ({
     type,
@@ -54,15 +61,6 @@ export default function StatisticsPage() {
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
-
-  const chartData = months.map((month, i) => ({
-    month,
-    зона1: toMinutes(enduranceData[0].data[i]),
-    зона2: toMinutes(enduranceData[1].data[i]),
-    зона3: toMinutes(enduranceData[2].data[i]),
-    зона4: toMinutes(enduranceData[3].data[i]),
-    зона5: toMinutes(enduranceData[4].data[i]),
-  }));
 
   const totalByMonth = months.map((_, monthIndex) =>
     toTimeString(enduranceData.reduce((sum, zone) => sum + toMinutes(zone.data[monthIndex]), 0))
@@ -120,41 +118,46 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="month" stroke="#aaa" tickLine={false} axisLine={false} />
-              <YAxis hide />
-              <Tooltip
-                formatter={(value:number) => {
-                  const h = Math.floor(value / 60);
-                  const m = value % 60;
-                  return `${h}:${m.toString().padStart(2,"0")}`;
-                }}
-                contentStyle={{ backgroundColor:"#1a1a1d", border:"1px solid #333" }}
-              />
-              <Legend
-                payload={[
-                  { value: "I1", type: "square", color: "#a3e635" },
-                  { value: "I2", type: "square", color: "#22c55e" },
-                  { value: "I3", type: "square", color: "#facc15" },
-                  { value: "I4", type: "square", color: "#f97316" },
-                  { value: "I5", type: "square", color: "#ef4444" },
-                ]}
-                verticalAlign="bottom"
-                align="center"
-                iconType="square"
-                wrapperStyle={{ marginTop: 10 }}
-              />
-              <Bar dataKey="зона1" stackId="a" fill="#a3e635" />
-              <Bar dataKey="зона2" stackId="a" fill="#22c55e" />
-              <Bar dataKey="зона3" stackId="a" fill="#facc15" />
-              <Bar dataKey="зона4" stackId="a" fill="#f97316" />
-              <Bar dataKey="зона5" stackId="a" fill="#ef4444" />
+            <BarChart data={mockData}>
+              <XAxis dataKey="month" stroke="#aaa" />
+              <YAxis stroke="#aaa" />
+              <Tooltip contentStyle={{ backgroundColor:"#1a1a1d", border:"1px solid #333" }}/>
+              <Legend />
+              <Bar dataKey="зона1" stackId="a" fill="#1E90FF"/>
+              <Bar dataKey="зона2" stackId="a" fill="#4682B4"/>
+              <Bar dataKey="зона3" stackId="a" fill="#FFA500"/>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Параметры дня */}
+        <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
+          <h2 className="text-lg font-semibold mb-3">Параметры дня</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse border border-gray-800 rounded-xl overflow-hidden">
+              <thead className="text-gray-400 border-b border-gray-700 bg-gradient-to-b from-[#18191c] to-[#131416]">
+                <tr>
+                  <th className="text-left py-2"></th>
+                  <th>Май 2025</th>
+                  <th>Июль 2025</th>
+                  <th>Авг 2025</th>
+                  <th>Сен 2025</th>
+                  <th>Среднее/мес</th>
+                </tr>
+              </thead>
+              <tbody>
+                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(
+                  <tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
+                    <td className="py-2">{row}</td>
+                    <td colSpan={5} className="text-center text-gray-600">—</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-        {/* Таблицы Выносливость */}
+        {/* Выносливость */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <h2 className="text-lg font-semibold mb-3">Выносливость</h2>
           <div className="overflow-x-auto">
@@ -163,7 +166,7 @@ export default function StatisticsPage() {
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
                   {months.map((m,i)=>(
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
                   ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
@@ -176,7 +179,7 @@ export default function StatisticsPage() {
                     onClick={()=>setSelectedRow(zone)}
                   >
                     <td className="py-3 px-3 flex items-center gap-2 border-r border-gray-800">
-                      <span className="inline-block w-3 h-3 rounded-full shadow-[0_0_6px]" style={{backgroundColor:color}}></span>
+                      <span className="inline-block w-3 h-3 rounded-full shadow-[0_0_6px] " style={{backgroundColor:color}}></span>
                       {zone}
                     </td>
                     {data.map((t,i)=>(
@@ -197,7 +200,7 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Таблицы Тип тренировки */}
+        {/* Тип тренировки */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
           <div className="overflow-x-auto">
@@ -206,7 +209,7 @@ export default function StatisticsPage() {
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
                   {months.map((m,i)=>(
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
                   ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
@@ -214,9 +217,9 @@ export default function StatisticsPage() {
               <tbody>
                 {trainingTypeData.map((row,idx)=>(
                   <tr key={row.type} className={`border-t border-gray-800 cursor-pointer transition-colors duration-200 ${selectedRow===row.type?"bg-[#1a1b1e]/90":"hover:bg-[#1d1e22]/80"}`} onClick={()=>setSelectedRow(row.type)}>
-                    <td className="py-3 px-3 border-r border-gray-800">{row.type}</td>
-                    {row.data.map((t,i)=>(
-                      <td key={i} className="py-3 text-center border-r border-gray-800">{t}</td>
+                    <td className="py-3 px-3 text-left border-r border-gray-800 font-medium">{row.type}</td>
+                    {row.data.map((time,i)=>(
+                      <td key={i} className="py-3 text-center border-r border-gray-800">{time}</td>
                     ))}
                     <td className="py-3 text-center text-blue-400 border-l border-gray-800">{totalTrainingByType[idx]}</td>
                   </tr>
