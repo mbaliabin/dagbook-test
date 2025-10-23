@@ -203,9 +203,9 @@ export default function StatisticsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* TOTALSUM */}
+        {/* Параметры дня */}
                 <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
-                  <h2 className="text-lg font-semibold mb-3">ИТОГО</h2>
+                  <h2 className="text-lg font-semibold mb-3">Параметры дня</h2>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="text-gray-400 border-b border-gray-700">
@@ -232,9 +232,9 @@ export default function StatisticsPage() {
                   </div>
                 </div>
 
-        {/* ВЫНОСЛИВОСТЬ */}
+        {/* Выносливость */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
-          <h2 className="text-lg font-semibold mb-3">ВЫНОСЛИВОСТЬ</h2>
+          <h2 className="text-lg font-semibold mb-3">Выносливость</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800">
               <thead className="text-gray-400 bg-[#141518]">
@@ -273,9 +273,9 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* ТИП ТРЕНИРОВКИ */}
+        {/* Тип тренировки */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800">
-          <h2 className="text-lg font-semibold mb-3">ТИП ТРЕНИРОВКИ</h2>
+          <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800">
               <thead className="text-gray-400 bg-[#141518]">
