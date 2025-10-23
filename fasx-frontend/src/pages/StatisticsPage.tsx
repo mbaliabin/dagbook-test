@@ -121,11 +121,19 @@ export default function StatisticsPage() {
                 labelStyle={{ color: "#ccc", fontWeight: 500 }}
               />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} cursor="none" />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} cursor="none" />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} cursor="none" />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} cursor="none" />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} cursor="none" />
+
+              {/* Кастомный Bar без эффекта hover */}
+              {["I1","#3b82f6","I2","#10b981","I3","#facc15","I4","#f97316","I5","#ef4444"].map((v,i)=>(
+                <Bar
+                  key={i}
+                  dataKey={v as string}
+                  stackId="a"
+                  fill={v as string}
+                  barSize={32}
+                  isAnimationActive={false}
+                  shape={(props) => <rect {...props} fill={v as string} />}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
