@@ -28,7 +28,6 @@ export default function StatisticsPage() {
 
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
-  // Данные для примера
   const enduranceData = [
     { zone: "I1", color: "#3b82f6", data: Array(12).fill("3:00") },
     { zone: "I2", color: "#10b981", data: Array(12).fill("2:00") },
@@ -74,6 +73,7 @@ export default function StatisticsPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0B0D] text-gray-100 flex flex-col px-4 py-6">
+
       {/* Верхнее меню */}
       <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
         {menuItems.map((item) => {
@@ -95,6 +95,7 @@ export default function StatisticsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6 space-y-6">
+
         {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#111214] p-4 rounded-2xl border border-gray-800">
@@ -108,7 +109,19 @@ export default function StatisticsPage() {
               <option>Выносливость</option>
               <option>Силовые</option>
             </select>
+            <div className="flex items-center gap-4 mt-3 text-sm">
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input type="radio" checked={mode==="Время"} onChange={()=>setMode("Время")} className="accent-blue-500"/>
+                Время
+              </label>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input type="radio" checked={mode==="Процент"} onChange={()=>setMode("Процент")} className="accent-blue-500"/>
+                Процент
+              </label>
+              <span className="text-gray-500">Экспортировать статистику</span>
+            </div>
           </div>
+
           <div className="bg-[#111214] p-4 rounded-2xl border border-gray-800">
             <label className="block text-sm font-semibold mb-2">Интервал времени</label>
             <div className="flex items-center gap-3">
@@ -121,10 +134,13 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={totalByMonth.map((t,i)=>({month:months[i], I1:0,I2:0,I3:0,I4:0,I5:0}))}>
+            <BarChart
+              data={months.map((m) => ({ month: m, I1: 0, I2:0, I3:0, I4:0, I5:0 }))}
+              margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+            >
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
-              <Legend wrapperStyle={{ color: "#fff" }} />
+              <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
               <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
               <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
               <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
@@ -133,7 +149,6 @@ export default function StatisticsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
@@ -151,10 +166,12 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(<tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
-                  <td className="py-2">{row}</td>
-                  <td colSpan={5} className="text-center text-gray-600">—</td>
-                </tr>))}
+                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(
+                  <tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
+                    <td className="py-2">{row}</td>
+                    <td colSpan={5} className="text-center text-gray-600">—</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -168,7 +185,9 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
-                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
+                  {months.map((m,i)=>(
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
+                  ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
@@ -201,7 +220,9 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
-                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
+                  {months.map((m,i)=>(
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
+                  ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
