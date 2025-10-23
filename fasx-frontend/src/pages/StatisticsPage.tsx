@@ -26,31 +26,56 @@ export default function StatisticsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const months = [
+    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
+  ];
 
   const enduranceData = [
-    { zone: "I1", color: "#3b82f6", data: Array(12).fill("3:00") },
-    { zone: "I2", color: "#10b981", data: Array(12).fill("2:00") },
-    { zone: "I3", color: "#facc15", data: Array(12).fill("1:30") },
-    { zone: "I4", color: "#f97316", data: Array(12).fill("0:45") },
-    { zone: "I5", color: "#ef4444", data: Array(12).fill("0:20") },
+    { zone: "I1", color: "#3b82f6", data: ["3:20","2:50","4:10","3:45","2:30","4:00","3:10","2:55","3:35","4:20","3:00","3:10"] },
+    { zone: "I2", color: "#10b981", data: ["2:15","1:50","2:00","1:40","1:35","1:50","2:10","2:05","2:20","2:30","2:15","2:00"] },
+    { zone: "I3", color: "#facc15", data: ["1:40","1:30","1:20","1:25","1:10","1:30","1:45","1:25","1:40","1:50","1:35","1:25"] },
+    { zone: "I4", color: "#f97316", data: ["0:45","0:50","0:35","0:40","0:30","0:35","0:50","0:45","0:55","0:50","0:40","0:35"] },
+    { zone: "I5", color: "#ef4444", data: ["0:20","0:15","0:25","0:20","0:18","0:20","0:22","0:19","0:25","0:30","0:20","0:18"] },
   ];
 
   const trainingTypes = [
-    "Бег","Лыжи классическим стилем","Лыжи коньковым стилем",
-    "Лыжероллеры классическим стилем","Лыжероллеры коньковым стилем",
-    "Силовая тренировка","Велосипед","Другое",
+    "Бег",
+    "Лыжи классическим стилем",
+    "Лыжи коньковым стилем",
+    "Лыжероллеры классическим стилем",
+    "Лыжероллеры коньковым стилем",
+    "Силовая тренировка",
+    "Велосипед",
+    "Другое",
   ];
 
   const trainingTypeData = trainingTypes.map((type) => ({
     type,
-    data: Array.from({ length: 12 }, () => "1:30"),
+    data: Array.from({ length: 12 }, () =>
+      `${Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`
+    ),
   }));
+
+  const mockData = [
+    { month: "Янв", I1: 30, I2: 15, I3: 10, I4: 5, I5: 2 },
+    { month: "Фев", I1: 25, I2: 10, I3: 12, I4: 6, I5: 3 },
+    { month: "Мар", I1: 28, I2: 12, I3: 14, I4: 7, I5: 4 },
+    { month: "Апр", I1: 22, I2: 15, I3: 11, I4: 8, I5: 5 },
+    { month: "Май", I1: 30, I2: 18, I3: 12, I4: 6, I5: 4 },
+    { month: "Июн", I1: 27, I2: 16, I3: 13, I4: 7, I5: 3 },
+    { month: "Июл", I1: 32, I2: 20, I3: 15, I4: 8, I5: 5 },
+    { month: "Авг", I1: 28, I2: 18, I3: 14, I4: 6, I5: 4 },
+    { month: "Сен", I1: 26, I2: 15, I3: 12, I4: 7, I5: 3 },
+    { month: "Окт", I1: 30, I2: 17, I3: 13, I4: 8, I5: 4 },
+    { month: "Ноя", I1: 29, I2: 16, I3: 14, I4: 6, I5: 3 },
+    { month: "Дек", I1: 31, I2: 18, I3: 15, I4: 7, I5: 4 },
+  ];
 
   const toMinutes = (time: string) => {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
+
   const toTimeString = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -60,6 +85,7 @@ export default function StatisticsPage() {
   const totalByMonth = months.map((_, monthIndex) =>
     toTimeString(enduranceData.reduce((sum, zone) => sum + toMinutes(zone.data[monthIndex]), 0))
   );
+
   const totalByZone = enduranceData.map((zone) =>
     toTimeString(zone.data.reduce((sum, time) => sum + toMinutes(time), 0))
   );
@@ -67,15 +93,16 @@ export default function StatisticsPage() {
   const totalTrainingByMonth = months.map((_, i) =>
     toTimeString(trainingTypeData.reduce((sum, type) => sum + toMinutes(type.data[i]), 0))
   );
+
   const totalTrainingByType = trainingTypeData.map((t) =>
     toTimeString(t.data.reduce((sum, time) => sum + toMinutes(time), 0))
   );
 
   return (
-    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 flex flex-col px-4 py-6">
+    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6 flex flex-col">
 
       {/* Верхнее меню */}
-      <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+      <div className="max-w-6xl mx-auto w-full flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -94,7 +121,8 @@ export default function StatisticsPage() {
         })}
       </div>
 
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* Основной контент */}
+      <div className="flex-1 max-w-6xl mx-auto space-y-6">
 
         {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,11 +163,13 @@ export default function StatisticsPage() {
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
-              data={months.map((m) => ({ month: m, I1: 0, I2:0, I3:0, I4:0, I5:0 }))}
+              data={mockData}
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
+              />
               <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
               <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
               <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
