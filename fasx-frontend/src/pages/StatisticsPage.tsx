@@ -121,8 +121,8 @@ export default function StatisticsPage() {
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <XAxis dataKey="month" stroke="#aaa" />
-              <YAxis stroke="#aaa" />
+              <XAxis dataKey="month" stroke="#aaa" tickLine={false} axisLine={false} />
+              <YAxis hide />
               <Tooltip
                 formatter={(value:number) => {
                   const h = Math.floor(value / 60);
@@ -131,15 +131,28 @@ export default function StatisticsPage() {
                 }}
                 contentStyle={{ backgroundColor:"#1a1a1d", border:"1px solid #333" }}
               />
-              <Legend />
-              <Bar dataKey="зона1" stackId="a" fill="#3b82f6" />
-              <Bar dataKey="зона2" stackId="a" fill="#10b981" />
+              <Legend
+                payload={[
+                  { value: "I1", type: "square", color: "#a3e635" },
+                  { value: "I2", type: "square", color: "#22c55e" },
+                  { value: "I3", type: "square", color: "#facc15" },
+                  { value: "I4", type: "square", color: "#f97316" },
+                  { value: "I5", type: "square", color: "#ef4444" },
+                ]}
+                verticalAlign="bottom"
+                align="center"
+                iconType="square"
+                wrapperStyle={{ marginTop: 10 }}
+              />
+              <Bar dataKey="зона1" stackId="a" fill="#a3e635" />
+              <Bar dataKey="зона2" stackId="a" fill="#22c55e" />
               <Bar dataKey="зона3" stackId="a" fill="#facc15" />
               <Bar dataKey="зона4" stackId="a" fill="#f97316" />
               <Bar dataKey="зона5" stackId="a" fill="#ef4444" />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
 
         {/* Таблицы Выносливость */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
