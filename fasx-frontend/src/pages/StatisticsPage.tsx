@@ -3,11 +3,9 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
   Tooltip,
   Legend,
   ResponsiveContainer,
-  CartesianGrid,
 } from "recharts";
 
 export default function StatisticsPage() {
@@ -132,39 +130,15 @@ export default function StatisticsPage() {
               data={mockData}
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
-              {/* Сетка */}
-              <CartesianGrid stroke="#222" vertical={false} strokeDasharray="3 3" />
-
-              {/* Оси */}
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
-              <YAxis axisLine={false} tickLine={false} stroke="#ccc" />
+              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
+              <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
 
-              {/* Tooltip */}
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1a1a1d",
-                  border: "1px solid #333",
-                  color: "#fff",
-                  boxShadow: "none",
-                  borderRadius: "8px",
-                  padding: "6px 10px",
-                }}
-                itemStyle={{ color: "#fff" }}
-                labelStyle={{ color: "#ccc", fontWeight: 500 }}
-              />
-
-              {/* Легенда */}
-              <Legend
-                formatter={(value) => value}
-                wrapperStyle={{ color: "#fff", paddingBottom: 10 }}
-              />
-
-              {/* Бары */}
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
+              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
+              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
+              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
+              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} />
+              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>
