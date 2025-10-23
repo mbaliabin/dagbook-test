@@ -116,22 +116,30 @@ export default function StatisticsPage() {
         </div>
 
         {/* Диаграмма */}
+        const mockData = [
+          { month: "Янв", I1: 30, I2: 15, I3: 10, I4: 5, I5: 2 },
+          { month: "Фев", I1: 25, I2: 10, I3: 12, I4: 6, I5: 3 },
+          { month: "Мар", I1: 28, I2: 12, I3: 14, I4: 7, I5: 4 },
+          { month: "Апр", I1: 22, I2: 15, I3: 11, I4: 8, I5: 5 },
+          { month: "Май", I1: 30, I2: 10, I3: 13, I4: 5, I5: 2 },
+          { month: "Июн", I1: 26, I2: 12, I3: 14, I4: 6, I5: 3 },
+          { month: "Июл", I1: 28, I2: 11, I3: 15, I4: 7, I5: 4 },
+          { month: "Авг", I1: 24, I2: 14, I3: 12, I4: 6, I5: 3 },
+          { month: "Сен", I1: 27, I2: 13, I3: 11, I4: 8, I5: 4 },
+          { month: "Окт", I1: 25, I2: 12, I3: 14, I4: 7, I5: 3 },
+          { month: "Ноя", I1: 29, I2: 10, I3: 13, I4: 6, I5: 2 },
+          { month: "Дек", I1: 31, I2: 15, I3: 12, I4: 7, I5: 4 },
+        ];
+
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
-            data={mockData} // данные за 12 месяцев
+            data={mockData}
             margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
-            style={{ backgroundColor: "#1a1a1d", borderRadius: 12 }} // тёмный фон с закруглёнными углами
+            style={{ backgroundColor: "#1a1a1d", borderRadius: 12 }}
           >
-            <XAxis
-              dataKey="month"
-              axisLine={false}
-              tickLine={false}
-              stroke="#ccc" // цвет подписей месяцев
-            />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
-            />
-            <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
+            <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333" }} />
+            <Legend wrapperStyle={{ color: "#fff" }} />
 
             <Bar dataKey="I1" stackId="a" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
             <Bar dataKey="I2" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
@@ -140,6 +148,7 @@ export default function StatisticsPage() {
             <Bar dataKey="I5" stackId="a" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={24} />
           </BarChart>
         </ResponsiveContainer>
+
 
 
 
