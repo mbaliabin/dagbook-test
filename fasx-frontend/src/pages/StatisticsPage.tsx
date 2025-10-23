@@ -6,6 +6,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 
 export default function StatisticsPage() {
