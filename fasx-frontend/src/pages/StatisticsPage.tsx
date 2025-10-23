@@ -7,12 +7,24 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { Home, BarChart3, ClipboardList, CalendarDays } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState("Общий отчёт");
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
 
   const months = [
     "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
@@ -73,6 +85,7 @@ export default function StatisticsPage() {
   const totalByMonth = months.map((_, monthIndex) =>
     toTimeString(enduranceData.reduce((sum, zone) => sum + toMinutes(zone.data[monthIndex]), 0))
   );
+
   const totalByZone = enduranceData.map((zone) =>
     toTimeString(zone.data.reduce((sum, time) => sum + toMinutes(time), 0))
   );
@@ -80,13 +93,36 @@ export default function StatisticsPage() {
   const totalTrainingByMonth = months.map((_, i) =>
     toTimeString(trainingTypeData.reduce((sum, type) => sum + toMinutes(type.data[i]), 0))
   );
+
   const totalTrainingByType = trainingTypeData.map((t) =>
     toTimeString(t.data.reduce((sum, time) => sum + toMinutes(time), 0))
   );
 
   return (
-    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#0B0B0D] text-gray-100 p-6 flex flex-col">
+
+      {/* Верхнее меню */}
+      <div className="max-w-6xl mx-auto w-full flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Основной контент */}
+      <div className="flex-1 max-w-6xl mx-auto space-y-6">
 
         {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,9 +167,10 @@ export default function StatisticsPage() {
               margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
             >
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
+              />
               <Legend formatter={(value) => value} wrapperStyle={{ color: "#fff" }} />
-
               <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
               <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
               <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
@@ -142,7 +179,6 @@ export default function StatisticsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
@@ -160,10 +196,12 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(<tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
-                  <td className="py-2">{row}</td>
-                  <td colSpan={5} className="text-center text-gray-600">—</td>
-                </tr>))}
+                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(
+                  <tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150 cursor-pointer">
+                    <td className="py-2">{row}</td>
+                    <td colSpan={5} className="text-center text-gray-600">—</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -177,7 +215,9 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
-                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
+                  {months.map((m,i)=>(
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
+                  ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
@@ -210,7 +250,9 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416] shadow-sm">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
-                  {months.map((m,i)=>(<th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>))}
+                  {months.map((m,i)=>(
+                    <th key={m} className={`py-2 px-2 text-center border-r border-gray-700/70 ${[2,5,8,11].includes(i)?"border-r-2 border-blue-500/30":""}`}>{m}</th>
+                  ))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
