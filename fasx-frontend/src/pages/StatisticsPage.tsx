@@ -116,19 +116,40 @@ export default function StatisticsPage() {
         </div>
 
         {/* Диаграмма */}
+        {/* Диаграмма */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData}>
-              <XAxis dataKey="month" stroke="#aaa" />
-              <YAxis stroke="#aaa" />
-              <Tooltip contentStyle={{ backgroundColor:"#1a1a1d", border:"1px solid #333" }}/>
-              <Legend />
-              <Bar dataKey="зона1" stackId="a" fill="#1E90FF"/>
-              <Bar dataKey="зона2" stackId="a" fill="#4682B4"/>
-              <Bar dataKey="зона3" stackId="a" fill="#FFA500"/>
+            <BarChart data={mockData} barSize={18}>
+              <XAxis dataKey="month" stroke="#aaa" tickLine={false} axisLine={false} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1a1a1d",
+                  border: "1px solid #333",
+                  color: "#fff",
+                }}
+              />
+              <Legend
+                payload={[
+                  { value: "I1", type: "square", color: "#9ca3af" },
+                  { value: "I2", type: "square", color: "#3b82f6" },
+                  { value: "I3", type: "square", color: "#facc15" },
+                  { value: "I4", type: "square", color: "#f97316" },
+                  { value: "I5", type: "square", color: "#ef4444" },
+                ]}
+                verticalAlign="bottom"
+                align="center"
+                iconType="square"
+                wrapperStyle={{ marginTop: 10 }}
+              />
+              <Bar dataKey="зона1" stackId="a" fill="#9ca3af" />
+              <Bar dataKey="зона2" stackId="a" fill="#3b82f6" />
+              <Bar dataKey="зона3" stackId="a" fill="#facc15" />
+              <Bar dataKey="зона4" stackId="a" fill="#f97316" />
+              <Bar dataKey="зона5" stackId="a" fill="#ef4444" />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
 
         {/* Параметры дня */}
         <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
