@@ -14,7 +14,6 @@ export default function StatisticsPage() {
   const [reportType, setReportType] = useState("Общий отчёт");
   const [interval, setInterval] = useState("Месяц");
   const [mode, setMode] = useState("Время");
-  const [selectedRow, setSelectedRow] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -116,7 +115,7 @@ export default function StatisticsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Таблицы */}
+        {/* Параметры дня */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <h2 className="text-lg font-semibold mb-3">Параметры дня</h2>
           <div className="overflow-x-auto">
@@ -124,16 +123,21 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 border-b border-gray-700 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
                   <th className="text-left py-2"></th>
-                  {["Май 2025","Июль 2025","Авг 2025","Сен 2025","Среднее/мес"].map((m)=>(
-                    <th key={m}>{m}</th>
-                  ))}
+                  {["Май 2025","Июль 2025","Авг 2025","Сен 2025","Среднее/мес"].map((m)=>(<th key={m}>{m}</th>))}
                 </tr>
               </thead>
               <tbody>
-                {["Болезнь","Травма","Соревнования","Высота","В поездке","Выходной"].map((row)=>(
-                  <tr key={row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
-                    <td className="py-2">{row}</td>
-                    <td colSpan={5} className="text-center text-gray-600">—</td>
+                {[
+                  { row: "Болезнь", values: ["—","—","—","—","—"] },
+                  { row: "Травма", values: ["—","—","—","—","—"] },
+                  { row: "Соревнования", values: ["✓","—","✓","—","—"] },
+                  { row: "Высота", values: ["—","—","—","✓","—"] },
+                  { row: "В поездке", values: ["—","✓","—","—","—"] },
+                  { row: "Выходной", values: ["—","—","✓","—","✓"] },
+                ].map((item) => (
+                  <tr key={item.row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
+                    <td className="py-2">{item.row}</td>
+                    {item.values.map((v,i)=><td key={i} className="text-center text-gray-400">{v}</td>)}
                   </tr>
                 ))}
               </tbody>
@@ -149,14 +153,18 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
-                  {months.map((m,i)=>(
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
-                  ))}
+                  {months.map((m,i)=>(<th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
               <tbody>
-                {/* данные будут подставляться */}
+                {["I1","I2","I3","I4","I5"].map((zone)=>(
+                  <tr key={zone} className="border-b border-gray-800">
+                    <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
+                    {months.map((m,i)=>(<td key={i} className="text-center">{Math.floor(Math.random()*60)}</td>))}
+                    <td className="text-center text-blue-400">{Math.floor(Math.random()*300)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -170,14 +178,18 @@ export default function StatisticsPage() {
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
-                  {months.map((m,i)=>(
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
-                  ))}
+                  {months.map((m,i)=>(<th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>))}
                   <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
               <tbody>
-                {/* данные будут подставляться */}
+                {["Бег","Велосипед","Силовая тренировка","Плавание","Другое"].map((type)=>(
+                  <tr key={type} className="border-b border-gray-800">
+                    <td className="py-2 px-3 border-r border-gray-800">{type}</td>
+                    {months.map((m,i)=>(<td key={i} className="text-center">{Math.floor(Math.random()*60)}</td>))}
+                    <td className="text-center text-blue-400">{Math.floor(Math.random()*300)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
