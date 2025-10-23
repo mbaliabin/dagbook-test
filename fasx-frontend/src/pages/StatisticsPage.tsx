@@ -100,41 +100,25 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Диаграмма */}
-        <div className="bg-[#111214] p-5 rounded-2xl border border-gray-800 animate-fadeIn">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={mockData}
-              margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
-            >
-              <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={mockData}
+            margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+          >
+            <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
 
-              {/* Tooltip можно убрать или оставить */}
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1a1a1d",
-                  border: "1px solid #333",
-                  color: "#fff",
-                  boxShadow: "none",
-                  borderRadius: "8px",
-                  padding: "6px 10px",
-                }}
-                itemStyle={{ color: "#fff" }}
-                labelStyle={{ color: "#ccc", fontWeight: 500 }}
-              />
+            {/* Убираем Tooltip полностью */}
+            {/* <Tooltip ... /> */}
 
-              <Legend wrapperStyle={{ color: "#fff" }} />
+            <Legend wrapperStyle={{ color: "#fff" }} />
 
-              {/* Полностью неактивные бары */}
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} pointerEvents="none" />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} pointerEvents="none" />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} pointerEvents="none" />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} pointerEvents="none" />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} pointerEvents="none" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
+            <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} isAnimationActive={false} />
+            <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} isAnimationActive={false} />
+            <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} isAnimationActive={false} />
+            <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} isAnimationActive={false} />
+            <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} isAnimationActive={false} />
+          </BarChart>
+        </ResponsiveContainer>
 
         {/* Таблицы */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
