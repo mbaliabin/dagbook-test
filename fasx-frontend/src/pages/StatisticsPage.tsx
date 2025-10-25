@@ -1,203 +1,224 @@
-import React from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  CartesianGrid,
-} from "recharts";
+import React, { useState } from "react";
+import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import dayjs from "dayjs";
 
-const CustomTooltip = ({ active, payload, label, unit }) => {
-  if (active && payload && payload.length) {
-    const item = payload[0];
-    return (
-      <div className="bg-[#1a1a1a]/90 border border-gray-700 rounded-lg px-3 py-2 shadow-md text-sm text-gray-200">
-        <p className="font-semibold mb-1">{label}</p>
-        <p>
-          {item.name}
-          <span className="ml-1">
-            {unit === "км"
-              ? `${item.value} км`
-              : `${Math.floor(item.value / 60)} ч ${item.value % 60} м`}
-          </span>
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
+type ReportType = "Общее расстояние" | "Длительность" | "Выносливость";
 
-const DurationChart = ({ data, dataKey, color, unit }) => (
-  <div className="w-full h-72 bg-[#0f0f0f] rounded-2xl p-4 shadow-lg border border-gray-800">
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={data}
-        barSize={45}
-        margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-        <XAxis dataKey="type" tick={{ fill: "#aaa", fontSize: 12 }} />
-        <Tooltip content={<CustomTooltip unit={unit} />} cursor={{ fill: "transparent" }} />
-        <Legend wrapperStyle={{ color: "#ccc" }} />
-        <Bar dataKey={dataKey} fill={color} />
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-);
+export default function StatisticsPage() {
+  const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
+  const [interval, setInterval] = useState("Год");
+  const [name, setName] = useState("Максим");
 
-const EnduranceTable = ({ data }) => (
-  <div className="bg-[#0f0f0f] rounded-2xl p-4 shadow-lg border border-gray-800 text-gray-200">
-    <h3 className="text-lg font-semibold mb-4">Зоны выносливости</h3>
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-gray-400 text-left border-b border-gray-700">
-          <th className="py-2">Зона</th>
-          <th className="py-2">Время</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((zone, index) => (
-          <tr
-            key={index}
-            className="hover:bg-[#1c1c1c] transition-colors duration-150"
-          >
-            <td className="py-2 flex items-center gap-2">
-              <span
-                className={`w-3 h-3 rounded-full`}
-                style={{
-                  backgroundColor:
-                    zone.zone === "I1"
-                      ? "#4FC3F7"
-                      : zone.zone === "I2"
-                      ? "#0288D1"
-                      : zone.zone === "I3"
-                      ? "#FFD54F"
-                      : zone.zone === "I4"
-                      ? "#FB8C00"
-                      : "#E53935",
-                }}
-              ></span>
-              {zone.zone}
-            </td>
-            <td className="py-2 text-gray-300">{zone.time}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const DurationTable = ({ data }) => (
-  <div className="bg-[#0f0f0f] rounded-2xl p-4 shadow-lg border border-gray-800 text-gray-200">
-    <h3 className="text-lg font-semibold mb-4">Длительность по видам тренировок</h3>
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-gray-400 text-left border-b border-gray-700">
-          <th className="py-2">Тип тренировки</th>
-          <th className="py-2">Время</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, index) => (
-          <tr
-            key={index}
-            className="hover:bg-[#1c1c1c] transition-colors duration-150"
-          >
-            <td className="py-2">{item.type}</td>
-            <td className="py-2 text-gray-300">{item.time}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
-const DistanceTable = ({ data }) => (
-  <div className="bg-[#0f0f0f] rounded-2xl p-4 shadow-lg border border-gray-800 text-gray-200">
-    <h3 className="text-lg font-semibold mb-4">Общее расстояние</h3>
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-gray-400 text-left border-b border-gray-700">
-          <th className="py-2">Тип тренировки</th>
-          <th className="py-2">Расстояние (км)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, index) => (
-          <tr
-            key={index}
-            className="hover:bg-[#1c1c1c] transition-colors duration-150"
-          >
-            <td className="py-2">{item.type}</td>
-            <td className="py-2 text-gray-300">{item.distance}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const StatsPage = () => {
-  const durationData = [
-    { type: "Бег", value: 75 },
-    { type: "Велосипед", value: 130 },
-    { type: "Плавание", value: 45 },
-    { type: "Силовая тренировка", value: 60 },
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  const distanceData = [
-    { type: "Бег", value: 14.2 },
-    { type: "Велосипед", value: 37.5 },
-    { type: "Плавание", value: 2.3 },
-  ];
+  const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  const enduranceData = [
-    { zone: "I1", time: "0:30" },
-    { zone: "I2", time: "0:45" },
-    { zone: "I3", time: "1:10" },
-    { zone: "I4", time: "0:35" },
-    { zone: "I5", time: "0:20" },
-  ];
+  const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
+  const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  const durationTableData = [
-    { type: "Бег", time: "1:15" },
-    { type: "Велосипед", time: "2:10" },
-    { type: "Плавание", time: "0:45" },
-    { type: "Силовая тренировка", time: "1:00" },
-  ];
+  const generateData = () => {
+    const today = dayjs();
+    let data: any[] = [];
+    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
-  const distanceTableData = [
-    { type: "Бег", distance: 14.2 },
-    { type: "Велосипед", distance: 37.5 },
-    { type: "Плавание", distance: 2.3 },
-  ];
+    const maxValues: any = {
+      "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
+      "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
+    };
+
+    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+
+    for (let i = points - 1; i >= 0; i--) {
+      let label = "";
+      if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+      else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+      else label = today.subtract(i, "month").format("MMM");
+
+      let item: any = { label };
+      types.forEach((t) => {
+        item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
+      });
+      data.push(item);
+    }
+    return data;
+  };
+
+  const chartData = generateData();
+  const labels = chartData.map(d => d.label);
+
+  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+
+  const formatTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${m.toString().padStart(2,"0")}`;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
+      return (
+        <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm">
+          <div className="font-semibold mb-1">{label}</div>
+          {payload.map((p: any) => (
+            <div key={p.dataKey} className="flex justify-between">
+              <span style={{ color: p.fill }}>{p.name}</span>
+              <span>
+                {reportType === "Длительность" || reportType === "Выносливость"
+                  ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
+                  : `${p.value} км`}
+              </span>
+            </div>
+          ))}
+          <div className="border-t border-gray-600 mt-1 pt-1 flex justify-between font-semibold text-blue-400">
+            <span>Общее</span>
+            <span>
+              {reportType === "Длительность" || reportType === "Выносливость"
+                ? `${Math.floor(total/60)} ч ${total%60} м`
+                : `${total} км`}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] text-white p-6 space-y-8">
-      <h1 className="text-2xl font-bold mb-6 text-gray-100">Отчёты</h1>
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* Диаграмма длительности */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-gray-200">Длительность</h2>
-        <DurationChart data={durationData} dataKey="value" color="#4FC3F7" unit="время" />
-      </div>
+        {/* Верхняя плашка */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
+            <div>
+              <h1 className="text-2xl font-bold">{name}</h1>
+            </div>
+          </div>
+          <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+            <LogOut className="w-4 h-4 mr-1" /> Выйти
+          </button>
+        </div>
 
-      {/* Диаграмма расстояния */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-gray-200">Общее расстояние</h2>
-        <DurationChart data={distanceData} dataKey="value" color="#81C784" unit="км" />
-      </div>
+        {/* Верхнее меню */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+              >
+                <Icon className="w-6 h-6" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Таблицы */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <EnduranceTable data={enduranceData} />
-        <DurationTable data={durationTableData} />
-        <DistanceTable data={distanceTableData} />
+        {/* Выбор отчёта и интервала */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
+            <span className="font-semibold">Тип отчёта:</span>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value as ReportType)}
+              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white"
+            >
+              <option>Общее расстояние</option>
+              <option>Длительность</option>
+              <option>Выносливость</option>
+            </select>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
+            {intervals.map((intv) => (
+              <button
+                key={intv}
+                onClick={() => setInterval(intv)}
+                className={`px-3 py-1 rounded ${interval===intv ? "bg-blue-600":"bg-gray-700 hover:bg-gray-600"}`}
+              >
+                {intv}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Диаграмма */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+              <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ color: "#fff" }} />
+              {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
+                return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx%colors.length]} name={t} />;
+              })}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Таблица */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
+          <h2 className="text-lg font-semibold mb-3">
+            {reportType==="Выносливость"?"Зоны выносливости (мин)":
+             reportType==="Длительность"?`Длительность (ч:мм)`:`Тип тренировки (${reportType==="Общее расстояние"?"км":"мин"})`}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
+              <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
+                <tr>
+                  <th className="text-left py-3 px-3 border-r border-gray-800">
+                    {reportType==="Выносливость"?"Зона":"Тип тренировки"}
+                  </th>
+                  {labels.map((m) => <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>)}
+                  <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
+                  const total = chartData.reduce((sum,d)=>sum+d[type],0);
+                  return (
+                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/50 transition-colors">
+                      <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
+                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: colors[idx%colors.length]}}></span>}
+                        {type}
+                      </td>
+                      {chartData.map((d,i)=>(
+                        <td key={i} className="text-center py-3">
+                          {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(d[type]): d[type]}
+                        </td>
+                      ))}
+                      <td className="text-center text-blue-400 py-3">
+                        {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(total): total}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   );
-};
-
-export default StatsPage;
+}
