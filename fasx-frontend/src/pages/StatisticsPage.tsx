@@ -27,14 +27,12 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
@@ -101,6 +99,10 @@ export default function StatisticsPage() {
     }
     return null;
   };
+
+  // Цвета для диаграммы
+  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+  const zoneColors = ["#cbe8ff","#3b82f6","#facc15","#f97316","#ef4444"]; // для зон выносливости
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -172,15 +174,14 @@ export default function StatisticsPage() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
-                const colors = ["#3b82f6","#0d47a1","#facc15","#f97316","#ef4444"];
                 return (
                   <Bar
                     key={t}
                     dataKey={t}
                     stackId="a"
-                    fill={colors[idx % colors.length]}
+                    fill={reportType==="Выносливость" ? zoneColors[idx] : colors[idx % colors.length]}
                     name={t}
-                    radius={[5,5,0,0]} // закруглённые концы баров
+                    radius={reportType==="Выносливость" || idx===0 ? [0,0,0,0] : [5,5,0,0]} // верхний сегмент закруглён
                   />
                 );
               })}
@@ -191,7 +192,7 @@ export default function StatisticsPage() {
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
           <h2 className="text-lg font-semibold mb-3">
-            {reportType==="Выносливость"?"Зоны выносливости (ч:мм)":
+            {reportType==="Выносливость"?"Зоны выносливости (мин)":
              reportType==="Длительность"?`Длительность (ч:мм)`:`Тип тренировки (${reportType==="Общее расстояние"?"км":"мин"})`}
           </h2>
           <div className="overflow-x-auto">
@@ -206,21 +207,16 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type)=>{
+                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
                   const total = chartData.reduce((sum,d)=>sum+d[type],0);
                   return (
-                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/20 transition-colors">
+                    <tr
+                      key={type}
+                      className="border-b border-gray-800 hover:bg-gray-700 transition-colors"
+                    >
                       <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
                         {reportType==="Выносливость" && (
-                          <span
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor:
-                              type==="I1"?"#3b82f6":
-                              type==="I2"?"#0d47a1":
-                              type==="I3"?"#facc15":
-                              type==="I4"?"#f97316":"#ef4444"
-                            }}
-                          />
+                          <span style={{backgroundColor: zoneColors[idx], width:12, height:12, borderRadius:"50%", display:"inline-block"}}></span>
                         )}
                         {type}
                       </td>
