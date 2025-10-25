@@ -10,6 +10,7 @@ export default function StatisticsPage() {
   const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
+  const [hoveredBar, setHoveredBar] = useState<{ label: string; dataKey: string } | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,7 +34,6 @@ export default function StatisticsPage() {
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
@@ -52,7 +52,7 @@ export default function StatisticsPage() {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-      else if (interval === "6 месяцев" || interval === "Год") label = today.subtract(i, interval === "6 месяцев" ? "month" : "month").format("MMM");
+      else if (interval === "6 месяцев" || interval === "Год") label = today.subtract(i, "month").format("MMM");
 
       let item: any = { label };
       types.forEach((t) => {
@@ -60,12 +60,34 @@ export default function StatisticsPage() {
       });
       data.push(item);
     }
-
     return data;
   };
 
   const chartData = generateData();
   const months = chartData.map(d => d.label);
+
+  // Цвета для баров
+  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+
+  // Кастомный тултип
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !hoveredBar) return null;
+    const { label, dataKey } = hoveredBar;
+    const item = chartData.find(d => d.label === label);
+    if (!item) return null;
+
+    const total = Object.keys(item)
+      .filter(k => k !== "label")
+      .reduce((sum, k) => sum + item[k], 0);
+
+    return (
+      <div className="bg-[#1a1a1d] border border-gray-700 text-white p-2 rounded">
+        <div className="font-semibold mb-1">{label}</div>
+        <div>{dataKey}: {item[dataKey]}</div>
+        <div>Общее: {total}</div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -135,33 +157,19 @@ export default function StatisticsPage() {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip content={({ active, payload, label }) => {
-                if (active && payload && payload.length) {
-                  // Берем элемент, на который именно навели (тот, что с ненулевым значением)
-                  const hovered = payload.find(p => p.value !== 0) || payload[0];
-                  const total = payload.reduce((sum, entry) => sum + entry.value, 0);
-                  return (
-                    <div className="bg-[#1a1a1d] border border-gray-700 p-2 rounded text-white text-sm">
-                      <div className="font-semibold mb-1">{label}</div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: hovered.color }}></span>
-                        <span>{hovered.name}:</span>
-                        <span>{hovered.value}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-gray-600 pt-1 text-blue-400">
-                        <span>Общее:</span>
-                        <span>{total}</span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              }} />
+              <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
-                const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
-                return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx % colors.length]} name={t} />;
-              })}
+              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => (
+                <Bar
+                  key={t}
+                  dataKey={t}
+                  stackId="a"
+                  fill={colors[idx % colors.length]}
+                  name={t}
+                  onMouseOver={(data) => setHoveredBar({ label: data.label, dataKey: t })}
+                  onMouseOut={() => setHoveredBar(null)}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
