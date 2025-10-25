@@ -10,7 +10,6 @@ export default function StatisticsPage() {
   const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
-  const [hoveredBar, setHoveredBar] = useState<{ label: string; dataKey: string } | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,18 +27,21 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
+  // Генерация данных
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
+
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
-      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
     };
 
     let points = 0;
@@ -52,7 +54,8 @@ export default function StatisticsPage() {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-      else if (interval === "6 месяцев" || interval === "Год") label = today.subtract(i, "month").format("MMM");
+      else if (interval === "6 месяцев" || interval === "Год")
+        label = today.subtract(i, "month").format("MMM");
 
       let item: any = { label };
       types.forEach((t) => {
@@ -60,40 +63,47 @@ export default function StatisticsPage() {
       });
       data.push(item);
     }
+
     return data;
   };
 
   const chartData = generateData();
-  const months = chartData.map(d => d.label);
-
-  // Цвета для баров
-  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+  const months = chartData.map((d) => d.label);
 
   // Кастомный тултип
   const CustomTooltip = ({ active, payload }: any) => {
-    if (!active || !hoveredBar) return null;
-    const { label, dataKey } = hoveredBar;
-    const item = chartData.find(d => d.label === label);
-    if (!item) return null;
+    if (active && payload && payload.length) {
+      const barData = payload[0].payload;
+      const total = Object.keys(barData)
+        .filter((k) => k !== "label")
+        .reduce((sum, key) => sum + barData[key], 0);
 
-    const total = Object.keys(item)
-      .filter(k => k !== "label")
-      .reduce((sum, k) => sum + item[k], 0);
-
-    return (
-      <div className="bg-[#1a1a1d] border border-gray-700 text-white p-2 rounded">
-        <div className="font-semibold mb-1">{label}</div>
-        <div>{dataKey}: {item[dataKey]}</div>
-        <div>Общее: {total}</div>
-      </div>
-    );
+      return (
+        <div className="bg-[#1a1a1d] border border-gray-700 p-2 text-white text-sm rounded shadow-md">
+          <div className="font-semibold">{barData.label}</div>
+          {payload.map((p: any) => (
+            <div key={p.dataKey} className="flex justify-between">
+              <span style={{ color: p.fill }}>{p.name}</span>
+              <span>{p.value}</span>
+            </div>
+          ))}
+          <hr className="my-1 border-gray-600" />
+          <div className="flex justify-between font-semibold">
+            <span>Общее</span>
+            <span>{total}</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
+
+  const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#a855f7"];
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
+        {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
@@ -160,15 +170,7 @@ export default function StatisticsPage() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => (
-                <Bar
-                  key={t}
-                  dataKey={t}
-                  stackId="a"
-                  fill={colors[idx % colors.length]}
-                  name={t}
-                  onMouseOver={(data) => setHoveredBar({ label: data.label, dataKey: t })}
-                  onMouseOut={() => setHoveredBar(null)}
-                />
+                <Bar key={t} dataKey={t} stackId="a" fill={colors[idx % colors.length]} name={t} />
               ))}
             </BarChart>
           </ResponsiveContainer>
@@ -208,7 +210,6 @@ export default function StatisticsPage() {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
