@@ -25,20 +25,17 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
-  const typesDistance = ["run", "ski", "bike", "swim"];
-  const typesDuration = ["run", "ski", "bike", "swim", "strength"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Генерация динамических данных
-  const generateChartData = () => {
+  const generateData = () => {
     const today = dayjs();
-    let data: any[] = [];
     let count = 0;
     if (interval === "7 дней") count = 7;
     else if (interval === "4 недели") count = 4;
     else if (interval === "6 месяцев") count = 6;
     else if (interval === "Год") count = 12;
+
+    const chartData: any[] = [];
 
     for (let i = count - 1; i >= 0; i--) {
       let label = "";
@@ -46,72 +43,59 @@ export default function StatisticsPage() {
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
       else label = today.subtract(i, "month").format("MMM");
 
-      const randomValue = (max: number) => Math.floor(Math.random() * max);
-
-      if (reportType === "Общее расстояние") {
-        data.push({
-          label,
-          run: randomValue(100),
-          ski: randomValue(120),
-          bike: randomValue(200),
-          swim: randomValue(50),
-        });
-      } else if (reportType === "Длительность") {
-        data.push({
-          label,
-          run: randomValue(300),
-          ski: randomValue(400),
-          bike: randomValue(500),
-          swim: randomValue(100),
-          strength: randomValue(150),
-        });
-      } else if (reportType === "Выносливость") {
+      if (reportType === "Выносливость") {
+        const row: any = { label };
         enduranceZones.forEach((zone) => {
-          if (!data.find((d) => d.zone === zone)) data.push({ zone });
-          data.find((d) => d.zone === zone)[label] = randomValue(60);
+          row[zone] = Math.floor(Math.random() * 55) + 5; // 5-60 минут
         });
+        chartData.push(row);
+      } else {
+        const row: any = { label };
+        if (reportType === "Общее расстояние") {
+          row.run = Math.floor(Math.random() * 80) + 20;
+          row.ski = Math.floor(Math.random() * 100);
+          row.bike = Math.floor(Math.random() * 150);
+          row.swim = Math.floor(Math.random() * 30);
+        } else {
+          row.run = Math.floor(Math.random() * 120) + 20;
+          row.ski = Math.floor(Math.random() * 150);
+          row.bike = Math.floor(Math.random() * 200);
+          row.swim = Math.floor(Math.random() * 60);
+          row.strength = Math.floor(Math.random() * 60);
+        }
+        chartData.push(row);
       }
     }
 
-    // Для таблицы добавляем total
-    if (reportType === "Выносливость") {
-      data.forEach((row) => {
-        row.total = Object.keys(row)
-          .filter((k) => k !== "zone")
-          .reduce((sum, k) => sum + row[k], 0);
-      });
-    }
-
-    return data;
+    return chartData;
   };
 
-  const chartData = generateChartData();
-  const months = chartData.map((d: any) => d.label);
+  const chartData = generateData();
+  const months = chartData.map((d) => d.label);
+
+  // Для таблицы Выносливости суммируем по строке
+  const enduranceTable = chartData.map((row) => {
+    let total = 0;
+    enduranceZones.forEach((zone) => (total += row[zone]));
+    return { ...row, total };
+  });
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
+
         {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <img
-              src="/profile-avatar.jpg"
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover border border-gray-700"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-white">{name}</h1>
-            </div>
+            <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
+            <h1 className="text-2xl font-bold">{name}</h1>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-          >
+          <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -129,15 +113,11 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Выбор отчёта и интервала */}
+        {/* Выбор отчета и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value as any)}
-              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white"
-            >
+            <select value={reportType} onChange={(e) => setReportType(e.target.value as any)} className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white">
               <option>Общее расстояние</option>
               <option>Длительность</option>
               <option>Выносливость</option>
@@ -146,13 +126,7 @@ export default function StatisticsPage() {
 
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
             {intervals.map((intv) => (
-              <button
-                key={intv}
-                onClick={() => setInterval(intv)}
-                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
-              >
-                {intv}
-              </button>
+              <button key={intv} onClick={() => setInterval(intv)} className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}>{intv}</button>
             ))}
           </div>
         </div>
@@ -196,20 +170,18 @@ export default function StatisticsPage() {
                 <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                   <tr>
                     <th className="text-left py-2 px-3 border-r border-gray-800">Зона</th>
-                    {months.map((m) => (
-                      <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
-                    ))}
+                    {months.map((m) => <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>)}
                     <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {chartData.map((zone) => (
-                    <tr key={zone.zone} className="border-b border-gray-800">
-                      <td className="py-2 px-3 border-r border-gray-800">{zone.zone}</td>
-                      {months.map((m) => (
-                        <td key={m} className="text-center">{zone[m]}</td>
+                  {enduranceZones.map((zone) => (
+                    <tr key={zone} className="border-b border-gray-800">
+                      <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
+                      {months.map((m, i) => (
+                        <td key={i} className="text-center">{enduranceTable[i][zone]}</td>
                       ))}
-                      <td className="text-center text-blue-400">{zone.total}</td>
+                      <td className="text-center text-blue-400">{enduranceTable.reduce((sum, row) => sum + row[zone], 0)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -218,29 +190,22 @@ export default function StatisticsPage() {
           </div>
         ) : (
           <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-            <h2 className="text-lg font-semibold mb-3">
-              Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})
-            </h2>
+            <h2 className="text-lg font-semibold mb-3">Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
                 <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                   <tr>
                     <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
-                    {months.map((m) => (
-                      <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
-                    ))}
+                    {months.map((m) => <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>)}
                     <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(reportType === "Общее расстояние" ? typesDistance : typesDuration).map((type) => (
+                  {(reportType === "Общее расстояние" ? ["Бег","Лыжи","Велосипед","Плавание"] : ["Бег","Лыжи","Велосипед","Плавание","Силовая"])
+                    .map((type) => (
                     <tr key={type} className="border-b border-gray-800">
-                      <td className="py-2 px-3 border-r border-gray-800">
-                        {type === "run" ? "Бег" : type === "ski" ? "Лыжи" : type === "bike" ? "Велосипед" : type === "swim" ? "Плавание" : "Силовая"}
-                      </td>
-                      {months.map((m, i) => (
-                        <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
-                      ))}
+                      <td className="py-2 px-3 border-r border-gray-800">{type}</td>
+                      {months.map((m, i) => <td key={i} className="text-center">{Math.floor(Math.random() * 80 + 20)}</td>)}
                       <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
                     </tr>
                   ))}
@@ -249,6 +214,7 @@ export default function StatisticsPage() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
