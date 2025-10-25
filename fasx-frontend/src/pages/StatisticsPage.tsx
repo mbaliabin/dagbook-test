@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
+import {
+  Home,
+  BarChart3,
+  ClipboardList,
+  CalendarDays,
+  LogOut,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
+type ReportType = "Общее расстояние" | "Длительность" | "Выносливость";
+
 export default function StatisticsPage() {
-  const [reportType, setReportType] = useState<"Общее расстояние" | "Длительность" | "Выносливость">("Общее расстояние");
+  const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
 
@@ -30,36 +38,49 @@ export default function StatisticsPage() {
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-    let count = 12;
 
-    if (interval === "7 дней") count = 7;
-    else if (interval === "4 недели") count = 4;
-    else if (interval === "6 месяцев") count = 6;
+    if (reportType === "Выносливость") {
+      // 5 зон I1-I5
+      const maxValues = { I1: 30, I2: 45, I3: 60, I4: 75, I5: 90 };
+      const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
 
-    for (let i = count - 1; i >= 0; i--) {
-      const label =
-        interval === "7 дней"
-          ? today.subtract(i, "day").format("DD MMM")
-          : interval === "4 недели"
-          ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`
-          : today.subtract(i, "month").format("MMM");
+      for (let i = barsCount - 1; i >= 0; i--) {
+        let label = "";
+        if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+        else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+        else if (interval === "6 месяцев") label = today.subtract(i, "month").format("MMM");
+        else label = today.subtract(i, "month").format("MMM");
 
-      if (reportType === "Выносливость") {
         data.push({
           label,
-          I1: Math.floor(Math.random() * 30 + 10),
-          I2: Math.floor(Math.random() * 30 + 10),
-          I3: Math.floor(Math.random() * 30 + 10),
-          I4: Math.floor(Math.random() * 30 + 10),
-          I5: Math.floor(Math.random() * 30 + 10),
+          I1: Math.floor(Math.random() * maxValues.I1),
+          I2: Math.floor(Math.random() * maxValues.I2),
+          I3: Math.floor(Math.random() * maxValues.I3),
+          I4: Math.floor(Math.random() * maxValues.I4),
+          I5: Math.floor(Math.random() * maxValues.I5),
         });
-      } else {
+      }
+    } else {
+      // Бег, Лыжи, Велосипед, Плавание
+      const maxValues = reportType === "Общее расстояние"
+        ? { run: 10, ski: 15, bike: 20, swim: 5 }
+        : { run: 60, ski: 90, bike: 120, swim: 30 };
+
+      const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+
+      for (let i = barsCount - 1; i >= 0; i--) {
+        let label = "";
+        if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+        else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+        else if (interval === "6 месяцев") label = today.subtract(i, "month").format("MMM");
+        else label = today.subtract(i, "month").format("MMM");
+
         data.push({
           label,
-          run: Math.floor(Math.random() * 15),
-          ski: Math.floor(Math.random() * 20),
-          bike: Math.floor(Math.random() * 25),
-          swim: Math.floor(Math.random() * 10),
+          run: Math.floor(Math.random() * maxValues.run),
+          ski: Math.floor(Math.random() * maxValues.ski),
+          bike: Math.floor(Math.random() * maxValues.bike),
+          swim: Math.floor(Math.random() * maxValues.swim),
         });
       }
     }
@@ -70,7 +91,10 @@ export default function StatisticsPage() {
   const chartData = generateData();
   const months = chartData.map(d => d.label);
 
-  const types = reportType === "Выносливость" ? ["I1", "I2", "I3", "I4", "I5"] : ["Бег", "Велосипед", "Плавание", "Лыжи"];
+  // Типы тренировок для таблиц
+  const trainingTypes = reportType === "Выносливость"
+    ? ["I1", "I2", "I3", "I4", "I5"]
+    : ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -95,7 +119,11 @@ export default function StatisticsPage() {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+              >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
@@ -103,11 +131,15 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Выбор отчёта и интервала */}
+        {/* Выбор отчета и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
-            <select value={reportType} onChange={(e) => setReportType(e.target.value as any)} className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white">
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value as ReportType)}
+              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white"
+            >
               <option>Общее расстояние</option>
               <option>Длительность</option>
               <option>Выносливость</option>
@@ -116,7 +148,11 @@ export default function StatisticsPage() {
 
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
             {intervals.map((intv) => (
-              <button key={intv} onClick={() => setInterval(intv)} className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}>
+              <button
+                key={intv}
+                onClick={() => setInterval(intv)}
+                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
+              >
                 {intv}
               </button>
             ))}
@@ -133,8 +169,8 @@ export default function StatisticsPage() {
               {reportType === "Выносливость" ? (
                 <>
                   <Bar dataKey="I1" stackId="a" fill="#ef4444" name="I1" />
-                  <Bar dataKey="I2" stackId="a" fill="#f97316" name="I2" />
-                  <Bar dataKey="I3" stackId="a" fill="#facc15" name="I3" />
+                  <Bar dataKey="I2" stackId="a" fill="#f59e0b" name="I2" />
+                  <Bar dataKey="I3" stackId="a" fill="#eab308" name="I3" />
                   <Bar dataKey="I4" stackId="a" fill="#3b82f6" name="I4" />
                   <Bar dataKey="I5" stackId="a" fill="#10b981" name="I5" />
                 </>
@@ -152,7 +188,9 @@ export default function StatisticsPage() {
 
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">{reportType === "Выносливость" ? "Зоны интенсивности (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}</h2>
+          <h2 className="text-lg font-semibold mb-3">
+            {reportType === "Выносливость" ? "Выносливость (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
@@ -165,14 +203,15 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {types.map((type) => (
+                {trainingTypes.map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-2 px-3 border-r border-gray-800">{type}</td>
-                    {months.map((_, i) => {
-                      const value = reportType === "Выносливость" ? chartData[i][type] : chartData[i][type.toLowerCase()];
-                      return <td key={i} className="text-center">{value}</td>;
-                    })}
-                    <td className="text-center text-blue-400">{months.reduce((sum, _, i) => sum + (reportType === "Выносливость" ? chartData[i][type] : chartData[i][type.toLowerCase()]), 0)}</td>
+                    {months.map((m, i) => (
+                      <td key={i} className="text-center">{chartData[i]?.[type] || 0}</td>
+                    ))}
+                    <td className="text-center text-blue-400">
+                      {chartData.reduce((sum, item) => sum + (item[type] || 0), 0)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
