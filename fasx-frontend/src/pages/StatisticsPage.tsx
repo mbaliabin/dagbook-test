@@ -32,57 +32,45 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  // Генерация данных для отчётов
+  // Генерация согласованных данных для диаграммы и таблицы
   const generateData = () => {
     const today = dayjs();
-    if (reportType === "Выносливость") {
-      // 5 зон
-      const zones = ["I1", "I2", "I3", "I4", "I5"];
-      const data: { label: string; I1: number; I2: number; I3: number; I4: number; I5: number }[] = [];
-      let count = 12;
-      if (interval === "7 дней") count = 7;
-      else if (interval === "4 недели") count = 4;
-      else if (interval === "6 месяцев") count = 6;
+    let data: any[] = [];
+    let count = 12;
 
-      for (let i = count - 1; i >= 0; i--) {
-        const label = interval === "7 дней" ? today.subtract(i, "day").format("DD MMM") :
-                      interval === "4 недели" ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}` :
-                      interval === "6 месяцев" || interval === "Год" ? today.subtract(i, "month").format("MMM") : "";
-        data.push({
-          label,
-          I1: Math.floor(Math.random() * 60),
-          I2: Math.floor(Math.random() * 50),
-          I3: Math.floor(Math.random() * 40),
-          I4: Math.floor(Math.random() * 30),
-          I5: Math.floor(Math.random() * 20),
-        });
-      }
-      return data;
-    } else {
-      // Для расстояния или времени
-      const maxValues = reportType === "Общее расстояние"
-        ? { run: 10, ski: 15, bike: 20, swim: 5 }   // км
-        : { run: 60, ski: 90, bike: 120, swim: 30 }; // мин
-      const data: { label: string; run: number; ski: number; bike: number; swim: number }[] = [];
-      let count = 12;
-      if (interval === "7 дней") count = 7;
-      else if (interval === "4 недели") count = 4;
-      else if (interval === "6 месяцев") count = 6;
+    if (interval === "7 дней") count = 7;
+    else if (interval === "4 недели") count = 4;
+    else if (interval === "6 месяцев") count = 6;
 
-      for (let i = count - 1; i >= 0; i--) {
-        const label = interval === "7 дней" ? today.subtract(i, "day").format("DD MMM") :
-                      interval === "4 недели" ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}` :
-                      interval === "6 месяцев" || interval === "Год" ? today.subtract(i, "month").format("MMM") : "";
-        data.push({
-          label,
-          run: Math.floor(Math.random() * maxValues.run),
-          ski: Math.floor(Math.random() * maxValues.ski),
-          bike: Math.floor(Math.random() * maxValues.bike),
-          swim: Math.floor(Math.random() * maxValues.swim),
-        });
+    for (let i = count - 1; i >= 0; i--) {
+      const label = interval === "7 дней"
+        ? today.subtract(i, "day").format("DD MMM")
+        : interval === "4 недели"
+        ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`
+        : today.subtract(i, "month").format("MMM");
+
+      if (reportType === "Выносливость") {
+        // 5 зон
+        const I1 = Math.floor(Math.random() * 60);
+        const I2 = Math.floor(Math.random() * 50);
+        const I3 = Math.floor(Math.random() * 40);
+        const I4 = Math.floor(Math.random() * 30);
+        const I5 = Math.floor(Math.random() * 20);
+        data.push({ label, I1, I2, I3, I4, I5 });
+      } else {
+        const maxValues = reportType === "Общее расстояние"
+          ? { run: 10, ski: 15, bike: 20, swim: 5 }   // км
+          : { run: 60, ski: 90, bike: 120, swim: 30 }; // мин
+
+        const run = Math.floor(Math.random() * maxValues.run);
+        const ski = Math.floor(Math.random() * maxValues.ski);
+        const bike = Math.floor(Math.random() * maxValues.bike);
+        const swim = Math.floor(Math.random() * maxValues.swim);
+
+        data.push({ label, run, ski, bike, swim });
       }
-      return data;
     }
+    return data;
   };
 
   const chartData = generateData();
@@ -205,10 +193,10 @@ export default function StatisticsPage() {
                     {["I1","I2","I3","I4","I5"].map((zone) => (
                       <tr key={zone} className="border-b border-gray-800">
                         <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
-                        {months.map((m, i) => (
-                          <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                        {chartData.map((d, i) => (
+                          <td key={i} className="text-center">{d[zone]}</td>
                         ))}
-                        <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                        <td className="text-center text-blue-400">{chartData.reduce((sum, d) => sum + d[zone], 0)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -230,13 +218,13 @@ export default function StatisticsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"].map((type) => (
+                    {["Бег", "Велосипед", "Плавание", "Лыжи"].map((type) => (
                       <tr key={type} className="border-b border-gray-800">
                         <td className="py-2 px-3 border-r border-gray-800">{type}</td>
-                        {months.map((m, i) => (
-                          <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                        {chartData.map((d, i) => (
+                          <td key={i} className="text-center">{d[type.toLowerCase()]}</td>
                         ))}
-                        <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                        <td className="text-center text-blue-400">{chartData.reduce((sum, d) => sum + d[type.toLowerCase()], 0)}</td>
                       </tr>
                     ))}
                   </tbody>
