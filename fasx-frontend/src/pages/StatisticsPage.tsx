@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
@@ -27,26 +27,33 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
+
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
       "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
-    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+    let points = 0;
+    if (interval === "7 дней") points = 7;
+    else if (interval === "4 недели") points = 4;
+    else if (interval === "6 месяцев") points = 6;
+    else if (interval === "Год") points = 12;
 
     for (let i = points - 1; i >= 0; i--) {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-      else label = today.subtract(i, "month").format("MMM");
+      else if (interval === "6 месяцев" || interval === "Год") label = today.subtract(i, interval === "6 месяцев" ? "month" : "month").format("MMM");
 
       let item: any = { label };
       types.forEach((t) => {
@@ -124,13 +131,11 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Диаграмма с осями */}
+        {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={400}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
-              <CartesianGrid stroke="#333" strokeDasharray="3 3" />
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
-              <YAxis stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
@@ -164,9 +169,9 @@ export default function StatisticsPage() {
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-3 px-3 border-r border-gray-800">{type}</td>
                     {chartData.map((d, i) => (
-                      <td key={i} className="text-center">{d[type]}</td>
+                      <td key={i} className="text-center py-3">{d[type]}</td>
                     ))}
-                    <td className="text-center text-blue-400">
+                    <td className="text-center text-blue-400 py-3">
                       {chartData.reduce((sum, d) => sum + d[type], 0)}
                     </td>
                   </tr>
