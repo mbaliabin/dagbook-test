@@ -28,18 +28,15 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  // Типы тренировок и зоны выносливости
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Генерация данных для диаграммы и таблицы
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
 
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
-    // Максимальные значения для генерации данных
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
@@ -136,7 +133,7 @@ export default function StatisticsPage() {
 
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={400}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
@@ -158,23 +155,23 @@ export default function StatisticsPage() {
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
-                  <th className="text-left py-2 px-3 border-r border-gray-800">
+                  <th className="text-left py-3 px-3 border-r border-gray-800">
                     {reportType === "Выносливость" ? "Зона" : "Тип тренировки"}
                   </th>
                   {months.map((m) => (
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
+                    <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                  <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
               <tbody>
                 {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((type) => (
                   <tr key={type} className="border-b border-gray-800">
-                    <td className="py-2 px-3 border-r border-gray-800">{type}</td>
+                    <td className="py-3 px-3 border-r border-gray-800">{type}</td>
                     {chartData.map((d, i) => (
-                      <td key={i} className="text-center">{d[type]}</td>
+                      <td key={i} className="text-center py-3">{d[type]}</td>
                     ))}
-                    <td className="text-center text-blue-400">
+                    <td className="text-center text-blue-400 py-3">
                       {chartData.reduce((sum, d) => sum + d[type], 0)}
                     </td>
                   </tr>
