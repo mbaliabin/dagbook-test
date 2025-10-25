@@ -77,8 +77,8 @@ export default function StatisticsPage() {
         <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm">
           <div className="font-semibold mb-1">{label}</div>
           {payload.map((p: any) => (
-            <div key={p.dataKey} className="flex justify-between">
-              <span style={{ color: p.fill }}>{p.name}:</span>
+            <div key={p.dataKey} className="flex justify-between gap-2">
+              <span style={{ color: p.fill }} className="mr-1">{p.name}:</span>
               <span>
                 {reportType === "Длительность" || reportType === "Выносливость"
                   ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
@@ -165,13 +165,26 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+            >
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
-                const fillColor = reportType==="Выносливость" ? enduranceColors[idx%enduranceColors.length] : colors[idx%colors.length];
-                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} name={t} />;
+              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
+                const fillColor = reportType === "Выносливость" ? enduranceColors[idx % enduranceColors.length] : colors[idx % colors.length];
+                return (
+                  <Bar
+                    key={t}
+                    dataKey={t}
+                    stackId="a"
+                    fill={fillColor}
+                    name={t}
+                    maxBarSize={35} // чуть уже
+                    radius={[0, 0, 6, 6]} // закругление только кончиков
+                  />
+                );
               })}
             </BarChart>
           </ResponsiveContainer>
