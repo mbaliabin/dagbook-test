@@ -26,11 +26,11 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  // Генерация данных для разных отчётов
+  // Генерация данных
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-    let count = 12; // по умолчанию для года
+    let count = 12;
 
     if (interval === "7 дней") count = 7;
     else if (interval === "4 недели") count = 4;
@@ -47,19 +47,19 @@ export default function StatisticsPage() {
       if (reportType === "Выносливость") {
         data.push({
           label,
-          I1: Math.floor(Math.random() * 60),
-          I2: Math.floor(Math.random() * 60),
-          I3: Math.floor(Math.random() * 60),
-          I4: Math.floor(Math.random() * 60),
-          I5: Math.floor(Math.random() * 60),
+          I1: Math.floor(Math.random() * 30 + 10),
+          I2: Math.floor(Math.random() * 30 + 10),
+          I3: Math.floor(Math.random() * 30 + 10),
+          I4: Math.floor(Math.random() * 30 + 10),
+          I5: Math.floor(Math.random() * 30 + 10),
         });
       } else {
         data.push({
           label,
-          run: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 10 : 60)),
-          ski: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 15 : 90)),
-          bike: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 20 : 120)),
-          swim: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 5 : 30)),
+          run: Math.floor(Math.random() * 15),
+          ski: Math.floor(Math.random() * 20),
+          bike: Math.floor(Math.random() * 25),
+          swim: Math.floor(Math.random() * 10),
         });
       }
     }
@@ -70,14 +70,13 @@ export default function StatisticsPage() {
   const chartData = generateData();
   const months = chartData.map(d => d.label);
 
-  // Список тренировок для таблицы
   const types = reportType === "Выносливость" ? ["I1", "I2", "I3", "I4", "I5"] : ["Бег", "Велосипед", "Плавание", "Лыжи"];
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
+        {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
@@ -104,7 +103,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Плашка выбора отчёта и интервала */}
+        {/* Выбор отчёта и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
