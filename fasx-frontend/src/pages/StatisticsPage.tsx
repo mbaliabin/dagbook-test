@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -9,8 +9,7 @@ type ReportType = "Общее расстояние" | "Длительность"
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [name] = useState("Максим");
+  const [name, setName] = useState("Максим");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,47 +28,54 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  const trainingTypes = reportType === "Выносливость"
-    ? ["I1", "I2", "I3", "I4", "I5"]
-    : ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
+  // Типы тренировок и зоны выносливости
+  const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
+  const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Генерация данных для всех отчетов
+  // Генерация данных для диаграммы и таблицы
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
+
+    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+
+    // Максимальные значения для генерации данных
     const maxValues: any = {
-      "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5 },
-      "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30 },
+      "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
+      "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
       "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
-    const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+    let points = 0;
+    if (interval === "7 дней") points = 7;
+    else if (interval === "4 недели") points = 4;
+    else if (interval === "6 месяцев") points = 6;
+    else if (interval === "Год") points = 12;
 
-    for (let i = barsCount - 1; i >= 0; i--) {
+    for (let i = points - 1; i >= 0; i--) {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-      else label = today.subtract(i, interval === "6 месяцев" ? "month" : "month").format("MMM");
+      else if (interval === "6 месяцев" || interval === "Год") label = today.subtract(i, interval === "6 месяцев" ? "month" : "month").format("MMM");
 
       let item: any = { label };
-      trainingTypes.forEach((type) => {
-        item[type] = Math.floor(Math.random() * maxValues[reportType][type]);
+      types.forEach((t) => {
+        item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
       });
       data.push(item);
     }
+
     return data;
   };
 
-  useEffect(() => {
-    setChartData(generateData());
-  }, [reportType, interval]);
-
-  const months = chartData.map((d) => d.label);
+  const chartData = generateData();
+  const months = chartData.map(d => d.label);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Верхняя плашка */}
+
+        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
@@ -77,15 +83,12 @@ export default function StatisticsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-          >
+          <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
 
-        {/* Меню */}
+        {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -103,7 +106,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и интервала */}
+        {/* Плашка выбора отчёта и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
@@ -138,9 +141,9 @@ export default function StatisticsPage() {
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {trainingTypes.map((type, idx) => {
-                const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#8b5cf6"];
-                return <Bar key={type} dataKey={type} stackId="a" fill={colors[idx]} name={type} />;
+              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
+                const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+                return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx % colors.length]} name={t} />;
               })}
             </BarChart>
           </ResponsiveContainer>
@@ -148,12 +151,16 @@ export default function StatisticsPage() {
 
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">{reportType === "Выносливость" ? "Зоны интенсивности (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}</h2>
+          <h2 className="text-lg font-semibold mb-3">
+            {reportType === "Выносливость" ? "Зоны выносливости (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
-                  <th className="text-left py-2 px-3 border-r border-gray-800">{reportType === "Выносливость" ? "Зона" : "Тип тренировки"}</th>
+                  <th className="text-left py-2 px-3 border-r border-gray-800">
+                    {reportType === "Выносливость" ? "Зона" : "Тип тренировки"}
+                  </th>
                   {months.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
@@ -161,14 +168,14 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {trainingTypes.map((type) => (
+                {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-2 px-3 border-r border-gray-800">{type}</td>
-                    {months.map((m, i) => (
-                      <td key={i} className="text-center">{chartData[i]?.[type] || 0}</td>
+                    {chartData.map((d, i) => (
+                      <td key={i} className="text-center">{d[type]}</td>
                     ))}
                     <td className="text-center text-blue-400">
-                      {chartData.reduce((sum, item) => sum + (item[type] || 0), 0)}
+                      {chartData.reduce((sum, d) => sum + d[type], 0)}
                     </td>
                   </tr>
                 ))}
@@ -176,6 +183,7 @@ export default function StatisticsPage() {
             </table>
           </div>
         </div>
+
       </div>
     </div>
   );
