@@ -171,7 +171,7 @@ export default function StatisticsPage() {
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
                 const fillColor = reportType === "Выносливость" ? enduranceColors[idx % enduranceColors.length] : colors[idx % colors.length];
-                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} name={t} />;
+                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} barSize={30} />;
               })}
             </BarChart>
           </ResponsiveContainer>
