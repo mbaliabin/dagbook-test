@@ -78,7 +78,7 @@ export default function StatisticsPage() {
           <div className="font-semibold mb-1">{label}</div>
           {payload.map((p: any) => (
             <div key={p.dataKey} className="flex justify-between">
-              <span style={{ color: p.fill }}>{p.name}</span>
+              <span style={{ color: p.fill }}>{p.name}:</span>
               <span>
                 {reportType === "Длительность" || reportType === "Выносливость"
                   ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
