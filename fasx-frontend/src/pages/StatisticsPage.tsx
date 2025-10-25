@@ -27,6 +27,7 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
@@ -38,7 +39,7 @@ export default function StatisticsPage() {
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
-      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
     let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
@@ -51,8 +52,7 @@ export default function StatisticsPage() {
 
       let item: any = { label };
       types.forEach((t) => {
-        const value = Math.floor(Math.random() * maxValues[reportType][t]);
-        item[t] = value;
+        item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
       });
       data.push(item);
     }
@@ -62,30 +62,27 @@ export default function StatisticsPage() {
   const chartData = generateData();
   const labels = chartData.map(d => d.label);
 
-  // Форматирование времени для таблицы ч:мм
+  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
+    return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
-  // Кастомный тултип
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
       return (
-        <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm min-w-[140px]">
+        <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm">
           <div className="font-semibold mb-1">{label}</div>
           {payload.map((p: any) => (
-            <div key={p.dataKey} className="flex justify-between mt-1">
+            <div key={p.dataKey} className="flex justify-between">
               <span style={{ color: p.fill }}>{p.name}</span>
-              <span className="ml-2">
+              <span>
                 {reportType === "Длительность" || reportType === "Выносливость"
-                  ? `${Math.floor(p.value / 60)} ч ${p.value % 60} м`
-                  : reportType === "Общее расстояние"
-                    ? `${p.value} км`
-                    : p.value
-                }
+                  ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
+                  : `${p.value} км`}
               </span>
             </div>
           ))}
@@ -93,11 +90,8 @@ export default function StatisticsPage() {
             <span>Общее</span>
             <span>
               {reportType === "Длительность" || reportType === "Выносливость"
-                ? `${Math.floor(total / 60)} ч ${total % 60} м`
-                : reportType === "Общее расстояние"
-                  ? `${total} км`
-                  : total
-              }
+                ? `${Math.floor(total/60)} ч ${total%60} м`
+                : `${total} км`}
             </span>
           </div>
         </div>
@@ -176,7 +170,6 @@ export default function StatisticsPage() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
-                const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
                 return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx%colors.length]} name={t} />;
               })}
             </BarChart>
@@ -201,11 +194,14 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type)=>{
+                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
                   const total = chartData.reduce((sum,d)=>sum+d[type],0);
                   return (
-                    <tr key={type} className="border-b border-gray-800">
-                      <td className="py-3 px-3 border-r border-gray-800">{type}</td>
+                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/50 transition-colors">
+                      <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
+                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: colors[idx%colors.length]}}></span>}
+                        {type}
+                      </td>
                       {chartData.map((d,i)=>(
                         <td key={i} className="text-center py-3">
                           {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(d[type]): d[type]}
