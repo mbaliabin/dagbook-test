@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import {
-  Home,
-  BarChart3,
-  ClipboardList,
-  CalendarDays,
-  LogOut,
-} from "lucide-react";
+import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -32,55 +26,72 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  // Генерация согласованных данных для диаграммы и таблицы
-  const generateData = () => {
+  const typesDistance = ["run", "ski", "bike", "swim"];
+  const typesDuration = ["run", "ski", "bike", "swim", "strength"];
+  const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
+
+  // Генерация динамических данных
+  const generateChartData = () => {
     const today = dayjs();
     let data: any[] = [];
-    let count = 12;
-
+    let count = 0;
     if (interval === "7 дней") count = 7;
     else if (interval === "4 недели") count = 4;
     else if (interval === "6 месяцев") count = 6;
+    else if (interval === "Год") count = 12;
 
     for (let i = count - 1; i >= 0; i--) {
-      const label = interval === "7 дней"
-        ? today.subtract(i, "day").format("DD MMM")
-        : interval === "4 недели"
-        ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`
-        : today.subtract(i, "month").format("MMM");
+      let label = "";
+      if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+      else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+      else label = today.subtract(i, "month").format("MMM");
 
-      if (reportType === "Выносливость") {
-        // 5 зон
-        const I1 = Math.floor(Math.random() * 60);
-        const I2 = Math.floor(Math.random() * 50);
-        const I3 = Math.floor(Math.random() * 40);
-        const I4 = Math.floor(Math.random() * 30);
-        const I5 = Math.floor(Math.random() * 20);
-        data.push({ label, I1, I2, I3, I4, I5 });
-      } else {
-        const maxValues = reportType === "Общее расстояние"
-          ? { run: 10, ski: 15, bike: 20, swim: 5 }   // км
-          : { run: 60, ski: 90, bike: 120, swim: 30 }; // мин
+      const randomValue = (max: number) => Math.floor(Math.random() * max);
 
-        const run = Math.floor(Math.random() * maxValues.run);
-        const ski = Math.floor(Math.random() * maxValues.ski);
-        const bike = Math.floor(Math.random() * maxValues.bike);
-        const swim = Math.floor(Math.random() * maxValues.swim);
-
-        data.push({ label, run, ski, bike, swim });
+      if (reportType === "Общее расстояние") {
+        data.push({
+          label,
+          run: randomValue(100),
+          ski: randomValue(120),
+          bike: randomValue(200),
+          swim: randomValue(50),
+        });
+      } else if (reportType === "Длительность") {
+        data.push({
+          label,
+          run: randomValue(300),
+          ski: randomValue(400),
+          bike: randomValue(500),
+          swim: randomValue(100),
+          strength: randomValue(150),
+        });
+      } else if (reportType === "Выносливость") {
+        enduranceZones.forEach((zone) => {
+          if (!data.find((d) => d.zone === zone)) data.push({ zone });
+          data.find((d) => d.zone === zone)[label] = randomValue(60);
+        });
       }
     }
+
+    // Для таблицы добавляем total
+    if (reportType === "Выносливость") {
+      data.forEach((row) => {
+        row.total = Object.keys(row)
+          .filter((k) => k !== "zone")
+          .reduce((sum, k) => sum + row[k], 0);
+      });
+    }
+
     return data;
   };
 
-  const chartData = generateData();
-  const months = chartData.map(d => d.label);
+  const chartData = generateChartData();
+  const months = chartData.map((d: any) => d.label);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
+        {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
@@ -118,7 +129,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Плашка выбора отчёта и интервала */}
+        {/* Выбор отчёта и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
@@ -147,93 +158,97 @@ export default function StatisticsPage() {
         </div>
 
         {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
-              <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
-              <Legend wrapperStyle={{ color: "#fff" }} />
-              {reportType === "Выносливость" ? (
-                <>
-                  <Bar dataKey="I1" stackId="a" fill="#3b82f6" name="I1" />
-                  <Bar dataKey="I2" stackId="a" fill="#10b981" name="I2" />
-                  <Bar dataKey="I3" stackId="a" fill="#facc15" name="I3" />
-                  <Bar dataKey="I4" stackId="a" fill="#f97316" name="I4" />
-                  <Bar dataKey="I5" stackId="a" fill="#ef4444" name="I5" />
-                </>
-              ) : (
-                <>
-                  <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
-                  <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
-                  <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
-                  <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
-                </>
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {reportType !== "Выносливость" && (
+          <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+                <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
+                <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
+                <Legend wrapperStyle={{ color: "#fff" }} />
+                {reportType === "Общее расстояние" && (
+                  <>
+                    <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
+                    <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
+                    <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
+                    <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
+                  </>
+                )}
+                {reportType === "Длительность" && (
+                  <>
+                    <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
+                    <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
+                    <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
+                    <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
+                    <Bar dataKey="strength" stackId="a" fill="#a855f7" name="Силовая" />
+                  </>
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
-        {/* Таблица */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          {reportType === "Выносливость" ? (
-            <>
-              <h2 className="text-lg font-semibold mb-3">Выносливость (мин)</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
-                  <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
-                    <tr>
-                      <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
-                      {months.map((m) => (
-                        <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
-                      ))}
-                      <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {["I1","I2","I3","I4","I5"].map((zone) => (
-                      <tr key={zone} className="border-b border-gray-800">
-                        <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
-                        {chartData.map((d, i) => (
-                          <td key={i} className="text-center">{d[zone]}</td>
-                        ))}
-                        <td className="text-center text-blue-400">{chartData.reduce((sum, d) => sum + d[zone], 0)}</td>
-                      </tr>
+        {/* Таблицы */}
+        {reportType === "Выносливость" ? (
+          <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
+            <h2 className="text-lg font-semibold mb-3">Выносливость (мин)</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
+                <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
+                  <tr>
+                    <th className="text-left py-2 px-3 border-r border-gray-800">Зона</th>
+                    {months.map((m) => (
+                      <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2 className="text-lg font-semibold mb-3">Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
-                  <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
-                    <tr>
-                      <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
+                    <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chartData.map((zone) => (
+                    <tr key={zone.zone} className="border-b border-gray-800">
+                      <td className="py-2 px-3 border-r border-gray-800">{zone.zone}</td>
                       {months.map((m) => (
-                        <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
+                        <td key={m} className="text-center">{zone[m]}</td>
                       ))}
-                      <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                      <td className="text-center text-blue-400">{zone.total}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {["Бег", "Велосипед", "Плавание", "Лыжи"].map((type) => (
-                      <tr key={type} className="border-b border-gray-800">
-                        <td className="py-2 px-3 border-r border-gray-800">{type}</td>
-                        {chartData.map((d, i) => (
-                          <td key={i} className="text-center">{d[type.toLowerCase()]}</td>
-                        ))}
-                        <td className="text-center text-blue-400">{chartData.reduce((sum, d) => sum + d[type.toLowerCase()], 0)}</td>
-                      </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
+            <h2 className="text-lg font-semibold mb-3">
+              Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
+                <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
+                  <tr>
+                    <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
+                    {months.map((m) => (
+                      <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-
+                    <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(reportType === "Общее расстояние" ? typesDistance : typesDuration).map((type) => (
+                    <tr key={type} className="border-b border-gray-800">
+                      <td className="py-2 px-3 border-r border-gray-800">
+                        {type === "run" ? "Бег" : type === "ski" ? "Лыжи" : type === "bike" ? "Велосипед" : type === "swim" ? "Плавание" : "Силовая"}
+                      </td>
+                      {months.map((m, i) => (
+                        <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                      ))}
+                      <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
