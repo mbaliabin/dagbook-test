@@ -100,7 +100,6 @@ export default function DailyParameters() {
   const [sleepDuration, setSleepDuration] = useState<string>("");
   const [comment, setComment] = useState<string>("");
 
-  // --- Загрузка профиля пользователя ---
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -113,7 +112,6 @@ export default function DailyParameters() {
     fetchProfile();
   }, []);
 
-  // --- Загрузка данных выбранного дня ---
   useEffect(() => {
     const fetchDailyInfo = async () => {
       try {
@@ -122,13 +120,10 @@ export default function DailyParameters() {
 
         const response = await fetch(
           `${API_URL}/api/daily-information?date=${dateStr}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (!response.ok) {
-          // Сброс полей при отсутствии данных
           setMainParam(null);
           setPhysical(0);
           setMental(0);
@@ -140,7 +135,6 @@ export default function DailyParameters() {
         }
 
         const data = await response.json();
-
         setMainParam(data.main_param || null);
         setPhysical(Number(data.physical) || 0);
         setMental(Number(data.mental) || 0);
@@ -207,61 +201,59 @@ export default function DailyParameters() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-      {/* Аватар, имя, выбор даты и кнопки */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src="/profile.jpg"
-                      alt="Avatar"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                    <div>
-                      <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
-                      <p className="text-sm text-gray-400">{dayjs().format("D MMMM")}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    {/* Выбор даты */}
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={prevDay}
-                        className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-
-                      <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer select-none">
-                        {formattedDate}
-                      </div>
-
-                      <button
-                        onClick={nextDay}
-                        className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Кнопки Настройка профиля и Выйти */}
-                    <button
-                      onClick={() => navigate("/profile/settings")}
-                      className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded flex items-center"
-                    >
-                      <Settings className="w-4 h-4 mr-1" /> Настройка профиля
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-                    >
-                      <LogOut className="w-4 h-4 mr-1" /> Выйти
-                    </button>
-                  </div>
-                </div>
-              </div>
-        {/* Верхний блок с меню, аватаром и кнопками */}
+        {/* Верхний блок с аватаром и кнопками */}
         <div className="space-y-4">
-          {/* Верхнее меню */}
+          {/* Аватар, имя, выбор даты и кнопки */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <img
+                src="/profile.jpg"
+                alt="Avatar"
+                className="w-16 h-16 rounded-full object-cover"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
+                <p className="text-sm text-gray-400">{dayjs().format("D MMMM")}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={prevDay}
+                  className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer select-none">
+                  {formattedDate}
+                </div>
+
+                <button
+                  onClick={nextDay}
+                  className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => navigate("/profile/settings")}
+                className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Settings className="w-4 h-4 mr-1" /> Настройка профиля
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
+          </div>
+
+          {/* Верхнее меню сразу под аватаром и кнопками */}
           <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
             {[
               { label: "Главная", icon: Timer, path: "/daily" },
@@ -288,58 +280,6 @@ export default function DailyParameters() {
                 </button>
               );
             })}
-          </div>
-
-          {/* Аватар, имя, выбор даты и кнопки */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src="/profile.jpg"
-                alt="Avatar"
-                className="w-16 h-16 rounded-full object-cover"
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
-                <p className="text-sm text-gray-400">{dayjs().format("D MMMM")}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Выбор даты */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={prevDay}
-                  className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                <div className="px-3 py-1 rounded bg-[#1f1f22] text-white text-sm flex items-center justify-center cursor-pointer select-none">
-                  {formattedDate}
-                </div>
-
-                <button
-                  onClick={nextDay}
-                  className="flex items-center justify-center text-sm text-gray-300 bg-[#1f1f22] px-2 py-1 rounded hover:bg-[#2a2a2d] transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Кнопки Настройка профиля и Выйти */}
-              <button
-                onClick={() => navigate("/profile/settings")}
-                className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-1" /> Настройка профиля
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-1" /> Выйти
-              </button>
-            </div>
           </div>
         </div>
 
