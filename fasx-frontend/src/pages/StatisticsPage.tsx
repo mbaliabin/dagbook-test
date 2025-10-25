@@ -27,11 +27,18 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Генерация данных
+  // Функция форматирования значений
+  const formatValue = (type: ReportType, value: number) => {
+    if (type === "Общее расстояние") return value.toFixed(1); // км с одной цифрой после запятой
+    // Длительность и выносливость в формате 00:00
+    const hours = Math.floor(value / 60);
+    const minutes = value % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+  };
+
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
@@ -41,21 +48,16 @@ export default function StatisticsPage() {
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
-      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
-    let points = 0;
-    if (interval === "7 дней") points = 7;
-    else if (interval === "4 недели") points = 4;
-    else if (interval === "6 месяцев") points = 6;
-    else if (interval === "Год") points = 12;
+    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
 
     for (let i = points - 1; i >= 0; i--) {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-      else if (interval === "6 месяцев" || interval === "Год")
-        label = today.subtract(i, "month").format("MMM");
+      else label = today.subtract(i, "month").format("MMM");
 
       let item: any = { label };
       types.forEach((t) => {
@@ -68,48 +70,17 @@ export default function StatisticsPage() {
   };
 
   const chartData = generateData();
-  const months = chartData.map((d) => d.label);
-
-  // Кастомный тултип
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const barData = payload[0].payload;
-      const total = Object.keys(barData)
-        .filter((k) => k !== "label")
-        .reduce((sum, key) => sum + barData[key], 0);
-
-      return (
-        <div className="bg-[#1a1a1d] border border-gray-700 p-2 text-white text-sm rounded shadow-md">
-          <div className="font-semibold">{barData.label}</div>
-          {payload.map((p: any) => (
-            <div key={p.dataKey} className="flex justify-between">
-              <span style={{ color: p.fill }}>{p.name}</span>
-              <span>{p.value}</span>
-            </div>
-          ))}
-          <hr className="my-1 border-gray-600" />
-          <div className="flex justify-between font-semibold">
-            <span>Общее</span>
-            <span>{total}</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#a855f7"];
+  const months = chartData.map(d => d.label);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
+
         {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
-            <div>
-              <h1 className="text-2xl font-bold text-white">{name}</h1>
-            </div>
+            <div><h1 className="text-2xl font-bold">{name}</h1></div>
           </div>
           <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
             <LogOut className="w-4 h-4 mr-1" /> Выйти
@@ -122,11 +93,8 @@ export default function StatisticsPage() {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
-              >
+              <button key={item.path} onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
@@ -134,28 +102,21 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Плашка выбора отчёта и интервала */}
+        {/* Плашка выбора отчета и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value as ReportType)}
-              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white"
-            >
+            <select value={reportType} onChange={(e) => setReportType(e.target.value as ReportType)}
+              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white">
               <option>Общее расстояние</option>
               <option>Длительность</option>
               <option>Выносливость</option>
             </select>
           </div>
-
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
             {intervals.map((intv) => (
-              <button
-                key={intv}
-                onClick={() => setInterval(intv)}
-                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
-              >
+              <button key={intv} onClick={() => setInterval(intv)}
+                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}>
                 {intv}
               </button>
             ))}
@@ -167,11 +128,14 @@ export default function StatisticsPage() {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }}
+                formatter={(value: number) => formatValue(reportType, value)}
+              />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => (
-                <Bar key={t} dataKey={t} stackId="a" fill={colors[idx % colors.length]} name={t} />
-              ))}
+              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
+                const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+                return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx % colors.length]} name={t} />;
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -185,12 +149,8 @@ export default function StatisticsPage() {
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
-                  <th className="text-left py-3 px-3 border-r border-gray-800">
-                    {reportType === "Выносливость" ? "Зона" : "Тип тренировки"}
-                  </th>
-                  {months.map((m) => (
-                    <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>
-                  ))}
+                  <th className="text-left py-3 px-3 border-r border-gray-800">{reportType === "Выносливость" ? "Зона" : "Тип тренировки"}</th>
+                  {months.map((m) => <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>)}
                   <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
@@ -198,18 +158,15 @@ export default function StatisticsPage() {
                 {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-3 px-3 border-r border-gray-800">{type}</td>
-                    {chartData.map((d, i) => (
-                      <td key={i} className="text-center py-3">{d[type]}</td>
-                    ))}
-                    <td className="text-center text-blue-400 py-3">
-                      {chartData.reduce((sum, d) => sum + d[type], 0)}
-                    </td>
+                    {chartData.map((d, i) => <td key={i} className="text-center py-3">{formatValue(reportType, d[type])}</td>)}
+                    <td className="text-center text-blue-400 py-3">{formatValue(reportType, chartData.reduce((sum, d) => sum + d[type], 0))}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
     </div>
   );
