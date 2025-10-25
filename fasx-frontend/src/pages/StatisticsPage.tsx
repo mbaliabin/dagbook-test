@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
   Home,
   BarChart3,
   ClipboardList,
   CalendarDays,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Calendar
 } from "lucide-react";
@@ -148,9 +141,7 @@ export default function StatisticsPage() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -159,7 +150,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Остальной контент (фильтры, диаграммы, таблицы) */}
+        {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
             <label className="block text-sm font-semibold mb-2">Тип отчёта</label>
@@ -211,7 +202,6 @@ export default function StatisticsPage() {
           </ResponsiveContainer>
         </div>
 
-
         {/* Параметры дня */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <h2 className="text-lg font-semibold mb-3">Параметры дня</h2>
@@ -226,20 +216,16 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { row: "Болезнь", values: ["—", "—", "—", "—", "—"] },
+                {[{ row: "Болезнь", values: ["—", "—", "—", "—", "—"] },
                   { row: "Травма", values: ["—", "—", "—", "—", "—"] },
                   { row: "Соревнования", values: ["✓", "—", "✓", "—", "—"] },
                   { row: "Высота", values: ["—", "—", "—", "✓", "—"] },
                   { row: "В поездке", values: ["—", "✓", "—", "—", "—"] },
-                  { row: "Выходной", values: ["—", "—", "✓", "—", "✓"] },
-                ].map((item) => (
+                  { row: "Выходной", values: ["—", "—", "✓", "—", "✓"] }].map((item) => (
                   <tr key={item.row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
                     <td className="py-2">{item.row}</td>
                     {item.values.map((v, i) => (
-                      <td key={i} className="text-center text-gray-400">
-                        {v}
-                      </td>
+                      <td key={i} className="text-center text-gray-400">{v}</td>
                     ))}
                   </tr>
                 ))}
@@ -257,13 +243,9 @@ export default function StatisticsPage() {
                 <tr>
                   <th className="text-left py-2 px-3 border-r border-gray-800">Зоны</th>
                   {months.map((m) => (
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">
-                      {m}
-                    </th>
+                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">
-                    Общее время
-                  </th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,13 +253,9 @@ export default function StatisticsPage() {
                   <tr key={zone} className="border-b border-gray-800">
                     <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
                     {months.map((m, i) => (
-                      <td key={i} className="text-center">
-                        {Math.floor(Math.random() * 60)}
-                      </td>
+                      <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
                     ))}
-                    <td className="text-center text-blue-400">
-                      {Math.floor(Math.random() * 300)}
-                    </td>
+                    <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -292,35 +270,23 @@ export default function StatisticsPage() {
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
-                  <th className="text-left py-2 px-3 border-r border-gray-800">
-                    Тип тренировки
-                  </th>
+                  <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
                   {months.map((m) => (
-                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">
-                      {m}
-                    </th>
+                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">
-                    Общее время
-                  </th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
                 </tr>
               </thead>
               <tbody>
-                {["Бег", "Велосипед", "Силовая тренировка", "Плавание", "Другое"].map(
-                  (type) => (
-                    <tr key={type} className="border-b border-gray-800">
-                      <td className="py-2 px-3 border-r border-gray-800">{type}</td>
-                      {months.map((m, i) => (
-                        <td key={i} className="text-center">
-                          {Math.floor(Math.random() * 60)}
-                        </td>
-                      ))}
-                      <td className="text-center text-blue-400">
-                        {Math.floor(Math.random() * 300)}
-                      </td>
-                    </tr>
-                  )
-                )}
+                {["Бег", "Велосипед", "Силовая тренировка", "Плавание", "Другое"].map((type) => (
+                  <tr key={type} className="border-b border-gray-800">
+                    <td className="py-2 px-3 border-r border-gray-800">{type}</td>
+                    {months.map((m, i) => (
+                      <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                    ))}
+                    <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
