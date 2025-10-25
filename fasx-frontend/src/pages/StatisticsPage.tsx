@@ -11,7 +11,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
 export default function StatisticsPage() {
-  const [reportType, setReportType] = useState("Общее расстояние");
+  const [reportType, setReportType] = useState<"Общее расстояние" | "Длительность">("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
 
@@ -32,19 +32,24 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  const generateDistanceData = () => {
+  // Генерация данных по времени или расстоянию
+  const generateData = () => {
     const today = dayjs();
     let data: { label: string; run: number; ski: number; bike: number; swim: number }[] = [];
+
+    const maxValues = reportType === "Общее расстояние"
+      ? { run: 10, ski: 15, bike: 20, swim: 5 }   // км
+      : { run: 60, ski: 90, bike: 120, swim: 30 }; // мин
 
     if (interval === "7 дней") {
       for (let i = 6; i >= 0; i--) {
         const day = today.subtract(i, "day");
         data.push({
           label: day.format("DD MMM"),
-          run: Math.floor(Math.random() * 10),
-          ski: Math.floor(Math.random() * 15),
-          bike: Math.floor(Math.random() * 20),
-          swim: Math.floor(Math.random() * 5)
+          run: Math.floor(Math.random() * maxValues.run),
+          ski: Math.floor(Math.random() * maxValues.ski),
+          bike: Math.floor(Math.random() * maxValues.bike),
+          swim: Math.floor(Math.random() * maxValues.swim)
         });
       }
     } else if (interval === "4 недели") {
@@ -52,10 +57,10 @@ export default function StatisticsPage() {
         const weekStart = today.subtract(i, "week").startOf("week");
         data.push({
           label: `Нед ${weekStart.format("DD/MM")}`,
-          run: Math.floor(Math.random() * 50),
-          ski: Math.floor(Math.random() * 60),
-          bike: Math.floor(Math.random() * 80),
-          swim: Math.floor(Math.random() * 15)
+          run: Math.floor(Math.random() * maxValues.run * 5),
+          ski: Math.floor(Math.random() * maxValues.ski * 5),
+          bike: Math.floor(Math.random() * maxValues.bike * 5),
+          swim: Math.floor(Math.random() * maxValues.swim * 5)
         });
       }
     } else if (interval === "6 месяцев") {
@@ -63,10 +68,10 @@ export default function StatisticsPage() {
         const month = today.subtract(i, "month");
         data.push({
           label: month.format("MMM"),
-          run: Math.floor(Math.random() * 200),
-          ski: Math.floor(Math.random() * 250),
-          bike: Math.floor(Math.random() * 300),
-          swim: Math.floor(Math.random() * 50)
+          run: Math.floor(Math.random() * maxValues.run * 20),
+          ski: Math.floor(Math.random() * maxValues.ski * 20),
+          bike: Math.floor(Math.random() * maxValues.bike * 20),
+          swim: Math.floor(Math.random() * maxValues.swim * 20)
         });
       }
     } else if (interval === "Год") {
@@ -74,10 +79,10 @@ export default function StatisticsPage() {
         const month = today.subtract(i, "month");
         data.push({
           label: month.format("MMM"),
-          run: Math.floor(Math.random() * 200),
-          ski: Math.floor(Math.random() * 250),
-          bike: Math.floor(Math.random() * 300),
-          swim: Math.floor(Math.random() * 50)
+          run: Math.floor(Math.random() * maxValues.run * 20),
+          ski: Math.floor(Math.random() * maxValues.ski * 20),
+          bike: Math.floor(Math.random() * maxValues.bike * 20),
+          swim: Math.floor(Math.random() * maxValues.swim * 20)
         });
       }
     }
@@ -85,9 +90,8 @@ export default function StatisticsPage() {
     return data;
   };
 
-  const distanceData = generateDistanceData();
-
-  const months = distanceData.map(d => d.label);
+  const chartData = generateData();
+  const months = chartData.map(d => d.label);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -135,7 +139,14 @@ export default function StatisticsPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
-            <span>{reportType}</span>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value as any)}
+              className="bg-[#0e0e10] border border-gray-700 rounded-lg p-1 text-white"
+            >
+              <option>Общее расстояние</option>
+              <option>Длительность</option>
+            </select>
           </div>
 
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
@@ -151,24 +162,24 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Диаграмма общего расстояния */}
+        {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={distanceData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar dataKey="run" stackId="a" fill="#ef4444" barSize={32} name="Бег" />
-              <Bar dataKey="ski" stackId="a" fill="#3b82f6" barSize={32} name="Лыжи" />
-              <Bar dataKey="bike" stackId="a" fill="#10b981" barSize={32} name="Велосипед" />
-              <Bar dataKey="swim" stackId="a" fill="#f97316" barSize={32} name="Плавание" />
+              <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
+              <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
+              <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
+              <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Таблица типа тренировки */}
+        {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
+          <h2 className="text-lg font-semibold mb-3">Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
@@ -177,7 +188,7 @@ export default function StatisticsPage() {
                   {months.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее расстояние</th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
               <tbody>
