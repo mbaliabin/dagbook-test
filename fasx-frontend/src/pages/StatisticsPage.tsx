@@ -27,17 +27,19 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  const formatValue = (type: ReportType, value: number) => {
-    if (type === "Общее расстояние") return value.toFixed(1);
+  // Форматирование значений
+  const formatValue = (type: ReportType, val: number) => {
+    if (type === "Общее расстояние") return val.toFixed(1) + " км";
     if (type === "Длительность" || type === "Выносливость") {
-      const hours = Math.floor(value / 60);
-      const minutes = value % 60;
-      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+      const h = Math.floor(val / 60).toString().padStart(2, "0");
+      const m = (val % 60).toString().padStart(2, "0");
+      return `${h}:${m}`;
     }
-    return value;
+    return val;
   };
 
   const generateData = () => {
@@ -75,7 +77,7 @@ export default function StatisticsPage() {
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхняя плашка */}
+        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
@@ -106,7 +108,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Выбор отчёта и интервала */}
+        {/* Плашка выбора отчёта и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
@@ -140,17 +142,27 @@ export default function StatisticsPage() {
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip
+                cursor={false}
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
-                    const item = payload[0];
+                    const item = payload.find(p => p.value > 0);
+                    if (!item) return null;
                     const sport = item.name;
                     const value = item.value;
                     const total = payload.reduce((sum, p) => sum + p.value, 0);
                     return (
-                      <div className="bg-white/10 text-white text-xs rounded-lg px-2 py-1 shadow-lg border border-gray-700">
+                      <div style={{
+                        backgroundColor: 'rgba(30,30,30,0.95)',
+                        color: 'white',
+                        fontSize: 12,
+                        padding: '4px 8px',
+                        borderRadius: 6,
+                        border: '1px solid #444',
+                        pointerEvents: 'none'
+                      }}>
                         <div className="font-semibold">{label}</div>
                         <div>{sport}: {formatValue(reportType, value)}</div>
-                        <div className="text-gray-300">Общее: {formatValue(reportType, total)}</div>
+                        <div style={{color:'#aaa'}}>Общее: {formatValue(reportType, total)}</div>
                       </div>
                     );
                   }
