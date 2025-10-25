@@ -79,8 +79,8 @@ export default function StatisticsPage() {
               className="w-16 h-16 rounded-full border border-gray-700 object-cover"
             />
             <div>
-              <h2 className="text-lg font-semibold">Максим Иванов</h2>
-              <p className="text-gray-400 text-sm">Премиум аккаунт</p>
+              <h2 className="text-lg font-semibold">Максим </h2>
+              <p className="text-gray-400 text-sm">Premium plus</p>
             </div>
           </div>
           <button
