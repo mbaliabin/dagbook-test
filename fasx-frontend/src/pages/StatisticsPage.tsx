@@ -27,23 +27,23 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
-  const enduranceColors = ["#93c5fd", "#3b82f6", "#facc15", "#f97316", "#ef4444"];
-  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
 
-    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
       "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
-    const points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
 
     for (let i = points - 1; i >= 0; i--) {
       let label = "";
@@ -64,12 +64,14 @@ export default function StatisticsPage() {
   const chartData = generateData();
   const labels = chartData.map(d => d.label);
 
+  // Форматирование времени для таблицы ч:мм
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
+  // Тултип
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
@@ -170,8 +172,17 @@ export default function StatisticsPage() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
-                const fillColor = reportType==="Выносливость" ? enduranceColors[idx%enduranceColors.length] : colors[idx%colors.length];
-                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} name={t} />;
+                const colors = ["#3b82f6","#0d47a1","#facc15","#f97316","#ef4444"];
+                return (
+                  <Bar
+                    key={t}
+                    dataKey={t}
+                    stackId="a"
+                    fill={colors[idx % colors.length]}
+                    name={t}
+                    radius={[5,5,0,0]} // закруглённые концы баров
+                  />
+                );
               })}
             </BarChart>
           </ResponsiveContainer>
@@ -180,7 +191,7 @@ export default function StatisticsPage() {
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
           <h2 className="text-lg font-semibold mb-3">
-            {reportType==="Выносливость"?"Зоны выносливости (мин)":
+            {reportType==="Выносливость"?"Зоны выносливости (ч:мм)":
              reportType==="Длительность"?`Длительность (ч:мм)`:`Тип тренировки (${reportType==="Общее расстояние"?"км":"мин"})`}
           </h2>
           <div className="overflow-x-auto">
@@ -195,12 +206,22 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
+                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type)=>{
                   const total = chartData.reduce((sum,d)=>sum+d[type],0);
                   return (
                     <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/20 transition-colors">
                       <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
-                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: enduranceColors[idx%enduranceColors.length]}}></span>}
+                        {reportType==="Выносливость" && (
+                          <span
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor:
+                              type==="I1"?"#3b82f6":
+                              type==="I2"?"#0d47a1":
+                              type==="I3"?"#facc15":
+                              type==="I4"?"#f97316":"#ef4444"
+                            }}
+                          />
+                        )}
                         {type}
                       </td>
                       {chartData.map((d,i)=>(
