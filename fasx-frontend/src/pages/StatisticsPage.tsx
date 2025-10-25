@@ -1,17 +1,11 @@
 import React, { useState } from "react";
 import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import {
-  Home,
-  BarChart3,
-  ClipboardList,
-  CalendarDays,
-  LogOut,
-} from "lucide-react";
+import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
 export default function StatisticsPage() {
-  const [reportType, setReportType] = useState<"Общее расстояние" | "Длительность">("Общее расстояние");
+  const [reportType, setReportType] = useState<"Общее расстояние" | "Длительность" | "Выносливость">("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
 
@@ -47,23 +41,52 @@ export default function StatisticsPage() {
       for (let i = 11; i >= 0; i--) labels.push(today.subtract(i, "month").format("MMM"));
     }
 
-    const maxValues = reportType === "Общее расстояние"
-      ? { run: 10, ski: 15, bike: 20, swim: 5 }
-      : { run: 60, ski: 90, bike: 120, swim: 30 };
+    // Для каждого отчёта задаём свои максимальные значения
+    let maxValues: Record<string, number> = {};
+    if (reportType === "Общее расстояние") {
+      maxValues = { run: 10, ski: 15, bike: 20, swim: 5 };
+    } else if (reportType === "Длительность") {
+      maxValues = { run: 60, ski: 90, bike: 120, swim: 30 };
+    } else if (reportType === "Выносливость") {
+      maxValues = { I1: 20, I2: 25, I3: 30, I4: 35, I5: 40 };
+    }
 
-    const chartData = labels.map((label) => ({
-      label,
-      run: Math.floor(Math.random() * maxValues.run),
-      ski: Math.floor(Math.random() * maxValues.ski),
-      bike: Math.floor(Math.random() * maxValues.bike),
-      swim: Math.floor(Math.random() * maxValues.swim),
-    }));
+    // Формируем данные для диаграммы
+    let chartData: any[] = [];
+    if (reportType === "Выносливость") {
+      chartData = labels.map((label) => ({
+        label,
+        I1: Math.floor(Math.random() * maxValues.I1),
+        I2: Math.floor(Math.random() * maxValues.I2),
+        I3: Math.floor(Math.random() * maxValues.I3),
+        I4: Math.floor(Math.random() * maxValues.I4),
+        I5: Math.floor(Math.random() * maxValues.I5),
+      }));
+    } else {
+      chartData = labels.map((label) => ({
+        label,
+        run: Math.floor(Math.random() * maxValues.run),
+        ski: Math.floor(Math.random() * maxValues.ski),
+        bike: Math.floor(Math.random() * maxValues.bike),
+        swim: Math.floor(Math.random() * maxValues.swim),
+      }));
+    }
 
-    const tableData = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"].map((type) => ({
-      type,
-      values: labels.map(() => Math.floor(Math.random() * (reportType === "Общее расстояние" ? 10 : 60))),
-      total: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 300 : 900)),
-    }));
+    // Данные для основной таблицы
+    let tableData: any[] = [];
+    if (reportType === "Выносливость") {
+      tableData = ["I1", "I2", "I3", "I4", "I5"].map((type) => ({
+        type,
+        values: labels.map(() => Math.floor(Math.random() * 40)),
+        total: Math.floor(Math.random() * 150),
+      }));
+    } else {
+      tableData = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"].map((type) => ({
+        type,
+        values: labels.map(() => Math.floor(Math.random() * (reportType === "Общее расстояние" ? 10 : 60))),
+        total: Math.floor(Math.random() * (reportType === "Общее расстояние" ? 300 : 900)),
+      }));
+    }
 
     return { labels, chartData, tableData };
   };
@@ -75,7 +98,7 @@ export default function StatisticsPage() {
     const params = ["Болезнь", "Травма", "Соревнования", "Высота", "В поездке", "Выходной"];
     return params.map((p) => ({
       row: p,
-      values: labels.map(() => (Math.random() > 0.7 ? "✓" : "—"))
+      values: labels.map(() => (Math.random() > 0.7 ? "✓" : "—")),
     }));
   };
   const dayParams = generateDayParams();
@@ -133,6 +156,7 @@ export default function StatisticsPage() {
             >
               <option>Общее расстояние</option>
               <option>Длительность</option>
+              <option>Выносливость</option>
             </select>
           </div>
 
@@ -156,22 +180,36 @@ export default function StatisticsPage() {
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
-              <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
-              <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
-              <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
+              {reportType === "Выносливость" ? (
+                <>
+                  <Bar dataKey="I1" stackId="a" fill="#ef4444" name="I1" />
+                  <Bar dataKey="I2" stackId="a" fill="#3b82f6" name="I2" />
+                  <Bar dataKey="I3" stackId="a" fill="#10b981" name="I3" />
+                  <Bar dataKey="I4" stackId="a" fill="#f97316" name="I4" />
+                  <Bar dataKey="I5" stackId="a" fill="#8b5cf6" name="I5" />
+                </>
+              ) : (
+                <>
+                  <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
+                  <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
+                  <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
+                  <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
+                </>
+              )}
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Таблица тренировок */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">Тип тренировки ({reportType === "Общее расстояние" ? "км" : "мин"})</h2>
+          <h2 className="text-lg font-semibold mb-3">
+            {reportType === "Выносливость" ? "Зоны интенсивности (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
                 <tr>
-                  <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
+                  <th className="text-left py-2 px-3 border-r border-gray-800">{reportType === "Выносливость" ? "Зона" : "Тип тренировки"}</th>
                   {labels.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
