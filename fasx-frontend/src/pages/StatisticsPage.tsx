@@ -79,6 +79,16 @@ export default function StatisticsPage() {
             </div>
           </div>
 
+          {/* Кнопка Выйти */}
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+          >
+            <LogOut className="w-4 h-4 mr-1" /> Выйти
+          </button>
+        </div>
+
+
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
