@@ -79,7 +79,7 @@ export default function StatisticsPage() {
           {payload.map((p: any) => (
             <div key={p.dataKey} className="flex justify-between">
               <span style={{ color: p.fill }}>{p.name}</span>
-              <span>
+              <span className="ml-2">
                 {reportType === "Длительность" || reportType === "Выносливость"
                   ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
                   : `${p.value} км`}
@@ -104,7 +104,7 @@ export default function StatisticsPage() {
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхняя плашка */}
+        {/* Верхняя панель */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
@@ -117,7 +117,7 @@ export default function StatisticsPage() {
           </button>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -171,54 +171,11 @@ export default function StatisticsPage() {
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
                 const fillColor = reportType === "Выносливость" ? enduranceColors[idx % enduranceColors.length] : colors[idx % colors.length];
-                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} barSize={30} />;
+                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} barSize={45} />;
               })}
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Таблица */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">
-            {reportType==="Выносливость"?"Зоны выносливости (мин)":
-             reportType==="Длительность"?`Длительность (ч:мм)`:`Тип тренировки (${reportType==="Общее расстояние"?"км":"мин"})`}
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
-              <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
-                <tr>
-                  <th className="text-left py-3 px-3 border-r border-gray-800">
-                    {reportType==="Выносливость"?"Зона":"Тип тренировки"}
-                  </th>
-                  {labels.map((m) => <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>)}
-                  <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
-                  const total = chartData.reduce((sum,d)=>sum+d[type],0);
-                  return (
-                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/20 transition-colors">
-                      <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
-                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: enduranceColors[idx%enduranceColors.length]}}></span>}
-                        {type}
-                      </td>
-                      {chartData.map((d,i)=>(
-                        <td key={i} className="text-center py-3">
-                          {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(d[type]): d[type]}
-                        </td>
-                      ))}
-                      <td className="text-center text-blue-400 py-3">
-                        {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(total): total}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
     </div>
   );
