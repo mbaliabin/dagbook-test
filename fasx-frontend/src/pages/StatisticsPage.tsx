@@ -1,12 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import {
-  Home,
-  BarChart3,
-  ClipboardList,
-  CalendarDays,
-  LogOut,
-} from "lucide-react";
+import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -15,7 +9,8 @@ type ReportType = "Общее расстояние" | "Длительность"
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
-  const [name, setName] = useState("Максим");
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [name] = useState("Максим");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,72 +29,46 @@ export default function StatisticsPage() {
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
-  // Генерация данных
-  const generateData = () => {
-    const today = dayjs();
-    let data: any[] = [];
-
-    if (reportType === "Выносливость") {
-      // 5 зон I1-I5
-      const maxValues = { I1: 30, I2: 45, I3: 60, I4: 75, I5: 90 };
-      const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
-
-      for (let i = barsCount - 1; i >= 0; i--) {
-        let label = "";
-        if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
-        else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-        else if (interval === "6 месяцев") label = today.subtract(i, "month").format("MMM");
-        else label = today.subtract(i, "month").format("MMM");
-
-        data.push({
-          label,
-          I1: Math.floor(Math.random() * maxValues.I1),
-          I2: Math.floor(Math.random() * maxValues.I2),
-          I3: Math.floor(Math.random() * maxValues.I3),
-          I4: Math.floor(Math.random() * maxValues.I4),
-          I5: Math.floor(Math.random() * maxValues.I5),
-        });
-      }
-    } else {
-      // Бег, Лыжи, Велосипед, Плавание
-      const maxValues = reportType === "Общее расстояние"
-        ? { run: 10, ski: 15, bike: 20, swim: 5 }
-        : { run: 60, ski: 90, bike: 120, swim: 30 };
-
-      const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
-
-      for (let i = barsCount - 1; i >= 0; i--) {
-        let label = "";
-        if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
-        else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
-        else if (interval === "6 месяцев") label = today.subtract(i, "month").format("MMM");
-        else label = today.subtract(i, "month").format("MMM");
-
-        data.push({
-          label,
-          run: Math.floor(Math.random() * maxValues.run),
-          ski: Math.floor(Math.random() * maxValues.ski),
-          bike: Math.floor(Math.random() * maxValues.bike),
-          swim: Math.floor(Math.random() * maxValues.swim),
-        });
-      }
-    }
-
-    return data;
-  };
-
-  const chartData = generateData();
-  const months = chartData.map(d => d.label);
-
-  // Типы тренировок для таблиц
   const trainingTypes = reportType === "Выносливость"
     ? ["I1", "I2", "I3", "I4", "I5"]
     : ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
 
+  // Генерация данных для всех отчетов
+  const generateData = () => {
+    const today = dayjs();
+    let data: any[] = [];
+    const maxValues: any = {
+      "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5 },
+      "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30 },
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
+    };
+
+    const barsCount = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+
+    for (let i = barsCount - 1; i >= 0; i--) {
+      let label = "";
+      if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+      else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+      else label = today.subtract(i, interval === "6 месяцев" ? "month" : "month").format("MMM");
+
+      let item: any = { label };
+      trainingTypes.forEach((type) => {
+        item[type] = Math.floor(Math.random() * maxValues[reportType][type]);
+      });
+      data.push(item);
+    }
+    return data;
+  };
+
+  useEffect(() => {
+    setChartData(generateData());
+  }, [reportType, interval]);
+
+  const months = chartData.map((d) => d.label);
+
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-
         {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
@@ -108,12 +77,15 @@ export default function StatisticsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-          <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+          >
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -166,31 +138,17 @@ export default function StatisticsPage() {
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {reportType === "Выносливость" ? (
-                <>
-                  <Bar dataKey="I1" stackId="a" fill="#ef4444" name="I1" />
-                  <Bar dataKey="I2" stackId="a" fill="#f59e0b" name="I2" />
-                  <Bar dataKey="I3" stackId="a" fill="#eab308" name="I3" />
-                  <Bar dataKey="I4" stackId="a" fill="#3b82f6" name="I4" />
-                  <Bar dataKey="I5" stackId="a" fill="#10b981" name="I5" />
-                </>
-              ) : (
-                <>
-                  <Bar dataKey="run" stackId="a" fill="#ef4444" name="Бег" />
-                  <Bar dataKey="ski" stackId="a" fill="#3b82f6" name="Лыжи" />
-                  <Bar dataKey="bike" stackId="a" fill="#10b981" name="Велосипед" />
-                  <Bar dataKey="swim" stackId="a" fill="#f97316" name="Плавание" />
-                </>
-              )}
+              {trainingTypes.map((type, idx) => {
+                const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#8b5cf6"];
+                return <Bar key={type} dataKey={type} stackId="a" fill={colors[idx]} name={type} />;
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">
-            {reportType === "Выносливость" ? "Выносливость (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
-          </h2>
+          <h2 className="text-lg font-semibold mb-3">{reportType === "Выносливость" ? "Зоны интенсивности (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
@@ -218,7 +176,6 @@ export default function StatisticsPage() {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
