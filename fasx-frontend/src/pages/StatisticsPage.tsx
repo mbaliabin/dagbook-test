@@ -29,14 +29,14 @@ export default function StatisticsPage() {
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
-  const zoneColors = ["#93c5fd", "#3b82f6", "#facc15", "#f97316", "#ef4444"];
+  const enduranceColors = ["#93c5fd", "#3b82f6", "#facc15", "#f97316", "#ef4444"];
   const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
+    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
@@ -64,17 +64,12 @@ export default function StatisticsPage() {
   const chartData = generateData();
   const labels = chartData.map(d => d.label);
 
-  // Форматирование времени для таблицы ч:мм
-  const formatTimeTable = (minutes: number) => {
+  const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
-  // Форматирование времени для тултипа 0 ч 15 м
-  const formatTimeTooltip = (minutes: number) => `${Math.floor(minutes/60)} ч ${minutes%60} м`;
-
-  // Тултип
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
@@ -82,11 +77,11 @@ export default function StatisticsPage() {
         <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm">
           <div className="font-semibold mb-1">{label}</div>
           {payload.map((p: any) => (
-            <div key={p.dataKey} className="flex justify-between mb-0.5">
+            <div key={p.dataKey} className="flex justify-between">
               <span style={{ color: p.fill }}>{p.name}</span>
               <span>
                 {reportType === "Длительность" || reportType === "Выносливость"
-                  ? formatTimeTooltip(p.value)
+                  ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
                   : `${p.value} км`}
               </span>
             </div>
@@ -95,7 +90,7 @@ export default function StatisticsPage() {
             <span>Общее</span>
             <span>
               {reportType === "Длительность" || reportType === "Выносливость"
-                ? formatTimeTooltip(total)
+                ? `${Math.floor(total/60)} ч ${total%60} м`
                 : `${total} км`}
             </span>
           </div>
@@ -104,12 +99,6 @@ export default function StatisticsPage() {
     }
     return null;
   };
-
-  // Параметры баров
-  const barSize = 32;
-  const barRadius = 8;
-  const dataKeys = reportType === "Выносливость" ? enduranceZones : trainingTypes;
-  const fillColors = reportType === "Выносливость" ? zoneColors : colors;
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -180,17 +169,10 @@ export default function StatisticsPage() {
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {dataKeys.map((t, idx) => (
-                <Bar
-                  key={t}
-                  dataKey={t}
-                  stackId="a"
-                  fill={fillColors[idx % fillColors.length]}
-                  name={t}
-                  barSize={barSize}
-                  radius={idx === dataKeys.length - 1 ? [barRadius, barRadius, 0, 0] : 0}
-                />
-              ))}
+              {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
+                const fillColor = reportType==="Выносливость" ? enduranceColors[idx%enduranceColors.length] : colors[idx%colors.length];
+                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} name={t} />;
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -213,21 +195,21 @@ export default function StatisticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {dataKeys.map((type, idx)=>{
+                {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
                   const total = chartData.reduce((sum,d)=>sum+d[type],0);
                   return (
                     <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/20 transition-colors">
                       <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
-                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: zoneColors[idx]}} />}
+                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: enduranceColors[idx%enduranceColors.length]}}></span>}
                         {type}
                       </td>
                       {chartData.map((d,i)=>(
                         <td key={i} className="text-center py-3">
-                          {(reportType==="Длительность" || reportType==="Выносливость")? formatTimeTable(d[type]): d[type]}
+                          {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(d[type]): d[type]}
                         </td>
                       ))}
                       <td className="text-center text-blue-400 py-3">
-                        {(reportType==="Длительность" || reportType==="Выносливость")? formatTimeTable(total): total}
+                        {(reportType==="Длительность" || reportType==="Выносливость")? formatTime(total): total}
                       </td>
                     </tr>
                   );
