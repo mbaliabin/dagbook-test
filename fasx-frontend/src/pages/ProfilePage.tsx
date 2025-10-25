@@ -163,7 +163,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
-      setShowBottomMenu(scrollY > 300) // например, после 300px
+      setShowBottomMenu(scrollY > 300)
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -173,7 +173,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6 pb-24">
 
-        {/* Header: фото профиля + имя + кнопки */}
+        {/* Header: фото профиля + имя + кнопки + выбор периода */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-4">
             <img
@@ -194,19 +194,99 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 mt-2 md:mt-0">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Выбор периода */}
+            <div className="flex items-center space-x-2 flex-wrap">
+              <button
+                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onPrevMonth}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div
+                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+                onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
+                title="Показать текущий месяц"
+              >
+                {selectedMonth.format('MMMM YYYY')}
+              </div>
+
+              <button
+                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onNextMonth}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
+                  setShowDateRangePicker(false)
+                }}
+                className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
+              >
+                Текущая неделя
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowDateRangePicker(prev => !prev)}
+                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+                >
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Произвольный период
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {showDateRangePicker && (
+                  <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                    <DateRange
+                      onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                      showSelectionPreview={true}
+                      moveRangeOnFirstSelection={false}
+                      months={1}
+                      ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
+                      direction="horizontal"
+                      rangeColors={['#3b82f6']}
+                      className="text-white"
+                      locale={ru}
+                      weekStartsOn={1}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={() => setShowDateRangePicker(false)}
+                        className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={applyDateRange}
+                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Применить
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
           </div>
         </div>
 
@@ -299,7 +379,7 @@ export default function ProfilePage() {
         onAddWorkout={handleAddWorkout}
       />
 
-      {/* Нижняя навигация — появляется при скролле */}
+      {/* Нижняя навигация */}
       <div
         className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
           showBottomMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
