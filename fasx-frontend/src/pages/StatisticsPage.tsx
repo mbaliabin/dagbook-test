@@ -27,25 +27,13 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
-
-  // Форматирование значений
-  const formatValue = (type: ReportType, val: number) => {
-    if (type === "Общее расстояние") return val.toFixed(1) + " км";
-    if (type === "Длительность" || type === "Выносливость") {
-      const h = Math.floor(val / 60).toString().padStart(2, "0");
-      const m = (val % 60).toString().padStart(2, "0");
-      return `${h}:${m}`;
-    }
-    return val;
-  };
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
@@ -61,17 +49,28 @@ export default function StatisticsPage() {
       else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
       else label = today.subtract(i, "month").format("MMM");
 
-      let item: any = { label };
+      const item: any = { label };
       types.forEach((t) => {
         item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
       });
       data.push(item);
     }
+
     return data;
   };
 
   const chartData = generateData();
   const months = chartData.map(d => d.label);
+
+  const formatValue = (type: ReportType, value: number) => {
+    if (type === "Общее расстояние") return value.toFixed(1);
+    if (type === "Длительность" || type === "Выносливость") {
+      const h = Math.floor(value / 60);
+      const m = value % 60;
+      return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    }
+    return value;
+  };
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -145,10 +144,6 @@ export default function StatisticsPage() {
                 cursor={false}
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
-                    const item = payload.find(p => p.value > 0);
-                    if (!item) return null;
-                    const sport = item.name;
-                    const value = item.value;
                     const total = payload.reduce((sum, p) => sum + p.value, 0);
                     return (
                       <div style={{
@@ -161,8 +156,10 @@ export default function StatisticsPage() {
                         pointerEvents: 'none'
                       }}>
                         <div className="font-semibold">{label}</div>
-                        <div>{sport}: {formatValue(reportType, value)}</div>
-                        <div style={{color:'#aaa'}}>Общее: {formatValue(reportType, total)}</div>
+                        {payload.filter(p => p.value > 0).map((p, idx) => (
+                          <div key={idx}>{p.name}: {formatValue(reportType, p.value)}</div>
+                        ))}
+                        <div style={{color:'#aaa', marginTop:2}}>Общее: {formatValue(reportType, total)}</div>
                       </div>
                     );
                   }
@@ -204,7 +201,7 @@ export default function StatisticsPage() {
                       <td key={i} className="text-center py-3">{formatValue(reportType, d[type])}</td>
                     ))}
                     <td className="text-center text-blue-400 py-3">
-                      {formatValue(reportType, chartData.reduce((sum, d) => sum + d[type], 0))}
+                      {chartData.reduce((sum, d) => sum + d[type], 0)}
                     </td>
                   </tr>
                 ))}
