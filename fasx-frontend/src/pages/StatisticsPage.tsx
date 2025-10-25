@@ -11,7 +11,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
 export default function StatisticsPage() {
-  const [reportType, setReportType] = useState("Общее расстояние");
   const [name, setName] = useState("Максим");
 
   const navigate = useNavigate();
@@ -34,13 +33,24 @@ export default function StatisticsPage() {
     "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
   ];
 
-  // Пример данных для отчета "Общее расстояние"
+  // Пример данных для графика "Общее расстояние"
   const distanceData = months.map((m) => ({
     month: m,
-    run: Math.floor(Math.random() * 100),      // бег
-    ski: Math.floor(Math.random() * 120),      // лыжи
-    bike: Math.floor(Math.random() * 150),     // велосипед
-    swim: Math.floor(Math.random() * 30)       // плавание
+    run: Math.floor(Math.random() * 100),
+    ski: Math.floor(Math.random() * 120),
+    bike: Math.floor(Math.random() * 150),
+    swim: Math.floor(Math.random() * 30)
+  }));
+
+  // Таблица "Тип тренировки" (расстояние по месяцам)
+  const trainingTypes = ["Бег", "Велосипед", "Силовая тренировка", "Плавание", "Другое"];
+  const trainingData = trainingTypes.map((type) => ({
+    type,
+    ...months.reduce((acc, month) => {
+      acc[month] = Math.floor(Math.random() * 100);
+      return acc;
+    }, {} as Record<string, number>),
+    total: Math.floor(Math.random() * 500)
   }));
 
   return (
@@ -87,7 +97,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Отчет "Общее расстояние" */}
+        {/* График "Общее расстояние" */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <h2 className="text-xl font-semibold mb-4">Общее расстояние</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -101,6 +111,35 @@ export default function StatisticsPage() {
               <Bar dataKey="swim" stackId="a" fill="#f97316" barSize={32} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* Таблица "Тип тренировки" */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
+          <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
+              <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
+                <tr>
+                  <th className="text-left py-2 px-3 border-r border-gray-800">Тип тренировки</th>
+                  {months.map((m) => (
+                    <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
+                  ))}
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trainingData.map((item) => (
+                  <tr key={item.type} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
+                    <td className="py-2 px-3 border-r border-gray-800">{item.type}</td>
+                    {months.map((m) => (
+                      <td key={m} className="text-center">{item[m]}</td>
+                    ))}
+                    <td className="text-center text-blue-400">{item.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
