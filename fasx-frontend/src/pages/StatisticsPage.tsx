@@ -79,59 +79,6 @@ export default function StatisticsPage() {
             </div>
           </div>
 
-          {/* Кнопки и выбор периода */}
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
-
-            <div className="relative">
-              <button
-                onClick={() => setShowDateRangePicker(prev => !prev)}
-                className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
-              >
-                <Calendar className="w-4 h-4 mr-1" />
-                Выбрать период
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </button>
-
-              {showDateRangePicker && (
-                <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-                  <DateRange
-                    onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                    showSelectionPreview={true}
-                    moveRangeOnFirstSelection={false}
-                    months={1}
-                    ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
-                    direction="horizontal"
-                    rangeColors={['#3b82f6']}
-                    className="text-white"
-                    locale={ru}
-                    weekStartsOn={1}
-                  />
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <button
-                      onClick={() => setShowDateRangePicker(false)}
-                      className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      onClick={() => setShowDateRangePicker(false)}
-                      className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Применить
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
