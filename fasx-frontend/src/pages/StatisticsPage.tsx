@@ -66,6 +66,46 @@ export default function StatisticsPage() {
           })}
         </div>
 
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {loadingProfile ? 'Загрузка...' : name}
+              </h1>
+              <p className="text-sm text-white">
+                {!dateRange
+                  ? selectedMonth.format('MMMM YYYY')
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            {/* ...кнопки выбора периода... */}
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Фильтры */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
