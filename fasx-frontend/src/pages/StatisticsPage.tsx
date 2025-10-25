@@ -6,7 +6,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
 } from "recharts";
 import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -14,11 +14,15 @@ import dayjs from "dayjs";
 
 type ReportType = "Общее расстояние" | "Длительность" | "Выносливость";
 
+interface HoverState {
+  index: number | null;
+}
+
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
   const [interval, setInterval] = useState("Год");
   const [name, setName] = useState("Максим");
-  const [hoveredBar, setHoveredBar] = useState<{ index: number; key: string } | null>(null);
+  const [hover, setHover] = useState<HoverState>({ index: null });
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,24 +43,10 @@ export default function StatisticsPage() {
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Формат времени для таблицы
-  const formatTimeTable = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m}`;
-  };
-
-  // Формат времени для тултипа
-  const formatTooltipTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h} ч ${m} м`;
-  };
-
   const generateData = () => {
     const today = dayjs();
-    const data: any[] = [];
-    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+    let data: any[] = [];
+    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
@@ -64,36 +54,63 @@ export default function StatisticsPage() {
       "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
     };
 
-    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+    let points = 0;
+    if (interval === "7 дней") points = 7;
+    else if (interval === "4 недели") points = 4;
+    else if (interval === "6 месяцев") points = 6;
+    else if (interval === "Год") points = 12;
 
     for (let i = points - 1; i >= 0; i--) {
       let label = "";
       if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
-      else if (interval === "4 недели")
-        label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+      else if (interval === "4 недели") label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
       else label = today.subtract(i, "month").format("MMM");
 
-      const item: any = { label };
+      let item: any = { label };
       types.forEach((t) => {
-        item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
+        if (reportType === "Длительность" || reportType === "Выносливость") {
+          item[t] = Math.floor(Math.random() * maxValues[reportType][t]); // минуты
+        } else {
+          item[t] = +(Math.random() * maxValues[reportType][t]).toFixed(1);
+        }
       });
       data.push(item);
     }
-
     return data;
   };
 
   const chartData = generateData();
   const months = chartData.map((d) => d.label);
 
-  // Сумма для таблицы
-  const sumByType = (type: string) => chartData.reduce((sum, d) => sum + d[type], 0);
+  // Форматирование для тултипа
+  const formatTooltip = (value: number) => {
+    if (reportType === "Длительность" || reportType === "Выносливость") {
+      const h = Math.floor(value / 60);
+      const m = value % 60;
+      return `${h} ч ${m} м`;
+    }
+    return value;
+  };
+
+  // Кастомный бар для hover
+  const CustomBar = (props: any) => {
+    const { x, y, width, height, fill, index } = props;
+    const isHovered = hover.index === index;
+    return (
+      <Rectangle
+        x={x}
+        y={isHovered ? y - 5 : y}
+        width={width}
+        height={isHovered ? height + 5 : height}
+        fill={fill}
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
+        {/* Верхняя плашка — аватар и кнопка выйти */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
@@ -113,7 +130,7 @@ export default function StatisticsPage() {
           </button>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -133,7 +150,7 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Плашка выбора отчёта и интервала */}
+        {/* Отчет и интервал */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
             <span className="font-semibold">Тип отчёта:</span>
@@ -147,13 +164,14 @@ export default function StatisticsPage() {
               <option>Выносливость</option>
             </select>
           </div>
-
           <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
             {intervals.map((intv) => (
               <button
                 key={intv}
                 onClick={() => setInterval(intv)}
-                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
+                className={`px-3 py-1 rounded ${
+                  interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
+                }`}
               >
                 {intv}
               </button>
@@ -164,59 +182,33 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+            >
               <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip
-                content={({ active, payload, label }) => {
-                  if (!active || !payload) return null;
-                  const total = payload.reduce((sum, p) => sum + p.value, 0);
-                  return (
-                    <div className="bg-[#1a1a1d]/90 text-white p-2 rounded shadow-md text-sm">
-                      <div className="font-semibold">{label}</div>
-                      {payload.map((p) => (
-                        <div key={p.name} className="flex justify-between">
-                          <span>{p.name}</span>
-                          <span>{formatTooltipTime(p.value)}</span>
-                        </div>
-                      ))}
-                      <div className="border-t border-gray-600 mt-1 pt-1 flex justify-between font-semibold">
-                        <span>Общее</span>
-                        <span>{formatTooltipTime(total)}</span>
-                      </div>
-                    </div>
-                  );
-                }}
+                contentStyle={{ backgroundColor: "rgba(30,30,30,0.8)", border: "none", color: "#fff" }}
+                formatter={(value: number, name: string) => [formatTooltip(value), name]}
               />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
-                const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#a855f7"];
-                return (
-                  <Bar
-                    key={t}
-                    dataKey={t}
-                    stackId="a"
-                    fill={colors[idx % colors.length]}
-                    isAnimationActive={false}
-                  >
-                    {chartData.map((entry, i) => {
-                      const isActive = hoveredBar?.index === i && hoveredBar?.key === t;
-                      return (
-                        <Cell
-                          key={i}
-                          fill={colors[idx % colors.length]}
-                          onMouseEnter={() => setHoveredBar({ index: i, key: t })}
-                          onMouseLeave={() => setHoveredBar(null)}
-                          style={{
-                            transform: isActive ? "scale(1.05)" : "scale(1)",
-                            transformOrigin: "bottom",
-                            transition: "transform 0.2s",
-                          }}
-                        />
-                      );
-                    })}
-                  </Bar>
-                );
-              })}
+              {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map(
+                (t, idx) => {
+                  const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#a855f7"];
+                  return (
+                    <Bar
+                      key={t}
+                      dataKey={t}
+                      stackId="a"
+                      fill={colors[idx % colors.length]}
+                      name={t}
+                      shape={<CustomBar />}
+                      onMouseOver={() => setHover({ index: idx })}
+                      onMouseOut={() => setHover({ index: null })}
+                    />
+                  );
+                }
+              )}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -240,7 +232,9 @@ export default function StatisticsPage() {
                       {m}
                     </th>
                   ))}
-                  <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                  <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">
+                    Общее
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -250,17 +244,22 @@ export default function StatisticsPage() {
                 ).map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-3 px-3 border-r border-gray-800">{type}</td>
-                    {chartData.map((d, i) => (
-                      <td key={i} className="text-center py-3">
-                        {reportType === "Общее расстояние"
-                          ? d[type].toFixed(1)
-                          : formatTimeTable(d[type])}
-                      </td>
-                    ))}
+                    {chartData.map((d, i) => {
+                      let val = d[type];
+                      let display = val;
+                      if (reportType === "Длительность" || reportType === "Выносливость") {
+                        const h = Math.floor(val / 60);
+                        const m = val % 60;
+                        display = `${h}:${m}`;
+                      }
+                      return (
+                        <td key={i} className="text-center py-3">
+                          {display}
+                        </td>
+                      );
+                    })}
                     <td className="text-center text-blue-400 py-3">
-                      {reportType === "Общее расстояние"
-                        ? chartData.reduce((sum, d) => sum + d[type], 0).toFixed(1)
-                        : formatTimeTable(chartData.reduce((sum, d) => sum + d[type], 0))}
+                      {chartData.reduce((sum, d) => sum + d[type], 0)}
                     </td>
                   </tr>
                 ))}
@@ -268,7 +267,6 @@ export default function StatisticsPage() {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
