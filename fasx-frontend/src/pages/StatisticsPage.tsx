@@ -81,8 +81,8 @@ export default function StatisticsPage() {
               <span style={{ color: p.fill }}>{p.name}</span>
               <span>
                 {reportType === "Длительность" || reportType === "Выносливость"
-                  ? `${Math.floor(p.value/60)} ч ${p.value%60} м`
-                  : `${p.value} км`}
+                  ? ` ${Math.floor(p.value/60)} ч ${p.value%60} м` // ← добавлен пробел перед временем
+                  : ` ${p.value} км`} {/* ← и перед километрами */}
               </span>
             </div>
           ))}
