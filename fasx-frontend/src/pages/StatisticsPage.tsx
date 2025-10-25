@@ -106,7 +106,7 @@ export default function StatisticsPage() {
   };
 
   // Параметры баров
-  const barSize = 18;
+  const barSize = 32;
   const barRadius = 8;
   const dataKeys = reportType === "Выносливость" ? enduranceZones : trainingTypes;
   const fillColors = reportType === "Выносливость" ? zoneColors : colors;
