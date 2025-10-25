@@ -27,22 +27,23 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
+  const enduranceColors = ["#93c5fd", "#3b82f6", "#facc15", "#f97316", "#ef4444"];
+  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
 
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-    let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
+    const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
       "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
     };
 
-    let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
+    const points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
 
     for (let i = points - 1; i >= 0; i--) {
       let label = "";
@@ -52,7 +53,8 @@ export default function StatisticsPage() {
 
       let item: any = { label };
       types.forEach((t) => {
-        item[t] = Math.floor(Math.random() * maxValues[reportType][t]);
+        const value = Math.floor(Math.random() * maxValues[reportType][t]);
+        item[t] = value;
       });
       data.push(item);
     }
@@ -61,8 +63,6 @@ export default function StatisticsPage() {
 
   const chartData = generateData();
   const labels = chartData.map(d => d.label);
-
-  const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
 
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -170,7 +170,8 @@ export default function StatisticsPage() {
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((t, idx)=>{
-                return <Bar key={t} dataKey={t} stackId="a" fill={colors[idx%colors.length]} name={t} />;
+                const fillColor = reportType==="Выносливость" ? enduranceColors[idx%enduranceColors.length] : colors[idx%colors.length];
+                return <Bar key={t} dataKey={t} stackId="a" fill={fillColor} name={t} />;
               })}
             </BarChart>
           </ResponsiveContainer>
@@ -197,9 +198,9 @@ export default function StatisticsPage() {
                 {(reportType==="Выносливость"? enduranceZones: trainingTypes).map((type, idx)=>{
                   const total = chartData.reduce((sum,d)=>sum+d[type],0);
                   return (
-                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/50 transition-colors">
+                    <tr key={type} className="border-b border-gray-800 hover:bg-gray-700/20 transition-colors">
                       <td className="py-3 px-3 border-r border-gray-800 flex items-center gap-2">
-                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: colors[idx%colors.length]}}></span>}
+                        {reportType==="Выносливость" && <span className="w-3 h-3 rounded-full" style={{backgroundColor: enduranceColors[idx%enduranceColors.length]}}></span>}
                         {type}
                       </td>
                       {chartData.map((d,i)=>(
