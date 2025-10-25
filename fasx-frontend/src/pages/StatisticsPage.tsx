@@ -33,13 +33,12 @@ export default function StatisticsPage() {
   const generateData = () => {
     const today = dayjs();
     let data: any[] = [];
-
     let types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
 
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
       "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
-      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
     };
 
     let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
@@ -67,20 +66,20 @@ export default function StatisticsPage() {
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2,"0")}`;
+    return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Тултип
+  // Кастомный тултип
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
       return (
-        <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm">
+        <div className="bg-[#1a1a1d]/90 border border-gray-700 rounded-lg p-2 text-sm min-w-[140px]">
           <div className="font-semibold mb-1">{label}</div>
           {payload.map((p: any) => (
-            <div key={p.dataKey} className="flex justify-between">
+            <div key={p.dataKey} className="flex justify-between mt-1">
               <span style={{ color: p.fill }}>{p.name}</span>
-              <span>
+              <span className="ml-2">
                 {reportType === "Длительность" || reportType === "Выносливость"
                   ? `${Math.floor(p.value / 60)} ч ${p.value % 60} м`
                   : reportType === "Общее расстояние"
