@@ -5,15 +5,15 @@ import {
   BarChart3,
   ClipboardList,
   CalendarDays,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
 export default function StatisticsPage() {
-  const [name, setName] = useState("Максим");
   const [reportType, setReportType] = useState("Общее расстояние");
   const [interval, setInterval] = useState("Год");
+  const [name, setName] = useState("Максим");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,38 +30,70 @@ export default function StatisticsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  const months = [
-    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
-  ];
-
-  // Данные для графика (только виды спорта с расстоянием)
-  const distanceData = months.map((m) => ({
-    month: m,
-    run: Math.floor(Math.random() * 100),
-    ski: Math.floor(Math.random() * 120),
-    bike: Math.floor(Math.random() * 150),
-    swim: Math.floor(Math.random() * 30)
-  }));
-
-  // Таблица "Тип тренировки" без силовой тренировки
-  const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
-  const trainingData = trainingTypes.map((type) => ({
-    type,
-    ...months.reduce((acc, month) => {
-      acc[month] = Math.floor(Math.random() * 100);
-      return acc;
-    }, {} as Record<string, number>),
-    total: Math.floor(Math.random() * 500)
-  }));
-
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
+
+  const generateDistanceData = () => {
+    const today = dayjs();
+    let data: { label: string; run: number; ski: number; bike: number; swim: number }[] = [];
+
+    if (interval === "7 дней") {
+      for (let i = 6; i >= 0; i--) {
+        const day = today.subtract(i, "day");
+        data.push({
+          label: day.format("DD MMM"),
+          run: Math.floor(Math.random() * 10),
+          ski: Math.floor(Math.random() * 15),
+          bike: Math.floor(Math.random() * 20),
+          swim: Math.floor(Math.random() * 5)
+        });
+      }
+    } else if (interval === "4 недели") {
+      for (let i = 3; i >= 0; i--) {
+        const weekStart = today.subtract(i, "week").startOf("week");
+        data.push({
+          label: `Нед ${weekStart.format("DD/MM")}`,
+          run: Math.floor(Math.random() * 50),
+          ski: Math.floor(Math.random() * 60),
+          bike: Math.floor(Math.random() * 80),
+          swim: Math.floor(Math.random() * 15)
+        });
+      }
+    } else if (interval === "6 месяцев") {
+      for (let i = 5; i >= 0; i--) {
+        const month = today.subtract(i, "month");
+        data.push({
+          label: month.format("MMM"),
+          run: Math.floor(Math.random() * 200),
+          ski: Math.floor(Math.random() * 250),
+          bike: Math.floor(Math.random() * 300),
+          swim: Math.floor(Math.random() * 50)
+        });
+      }
+    } else if (interval === "Год") {
+      for (let i = 11; i >= 0; i--) {
+        const month = today.subtract(i, "month");
+        data.push({
+          label: month.format("MMM"),
+          run: Math.floor(Math.random() * 200),
+          ski: Math.floor(Math.random() * 250),
+          bike: Math.floor(Math.random() * 300),
+          swim: Math.floor(Math.random() * 50)
+        });
+      }
+    }
+
+    return data;
+  };
+
+  const distanceData = generateDistanceData();
+
+  const months = distanceData.map(d => d.label);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхняя плашка — аватар, имя, кнопки */}
+        {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
@@ -71,10 +103,8 @@ export default function StatisticsPage() {
             />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
-              <p className="text-sm text-gray-400">{dayjs().format('MMMM YYYY')}</p>
             </div>
           </div>
-
           <button
             onClick={handleLogout}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
@@ -101,24 +131,19 @@ export default function StatisticsPage() {
           })}
         </div>
 
-        {/* Плашка выбора отчета и периода */}
+        {/* Плашка выбора отчёта и интервала */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Тип отчёта</label>
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-              className="bg-[#1a1a1d] border border-gray-700 rounded-lg p-2 text-sm"
-            >
-              <option>Общее расстояние</option>
-            </select>
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-4">
+            <span className="font-semibold">Тип отчёта:</span>
+            <span>{reportType}</span>
           </div>
-          <div className="flex gap-2 mt-2 md:mt-0">
+
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-md flex items-center gap-2">
             {intervals.map((intv) => (
               <button
                 key={intv}
                 onClick={() => setInterval(intv)}
-                className={`px-3 py-2 rounded-lg text-sm border ${interval === intv ? "bg-blue-600 border-blue-600" : "border-gray-700 hover:bg-gray-800"}`}
+                className={`px-3 py-1 rounded ${interval === intv ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
               >
                 {intv}
               </button>
@@ -126,23 +151,22 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* График "Общее расстояние" */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mt-4">
-          <h2 className="text-xl font-semibold mb-4">Общее расстояние</h2>
+        {/* Диаграмма общего расстояния */}
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={distanceData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
-              <XAxis dataKey="month" stroke="#ccc" />
+              <XAxis dataKey="label" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar dataKey="ski" stackId="a" fill="#3b82f6" barSize={32} />
-              <Bar dataKey="run" stackId="a" fill="#ef4444" barSize={32} />
-              <Bar dataKey="bike" stackId="a" fill="#10b981" barSize={32} />
-              <Bar dataKey="swim" stackId="a" fill="#f97316" barSize={32} />
+              <Bar dataKey="run" stackId="a" fill="#ef4444" barSize={32} name="Бег" />
+              <Bar dataKey="ski" stackId="a" fill="#3b82f6" barSize={32} name="Лыжи" />
+              <Bar dataKey="bike" stackId="a" fill="#10b981" barSize={32} name="Велосипед" />
+              <Bar dataKey="swim" stackId="a" fill="#f97316" barSize={32} name="Плавание" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Таблица "Тип тренировки" */}
+        {/* Таблица типа тренировки */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
           <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
           <div className="overflow-x-auto">
@@ -153,17 +177,17 @@ export default function StatisticsPage() {
                   {months.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее расстояние</th>
                 </tr>
               </thead>
               <tbody>
-                {trainingData.map((item) => (
-                  <tr key={item.type} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
-                    <td className="py-2 px-3 border-r border-gray-800">{item.type}</td>
-                    {months.map((m) => (
-                      <td key={m} className="text-center">{item[m]}</td>
+                {["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"].map((type) => (
+                  <tr key={type} className="border-b border-gray-800">
+                    <td className="py-2 px-3 border-r border-gray-800">{type}</td>
+                    {months.map((m, i) => (
+                      <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
                     ))}
-                    <td className="text-center text-blue-400">{item.total}</td>
+                    <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
                   </tr>
                 ))}
               </tbody>
