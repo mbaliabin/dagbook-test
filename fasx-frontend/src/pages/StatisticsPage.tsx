@@ -27,7 +27,6 @@ export default function StatisticsPage() {
   ];
 
   const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
-
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
@@ -81,12 +80,26 @@ export default function StatisticsPage() {
           {payload.map((p: any) => (
             <div key={p.dataKey} className="flex justify-between">
               <span style={{ color: p.fill }}>{p.name}</span>
-              <span>{reportType === "Длительность" || reportType === "Выносливость" ? `${Math.floor(p.value/60)} ч ${p.value%60} м` : p.value}</span>
+              <span>
+                {reportType === "Длительность" || reportType === "Выносливость"
+                  ? `${Math.floor(p.value / 60)} ч ${p.value % 60} м`
+                  : reportType === "Общее расстояние"
+                    ? `${p.value} км`
+                    : p.value
+                }
+              </span>
             </div>
           ))}
           <div className="border-t border-gray-600 mt-1 pt-1 flex justify-between font-semibold text-blue-400">
             <span>Общее</span>
-            <span>{reportType === "Длительность" || reportType === "Выносливость" ? `${Math.floor(total/60)} ч ${total%60} м` : total}</span>
+            <span>
+              {reportType === "Длительность" || reportType === "Выносливость"
+                ? `${Math.floor(total / 60)} ч ${total % 60} м`
+                : reportType === "Общее расстояние"
+                  ? `${total} км`
+                  : total
+              }
+            </span>
           </div>
         </div>
       );
