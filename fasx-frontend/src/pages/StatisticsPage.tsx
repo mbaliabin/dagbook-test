@@ -6,26 +6,18 @@ import {
   ClipboardList,
   CalendarDays,
   LogOut,
-  ChevronDown,
-  Calendar
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
-import { DateRange } from "react-date-range";
-import { ru } from "date-fns/locale";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
+import "dayjs/locale/ru";
+
+dayjs.locale("ru");
 
 export default function StatisticsPage() {
   const [reportType, setReportType] = useState("Общий отчёт");
   const [interval, setInterval] = useState("Месяц");
-  const [mode, setMode] = useState("Время");
+  const [mode, setMode] = useState<"Время" | "Километры">("Время");
   const [name, setName] = useState("Максим");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>({
-    startDate: dayjs().startOf("isoWeek").toDate(),
-    endDate: dayjs().endOf("isoWeek").toDate()
-  });
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,24 +35,50 @@ export default function StatisticsPage() {
   ];
 
   const months = [
-    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
+    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"
   ];
 
-  const mockData = months.map(m => ({
+  // Генерация mock-данных
+  const generateData = () => months.map(m => ({
     month: m,
     I1: Math.floor(Math.random() * 30),
     I2: Math.floor(Math.random() * 20),
     I3: Math.floor(Math.random() * 15),
     I4: Math.floor(Math.random() * 10),
-    I5: Math.floor(Math.random() * 5)
+    I5: Math.floor(Math.random() * 5),
+    "Бег": Math.floor(Math.random() * 60),
+    "Велосипед": Math.floor(Math.random() * 120),
+    "Силовая тренировка": 0,
+    "Плавание": Math.floor(Math.random() * 10),
+    "Другое": Math.floor(Math.random() * 20),
   }));
+
+  const mockData = generateData();
+
+  // Данные для графика
+  const chartData = mode === "Время"
+    ? mockData
+    : mockData.map(m => ({
+        month: m.month,
+        Бег: m.Бег,
+        Велосипед: m.Велосипед,
+        Плавание: m.Плавание,
+      }));
+
+  const barKeys = mode === "Время" ? ["I1","I2","I3","I4","I5"] : ["Бег","Велосипед","Плавание"];
+  const barColors = mode === "Время"
+    ? ["#3b82f6","#10b981","#facc15","#f97316","#ef4444"]
+    : ["#3b82f6","#10b981","#facc15"];
+
+  // Данные для таблиц
+  const enduranceZones = ["I1","I2","I3","I4","I5"];
+  const types = ["Бег","Велосипед","Силовая тренировка","Плавание","Другое"];
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Верхняя плашка — аватар, имя, кнопки и выбор периода */}
+        {/* Верхняя плашка */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
@@ -70,16 +88,10 @@ export default function StatisticsPage() {
             />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
-              <p className="text-sm text-gray-400">
-                {!dateRange
-                  ? dayjs().format('MMMM YYYY')
-                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
-                }
-              </p>
+              <p className="text-sm text-gray-400">{dayjs().format('MMMM YYYY')}</p>
             </div>
           </div>
 
-          {/* Кнопка Выйти */}
           <button
             onClick={handleLogout}
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
@@ -87,7 +99,6 @@ export default function StatisticsPage() {
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
-
 
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
@@ -126,8 +137,8 @@ export default function StatisticsPage() {
                 Время
               </label>
               <label className="flex items-center gap-1 cursor-pointer">
-                <input type="radio" checked={mode === "Процент"} onChange={() => setMode("Процент")} className="accent-blue-500" />
-                Процент
+                <input type="radio" checked={mode === "Километры"} onChange={() => setMode("Километры")} className="accent-blue-500" />
+                Километры
               </label>
             </div>
           </div>
@@ -146,54 +157,20 @@ export default function StatisticsPage() {
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
               <XAxis dataKey="month" axisLine={false} tickLine={false} stroke="#ccc" />
               <Tooltip contentStyle={{ backgroundColor: "#1a1a1d", border: "1px solid #333", color: "#fff" }} />
               <Legend wrapperStyle={{ color: "#fff" }} />
-              <Bar dataKey="I1" stackId="a" fill="#3b82f6" barSize={32} />
-              <Bar dataKey="I2" stackId="a" fill="#10b981" barSize={32} />
-              <Bar dataKey="I3" stackId="a" fill="#facc15" barSize={32} />
-              <Bar dataKey="I4" stackId="a" fill="#f97316" barSize={32} />
-              <Bar dataKey="I5" stackId="a" fill="#ef4444" barSize={32} />
+              {barKeys.map((key, i) => (
+                <Bar key={key} dataKey={key} stackId="a" fill={barColors[i]} barSize={32} />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Параметры дня */}
+        {/* Таблица: Выносливость */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold mb-3">Параметры дня</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse border border-gray-800 rounded-xl overflow-hidden">
-              <thead className="text-gray-400 border-b border-gray-700 bg-gradient-to-b from-[#18191c] to-[#131416]">
-                <tr>
-                  <th className="text-left py-2"></th>
-                  {["Май 2025", "Июль 2025", "Авг 2025", "Сен 2025", "Среднее/мес"].map((m) => (
-                    <th key={m}>{m}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[{ row: "Болезнь", values: ["—", "—", "—", "—", "—"] },
-                  { row: "Травма", values: ["—", "—", "—", "—", "—"] },
-                  { row: "Соревнования", values: ["✓", "—", "✓", "—", "—"] },
-                  { row: "Высота", values: ["—", "—", "—", "✓", "—"] },
-                  { row: "В поездке", values: ["—", "✓", "—", "—", "—"] },
-                  { row: "Выходной", values: ["—", "—", "✓", "—", "✓"] }].map((item) => (
-                  <tr key={item.row} className="border-b border-gray-800 hover:bg-[#1d1e22]/80 transition-colors duration-150">
-                    <td className="py-2">{item.row}</td>
-                    {item.values.map((v, i) => (
-                      <td key={i} className="text-center text-gray-400">{v}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Выносливость */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
-          <h2 className="text-lg font-semibold mb-3">Выносливость</h2>
+          <h2 className="text-lg font-semibold mb-3">Выносливость {mode === "Километры" && "(км)"}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
@@ -202,17 +179,24 @@ export default function StatisticsPage() {
                   {months.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
               <tbody>
-                {["I1", "I2", "I3", "I4", "I5"].map((zone) => (
+                {enduranceZones.map((zone) => (
                   <tr key={zone} className="border-b border-gray-800">
                     <td className="py-2 px-3 border-r border-gray-800">{zone}</td>
                     {months.map((m, i) => (
-                      <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                      <td key={i} className="text-center">
+                        {mode === "Время" ? Math.floor(Math.random() * 60) : mockData[i][zone]}
+                      </td>
                     ))}
-                    <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                    <td className="text-center text-blue-400">
+                      {mode === "Время"
+                        ? Math.floor(Math.random() * 300)
+                        : months.reduce((sum, _, i) => sum + mockData[i][zone], 0)
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -220,9 +204,9 @@ export default function StatisticsPage() {
           </div>
         </div>
 
-        {/* Тип тренировки */}
+        {/* Таблица: Тип тренировки */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
-          <h2 className="text-lg font-semibold mb-3">Тип тренировки</h2>
+          <h2 className="text-lg font-semibold mb-3">Тип тренировки {mode === "Километры" && "(км)"}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
               <thead className="text-gray-400 bg-gradient-to-b from-[#18191c] to-[#131416]">
@@ -231,17 +215,24 @@ export default function StatisticsPage() {
                   {months.map((m) => (
                     <th key={m} className="py-2 px-2 text-center border-r border-gray-700/70">{m}</th>
                   ))}
-                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее время</th>
+                  <th className="py-2 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
               <tbody>
-                {["Бег", "Велосипед", "Силовая тренировка", "Плавание", "Другое"].map((type) => (
+                {types.map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-2 px-3 border-r border-gray-800">{type}</td>
                     {months.map((m, i) => (
-                      <td key={i} className="text-center">{Math.floor(Math.random() * 60)}</td>
+                      <td key={i} className="text-center">
+                        {mode === "Время" ? Math.floor(Math.random() * 60) : mockData[i][type]}
+                      </td>
                     ))}
-                    <td className="text-center text-blue-400">{Math.floor(Math.random() * 300)}</td>
+                    <td className="text-center text-blue-400">
+                      {mode === "Время"
+                        ? Math.floor(Math.random() * 300)
+                        : months.reduce((sum, _, i) => sum + mockData[i][type], 0)
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
