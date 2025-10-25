@@ -12,6 +12,8 @@ import dayjs from "dayjs";
 
 export default function StatisticsPage() {
   const [name, setName] = useState("Максим");
+  const [reportType, setReportType] = useState("Общее расстояние");
+  const [interval, setInterval] = useState("Год");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,7 +35,7 @@ export default function StatisticsPage() {
     "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
   ];
 
-  // Пример данных для графика "Общее расстояние"
+  // Данные для графика (только виды спорта с расстоянием)
   const distanceData = months.map((m) => ({
     month: m,
     run: Math.floor(Math.random() * 100),
@@ -42,8 +44,8 @@ export default function StatisticsPage() {
     swim: Math.floor(Math.random() * 30)
   }));
 
-  // Таблица "Тип тренировки" (расстояние по месяцам)
-  const trainingTypes = ["Бег", "Велосипед", "Силовая тренировка", "Плавание", "Другое"];
+  // Таблица "Тип тренировки" без силовой тренировки
+  const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const trainingData = trainingTypes.map((type) => ({
     type,
     ...months.reduce((acc, month) => {
@@ -52,6 +54,8 @@ export default function StatisticsPage() {
     }, {} as Record<string, number>),
     total: Math.floor(Math.random() * 500)
   }));
+
+  const intervals = ["7 дней", "4 недели", "6 месяцев", "Год"];
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -97,8 +101,33 @@ export default function StatisticsPage() {
           })}
         </div>
 
+        {/* Плашка выбора отчета и периода */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <label className="block text-sm font-semibold mb-2">Тип отчёта</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="bg-[#1a1a1d] border border-gray-700 rounded-lg p-2 text-sm"
+            >
+              <option>Общее расстояние</option>
+            </select>
+          </div>
+          <div className="flex gap-2 mt-2 md:mt-0">
+            {intervals.map((intv) => (
+              <button
+                key={intv}
+                onClick={() => setInterval(intv)}
+                className={`px-3 py-2 rounded-lg text-sm border ${interval === intv ? "bg-blue-600 border-blue-600" : "border-gray-700 hover:bg-gray-800"}`}
+              >
+                {intv}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* График "Общее расстояние" */}
-        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md">
+        <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mt-4">
           <h2 className="text-xl font-semibold mb-4">Общее расстояние</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={distanceData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
