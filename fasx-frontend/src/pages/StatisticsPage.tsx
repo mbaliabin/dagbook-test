@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { Home, BarChart3, ClipboardList, CalendarDays, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
@@ -31,27 +39,39 @@ export default function StatisticsPage() {
   const trainingTypes = ["Бег", "Велосипед", "Плавание", "Лыжи", "Другое"];
   const enduranceZones = ["I1", "I2", "I3", "I4", "I5"];
 
-  // Форматирование времени для таблицы 0:0
-  const formatTableTime = (minutes: number) => `${Math.floor(minutes / 60)}:${minutes % 60}`;
-  // Форматирование времени для тултипа 0 ч 0 м
-  const formatTooltipTime = (minutes: number) => `${Math.floor(minutes / 60)} ч ${minutes % 60} м`;
+  // Формат времени для таблицы
+  const formatTimeTable = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${m}`;
+  };
+
+  // Формат времени для тултипа
+  const formatTooltipTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h} ч ${m} м`;
+  };
 
   const generateData = () => {
     const today = dayjs();
+    const data: any[] = [];
     const types = reportType === "Выносливость" ? enduranceZones : trainingTypes;
+
     const maxValues: any = {
       "Общее расстояние": { Бег: 10, Лыжи: 15, Велосипед: 20, Плавание: 5, Другое: 8 },
-      "Длительность": { Бег: 60, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
-      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 }
+      "Длительность": { Бег: 75, Лыжи: 90, Велосипед: 120, Плавание: 30, Другое: 45 },
+      "Выносливость": { I1: 60, I2: 50, I3: 40, I4: 30, I5: 20 },
     };
 
     let points = interval === "7 дней" ? 7 : interval === "4 недели" ? 4 : interval === "6 месяцев" ? 6 : 12;
 
-    const data: any[] = [];
     for (let i = points - 1; i >= 0; i--) {
-      let label = interval === "7 дней" ? today.subtract(i, "day").format("DD MMM")
-        : interval === "4 недели" ? `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`
-        : today.subtract(i, "month").format("MMM");
+      let label = "";
+      if (interval === "7 дней") label = today.subtract(i, "day").format("DD MMM");
+      else if (interval === "4 недели")
+        label = `Нед ${today.subtract(i, "week").startOf("week").format("DD/MM")}`;
+      else label = today.subtract(i, "month").format("MMM");
 
       const item: any = { label };
       types.forEach((t) => {
@@ -59,11 +79,15 @@ export default function StatisticsPage() {
       });
       data.push(item);
     }
+
     return data;
   };
 
   const chartData = generateData();
-  const months = chartData.map(d => d.label);
+  const months = chartData.map((d) => d.label);
+
+  // Сумма для таблицы
+  const sumByType = (type: string) => chartData.reduce((sum, d) => sum + d[type], 0);
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
@@ -72,12 +96,19 @@ export default function StatisticsPage() {
         {/* Верхняя плашка — аватар, имя и кнопка Выйти */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
+            <img
+              src="/profile-avatar.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover border border-gray-700"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-          <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+          >
             <LogOut className="w-4 h-4 mr-1" /> Выйти
           </button>
         </div>
@@ -91,7 +122,9 @@ export default function StatisticsPage() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -140,15 +173,15 @@ export default function StatisticsPage() {
                   return (
                     <div className="bg-[#1a1a1d]/90 text-white p-2 rounded shadow-md text-sm">
                       <div className="font-semibold">{label}</div>
-                      {payload.map(p => (
+                      {payload.map((p) => (
                         <div key={p.name} className="flex justify-between">
                           <span>{p.name}</span>
-                          <span>{reportType === "Выносливость" || reportType === "Длительность" ? formatTooltipTime(p.value) : p.value}</span>
+                          <span>{formatTooltipTime(p.value)}</span>
                         </div>
                       ))}
                       <div className="border-t border-gray-600 mt-1 pt-1 flex justify-between font-semibold">
                         <span>Общее</span>
-                        <span>{reportType === "Выносливость" || reportType === "Длительность" ? formatTooltipTime(total) : total}</span>
+                        <span>{formatTooltipTime(total)}</span>
                       </div>
                     </div>
                   );
@@ -156,19 +189,30 @@ export default function StatisticsPage() {
               />
               <Legend wrapperStyle={{ color: "#fff" }} />
               {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((t, idx) => {
-                const colors = ["#ef4444","#3b82f6","#10b981","#f97316","#a855f7"];
+                const colors = ["#ef4444", "#3b82f6", "#10b981", "#f97316", "#a855f7"];
                 return (
                   <Bar
                     key={t}
                     dataKey={t}
                     stackId="a"
                     fill={colors[idx % colors.length]}
-                    onMouseEnter={(_, i) => setHoveredBar({ index: i, key: t })}
-                    onMouseLeave={() => setHoveredBar(null)}
+                    isAnimationActive={false}
                   >
                     {chartData.map((entry, i) => {
                       const isActive = hoveredBar?.index === i && hoveredBar?.key === t;
-                      return <Cell key={i} height={entry[t]} fill={colors[idx % colors.length]} style={isActive ? { transform: "scale(1.1)", transformOrigin: "bottom" } : {}} />;
+                      return (
+                        <Cell
+                          key={i}
+                          fill={colors[idx % colors.length]}
+                          onMouseEnter={() => setHoveredBar({ index: i, key: t })}
+                          onMouseLeave={() => setHoveredBar(null)}
+                          style={{
+                            transform: isActive ? "scale(1.05)" : "scale(1)",
+                            transformOrigin: "bottom",
+                            transition: "transform 0.2s",
+                          }}
+                        />
+                      );
                     })}
                   </Bar>
                 );
@@ -180,7 +224,9 @@ export default function StatisticsPage() {
         {/* Таблица */}
         <div className="bg-[#1a1a1d] p-6 rounded-2xl shadow-md mb-10">
           <h2 className="text-lg font-semibold mb-3">
-            {reportType === "Выносливость" ? "Зоны выносливости (мин)" : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
+            {reportType === "Выносливость"
+              ? "Зоны выносливости (мин)"
+              : `Тип тренировки (${reportType === "Общее расстояние" ? "км" : "мин"})`}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-gray-300 border-collapse border border-gray-800 rounded-xl overflow-hidden">
@@ -190,24 +236,31 @@ export default function StatisticsPage() {
                     {reportType === "Выносливость" ? "Зона" : "Тип тренировки"}
                   </th>
                   {months.map((m) => (
-                    <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">{m}</th>
+                    <th key={m} className="py-3 px-2 text-center border-r border-gray-700/70">
+                      {m}
+                    </th>
                   ))}
                   <th className="py-3 px-2 text-center text-blue-400 border-l border-gray-800">Общее</th>
                 </tr>
               </thead>
               <tbody>
-                {(reportType === "Выносливость" ? enduranceZones : trainingTypes).map((type) => (
+                {(reportType === "Выносливость"
+                  ? enduranceZones
+                  : trainingTypes
+                ).map((type) => (
                   <tr key={type} className="border-b border-gray-800">
                     <td className="py-3 px-3 border-r border-gray-800">{type}</td>
                     {chartData.map((d, i) => (
                       <td key={i} className="text-center py-3">
-                        {reportType === "Общее расстояние" ? d[type].toFixed(1) : formatTableTime(d[type])}
+                        {reportType === "Общее расстояние"
+                          ? d[type].toFixed(1)
+                          : formatTimeTable(d[type])}
                       </td>
                     ))}
                     <td className="text-center text-blue-400 py-3">
                       {reportType === "Общее расстояние"
                         ? chartData.reduce((sum, d) => sum + d[type], 0).toFixed(1)
-                        : formatTableTime(chartData.reduce((sum, d) => sum + d[type], 0))}
+                        : formatTimeTable(chartData.reduce((sum, d) => sum + d[type], 0))}
                     </td>
                   </tr>
                 ))}
