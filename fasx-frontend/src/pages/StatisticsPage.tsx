@@ -90,6 +90,12 @@ export default function StatsPage() {
     },
   ];
 
+  const formatTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${m.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -128,7 +134,7 @@ export default function StatsPage() {
                                     className="inline-block w-3 h-3 mr-1 rounded-full"
                                     style={{ backgroundColor: p.fill }}
                                   ></span>
-                                  {p.dataKey}: {p.value}:00
+                                  {p.dataKey}: {formatTime(p.value)}
                                 </p>
                               ))}
                             </div>
@@ -211,11 +217,11 @@ export default function StatsPage() {
                   </td>
                   {z.months.map((val, i) => (
                     <td key={i} className="p-3 text-center">
-                      {val > 0 ? `${val}:00` : "-"}
+                      {val > 0 ? formatTime(val) : "-"}
                     </td>
                   ))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">
-                    {z.total}:00
+                    {formatTime(z.total)}
                   </td>
                 </tr>
               ))}
@@ -255,11 +261,11 @@ export default function StatsPage() {
                   </td>
                   {m.months.map((val, i) => (
                     <td key={i} className="p-3 text-center">
-                      {val > 0 ? `${val}:00` : "-"}
+                      {val > 0 ? formatTime(val) : "-"}
                     </td>
                   ))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">
-                    {m.total}:00
+                    {formatTime(m.total)}
                   </td>
                 </tr>
               ))}
