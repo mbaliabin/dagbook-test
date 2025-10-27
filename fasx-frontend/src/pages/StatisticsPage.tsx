@@ -5,7 +5,6 @@ import {
   XAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 export default function StatsPage() {
@@ -15,20 +14,80 @@ export default function StatsPage() {
     time: "178:51",
   };
 
-  const enduranceData = [
-    { zone: "I1", time: 105, color: "#4ade80" },
-    { zone: "I2", time: 47, color: "#22d3ee" },
-    { zone: "I3", time: 12, color: "#facc15" },
-    { zone: "I4", time: 7, color: "#fb923c" },
-    { zone: "I5", time: 3, color: "#ef4444" },
+  const months = [
+    "Янв",
+    "Фев",
+    "Мар",
+    "Апр",
+    "Май",
+    "Июн",
+    "Июл",
+    "Авг",
+    "Сен",
+    "Окт",
+    "Ноя",
+    "Дек",
   ];
 
-  const movementData = [
-    { type: "Лыжи / скейтинг", total: "39:30", avg: "7:54" },
-    { type: "Лыжи, классика", total: "1:00", avg: "0:12" },
-    { type: "Роллеры, классика", total: "43:20", avg: "8:44" },
-    { type: "Роллеры, скейтинг", total: "67:27", avg: "13:29" },
-    { type: "Велосипед", total: "23:36", avg: "4:43" },
+  const enduranceZones = [
+    {
+      zone: "I1",
+      color: "#4ade80",
+      months: [10, 8, 12, 9, 11, 14, 13, 10, 8, 5, 3, 2],
+      total: 105,
+    },
+    {
+      zone: "I2",
+      color: "#22d3ee",
+      months: [5, 6, 7, 3, 4, 5, 6, 3, 4, 2, 1, 1],
+      total: 47,
+    },
+    {
+      zone: "I3",
+      color: "#facc15",
+      months: [2, 1, 1, 1, 2, 1, 1, 1, 0, 1, 0, 1],
+      total: 12,
+    },
+    {
+      zone: "I4",
+      color: "#fb923c",
+      months: [1, 1, 2, 0, 1, 1, 0, 0, 1, 0, 0, 0],
+      total: 7,
+    },
+    {
+      zone: "I5",
+      color: "#ef4444",
+      months: [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+      total: 3,
+    },
+  ];
+
+  const movementTypes = [
+    {
+      type: "Лыжи / скейтинг",
+      months: [4, 5, 3, 0, 0, 0, 0, 0, 1, 2, 3, 2],
+      total: 20,
+    },
+    {
+      type: "Лыжи, классика",
+      months: [3, 4, 2, 0, 0, 0, 0, 0, 0, 1, 2, 1],
+      total: 13,
+    },
+    {
+      type: "Роллеры, классика",
+      months: [0, 0, 0, 3, 5, 6, 7, 5, 4, 3, 2, 0],
+      total: 35,
+    },
+    {
+      type: "Роллеры, скейтинг",
+      months: [0, 0, 0, 2, 6, 7, 8, 6, 5, 3, 2, 0],
+      total: 39,
+    },
+    {
+      type: "Велосипед",
+      months: [0, 0, 0, 1, 2, 3, 4, 3, 2, 1, 0, 0],
+      total: 16,
+    },
   ];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -44,6 +103,12 @@ export default function StatsPage() {
     return null;
   };
 
+  const enduranceChartData = enduranceZones.map((z) => ({
+    zone: z.zone,
+    time: z.total,
+    color: z.color,
+  }));
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -54,7 +119,7 @@ export default function StatsPage() {
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={enduranceData} barSize={35}>
+              <BarChart data={enduranceChartData} barSize={35}>
                 <XAxis
                   dataKey="zone"
                   axisLine={false}
@@ -62,16 +127,11 @@ export default function StatsPage() {
                   tick={{ fill: "#888", fontSize: 12 }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {enduranceData.map((zone) => (
-                  <Bar
-                    key={zone.zone}
-                    dataKey="time"
-                    name={zone.zone}
-                    fill={zone.color}
-                    radius={[8, 8, 0, 0]}
-                  />
-                ))}
+                <Bar dataKey="time" radius={[8, 8, 0, 0]}>
+                  {enduranceChartData.map((entry, index) => (
+                    <cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -99,94 +159,100 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Section: Dagsparametere */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">
-            Дневные параметры
-          </h2>
-          <div className="text-gray-500 text-sm">
-            <p>Сюда позже можно добавить анализ по дням недели, соревнованиям и т.д.</p>
-          </div>
-        </div>
-
-        {/* Section: Utholdenhet */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
+        {/* Table: Endurance Zones by Month */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">
             Выносливость (Utholdenhet)
           </h2>
-          <div className="overflow-hidden rounded-xl">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-[#222] text-gray-400 text-left">
-                  <th className="p-3 font-medium">Зона</th>
-                  <th className="p-3 font-medium">Общее время</th>
-                  <th className="p-3 font-medium">Среднее</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enduranceData.map((zone) => (
-                  <tr
-                    key={zone.zone}
-                    className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
-                  >
-                    <td className="p-3 flex items-center gap-3">
-                      <div
-                        className="w-5 h-5 rounded-md"
-                        style={{ backgroundColor: zone.color }}
-                      ></div>
-                      {zone.zone}
-                    </td>
-                    <td className="p-3">{zone.time}:00</td>
-                    <td className="p-3">–</td>
-                  </tr>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">
+                  Зона
+                </th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">
+                    {m}
+                  </th>
                 ))}
-                <tr className="bg-[#222] font-medium text-gray-300 border-t border-[#333]">
-                  <td className="p-3">Всего</td>
-                  <td className="p-3">{totals.time}</td>
-                  <td className="p-3">–</td>
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">
+                  Всего
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {enduranceZones.map((z) => (
+                <tr
+                  key={z.zone}
+                  className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
+                >
+                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                    <div
+                      className="w-5 h-5 rounded-md"
+                      style={{ backgroundColor: z.color }}
+                    ></div>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">
+                      {val > 0 ? `${val}:00` : "-"}
+                    </td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">
+                    {z.total}:00
+                  </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Section: Bevegelsesformer */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
+        {/* Table: Activity Types by Month */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">
             Формы активности (Bevegelsesformer)
           </h2>
-          <div className="overflow-hidden rounded-xl">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-[#222] text-gray-400 text-left">
-                  <th className="p-3 font-medium">Тип</th>
-                  <th className="p-3 font-medium">Общее время</th>
-                  <th className="p-3 font-medium">Среднее</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movementData.map((m) => (
-                  <tr
-                    key={m.type}
-                    className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
-                  >
-                    <td className="p-3">{m.type}</td>
-                    <td className="p-3">{m.total}</td>
-                    <td className="p-3">{m.avg}</td>
-                  </tr>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">
+                  Тип активности
+                </th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">
+                    {m}
+                  </th>
                 ))}
-                <tr className="bg-[#222] font-medium text-gray-300 border-t border-[#333]">
-                  <td className="p-3">Всего</td>
-                  <td className="p-3">{totals.time}</td>
-                  <td className="p-3">35:22</td>
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">
+                  Всего
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {movementTypes.map((m) => (
+                <tr
+                  key={m.type}
+                  className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
+                >
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">
+                    {m.type}
+                  </td>
+                  {m.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">
+                      {val > 0 ? `${val}:00` : "-"}
+                    </td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">
+                    {m.total}:00
+                  </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div className="text-xs text-gray-500 text-center mt-6">
-          FASX Training Dashboard — демо-страница статистики
+          FASX Training Dashboard — годовая статистика
         </div>
       </div>
     </div>
