@@ -90,6 +90,25 @@ export default function StatsPage() {
     },
   ];
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
+          <p className="font-semibold">{data.zone}</p>
+          <p className="mt-1 text-gray-400">Время: {data.time} ч</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const enduranceChartData = enduranceZones.map((z) => ({
+    zone: z.zone,
+    time: z.total,
+    color: z.color,
+  }));
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -100,55 +119,20 @@ export default function StatsPage() {
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              {(() => {
-                const chartData = months.map((month, i) => {
-                  const data: any = { month };
-                  enduranceZones.forEach((zone) => {
-                    data[zone.zone] = zone.months[i];
-                  });
-                  return data;
-                });
-
-                return (
-                  <BarChart data={chartData} barSize={35}>
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#888", fontSize: 12 }}
-                    />
-                    <Tooltip
-                      content={({ active, payload }: any) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                              {payload.map((p: any) => (
-                                <p key={p.dataKey} className="mt-1">
-                                  <span
-                                    className="inline-block w-3 h-3 mr-1 rounded-full"
-                                    style={{ backgroundColor: p.fill }}
-                                  ></span>
-                                  {p.dataKey}: {p.value}:00
-                                </p>
-                              ))}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    {enduranceZones.map((zone) => (
-                      <Bar
-                        key={zone.zone}
-                        dataKey={zone.zone}
-                        stackId="a"
-                        fill={zone.color}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    ))}
-                  </BarChart>
-                );
-              })()}
+              <BarChart data={enduranceChartData} barSize={35}>
+                <XAxis
+                  dataKey="zone"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#888", fontSize: 12 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="time" radius={[8, 8, 0, 0]}>
+                  {enduranceChartData.map((entry, index) => (
+                    <cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
