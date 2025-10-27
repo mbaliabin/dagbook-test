@@ -99,6 +99,39 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
+
+      {/* Верхняя плашка */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <img src="/profile-avatar.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-gray-700" />
+                  <div>
+                    <h1 className="text-2xl font-bold">{name}</h1>
+                  </div>
+                </div>
+                <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+                  <LogOut className="w-4 h-4 mr-1" /> Выйти
+                </button>
+              </div>
+
+              {/* Верхнее меню */}
+              <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => navigate(item.path)}
+                      className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+                    >
+                      <Icon className="w-6 h-6" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+
         {/* Diagram */}
         <div className="bg-[#1a1a1a] rounded-2xl p-5 shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">
