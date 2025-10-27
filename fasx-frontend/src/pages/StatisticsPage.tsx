@@ -1,4 +1,12 @@
 import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 export default function StatsPage() {
   const totals = {
@@ -8,11 +16,11 @@ export default function StatsPage() {
   };
 
   const enduranceData = [
-    { zone: "I1", time: "105:41", avg: "21:08", color: "#4ade80" },
-    { zone: "I2", time: "47:49", avg: "9:33", color: "#22d3ee" },
-    { zone: "I3", time: "12:51", avg: "2:34", color: "#facc15" },
-    { zone: "I4", time: "7:15", avg: "1:27", color: "#fb923c" },
-    { zone: "I5", time: "3:15", avg: "0:39", color: "#ef4444" },
+    { zone: "I1", time: 105, color: "#4ade80" },
+    { zone: "I2", time: 47, color: "#22d3ee" },
+    { zone: "I3", time: 12, color: "#facc15" },
+    { zone: "I4", time: 7, color: "#fb923c" },
+    { zone: "I5", time: 3, color: "#ef4444" },
   ];
 
   const movementData = [
@@ -23,26 +31,71 @@ export default function StatsPage() {
     { type: "Велосипед", total: "23:36", avg: "4:43" },
   ];
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
+          <p className="font-semibold">{data.zone}</p>
+          <p className="mt-1 text-gray-400">Время: {data.time} ч</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto space-y-6">
-        <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
-          TOTALSUM
-        </h1>
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Diagram */}
+        <div className="bg-[#1a1a1a] rounded-2xl p-5 shadow-lg">
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">
+            Зоны выносливости
+          </h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={enduranceData} barSize={35}>
+                <XAxis
+                  dataKey="zone"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#888", fontSize: 12 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                {enduranceData.map((zone) => (
+                  <Bar
+                    key={zone.zone}
+                    dataKey="time"
+                    name={zone.zone}
+                    fill={zone.color}
+                    radius={[8, 8, 0, 0]}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-        <div className="flex gap-10 text-sm">
-          <div>
-            <p className="text-gray-400">Тренировочные дни</p>
-            <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Сессий</p>
-            <p className="text-xl text-gray-100">{totals.sessions}</p>
-          </div>
-          <div>
-            <p className="text-gray-400">Время</p>
-            <p className="text-xl text-gray-100">{totals.time}</p>
+        {/* TOTALSUM */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
+            TOTALSUM
+          </h1>
+
+          <div className="flex flex-wrap gap-10 text-sm mt-3">
+            <div>
+              <p className="text-gray-400">Тренировочные дни</p>
+              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Сессий</p>
+              <p className="text-xl text-gray-100">{totals.sessions}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Время</p>
+              <p className="text-xl text-gray-100">{totals.time}</p>
+            </div>
           </div>
         </div>
 
@@ -83,14 +136,14 @@ export default function StatsPage() {
                       ></div>
                       {zone.zone}
                     </td>
-                    <td className="p-3">{zone.time}</td>
-                    <td className="p-3">{zone.avg}</td>
+                    <td className="p-3">{zone.time}:00</td>
+                    <td className="p-3">–</td>
                   </tr>
                 ))}
                 <tr className="bg-[#222] font-medium text-gray-300 border-t border-[#333]">
                   <td className="p-3">Всего</td>
                   <td className="p-3">{totals.time}</td>
-                  <td className="p-3">35:22</td>
+                  <td className="p-3">–</td>
                 </tr>
               </tbody>
             </table>
