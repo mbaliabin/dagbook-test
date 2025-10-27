@@ -1,33 +1,36 @@
-import React from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+type ReportType = "Общее расстояние" | "Общее время" | "Сессии";
 
 export default function StatsPage() {
   const totals = {
     trainingDays: 83,
     sessions: 128,
     time: "178:51",
-    };
+  };
 
-    const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
-      const [interval, setInterval] = useState("Год");
-      const [name, setName] = useState("Максим");
+  const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
+  const [interval, setInterval] = useState("Год");
+  const [name, setName] = useState("Максим");
 
-      const navigate = useNavigate();
-      const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-      const handleLogout = () => {
-        localStorage.removeItem("token");
-        navigate("/login");
-      };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
+  return (
+    <div>
+      {/* Здесь будет остальной JSX */}
+    </div>
+  );
+}
 
-  const months = [
+ const months = [
     "Янв",
     "Фев",
     "Мар",
