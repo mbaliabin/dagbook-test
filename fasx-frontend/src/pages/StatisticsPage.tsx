@@ -12,12 +12,12 @@ export default function StatsPage() {
     trainingDays: 83,
     sessions: 128,
     time: "178:51",
+    };
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
   };
-];
 
   const months = [
     "Янв",
