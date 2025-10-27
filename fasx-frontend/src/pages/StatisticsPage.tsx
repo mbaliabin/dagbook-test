@@ -14,10 +14,18 @@ export default function StatsPage() {
     time: "178:51",
     };
 
-    const handleLogout = () => {
+    const [reportType, setReportType] = useState<ReportType>("Общее расстояние");
+      const [interval, setInterval] = useState("Год");
+      const [name, setName] = useState("Максим");
+
+      const navigate = useNavigate();
+      const location = useLocation();
+
+      const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
-  };
+      };
+
 
   const months = [
     "Янв",
