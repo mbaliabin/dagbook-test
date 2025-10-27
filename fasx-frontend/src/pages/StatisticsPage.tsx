@@ -17,6 +17,7 @@ export default function StatsPage() {
         localStorage.removeItem("token");
         navigate("/login");
   };
+];
 
   const months = [
     "Янв",
