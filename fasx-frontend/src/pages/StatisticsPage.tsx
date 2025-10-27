@@ -126,8 +126,66 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы остаются без изменений */}
-        {/* ... (оставляем твои таблицы по зонам и активностям как есть) */}
+        {/* Таблица: Endurance Zones by Month */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">
+            Выносливость (Utholdenhet)
+          </h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {enduranceZones.map((z) => (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">{val > 0 ? `${val}:00` : "-"}</td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}:00</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Таблица: Activity Types by Month */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">
+            Формы активности (Bevegelsesformer)
+          </h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movementTypes.map((m) => (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">{val > 0 ? `${val}:00` : "-"}</td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}:00</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <div className="text-xs text-gray-500 text-center mt-6">
           FASX Training Dashboard — годовая статистика
