@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
@@ -9,38 +9,41 @@ import {
   CalendarDays,
   Settings,
   LogOut,
+  Plus,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Plus,
   Calendar,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { DateRange } from "react-date-range";
-import { ru } from "date-fns/locale";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
+import ru from "date-fns/locale/ru";
 
 dayjs.locale("ru");
 
 export default function StatsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const [name] = useState("Пользователь");
+  // --- STATES ---
+  const [name] = React.useState("Пользователь");
+  const [loadingProfile, setLoadingProfile] = React.useState(false);
+  const [reportType, setReportType] = React.useState("Общий отчет");
+  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
+  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
+  const [year, setYear] = React.useState("2025");
+  const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
+  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date } | null>(null);
+  const [selectedMonth, setSelectedMonth] = React.useState(dayjs());
 
-  const [reportType, setReportType] = useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = useState(new Date("2025-01-01"));
-  const [endPeriod, setEndPeriod] = useState(new Date("2025-12-31"));
-  const [year, setYear] = useState("2025");
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  const [selectedMonth, setSelectedMonth] = useState(dayjs());
-  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>(null);
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loadingProfile] = useState(false);
-
+  // --- TOTALS ---
   const totals = {
     trainingDays: 83,
     sessions: 128,
@@ -67,6 +70,7 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0], total: 16 },
   ];
 
+  // --- HELPERS ---
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -88,56 +92,88 @@ export default function StatsPage() {
     total: m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
   }));
 
-  const onPrevMonth = () => setSelectedMonth(selectedMonth.subtract(1, "month"));
-  const onNextMonth = () => setSelectedMonth(selectedMonth.add(1, "month"));
+  // --- EVENTS ---
+  const onPrevMonth = () => setSelectedMonth(prev => prev.subtract(1, "month"));
+  const onNextMonth = () => setSelectedMonth(prev => prev.add(1, "month"));
 
-  const applyDateRange = () => setShowDateRangePicker(false);
-  const handleLogout = () => { localStorage.removeItem("token"); navigate("/login"); };
+  const applyDateRange = () => {
+    if (dateRange) {
+      setStartPeriod(dayjs(dateRange.startDate).format("YYYY-MM-DD"));
+      setEndPeriod(dayjs(dateRange.endDate).format("YYYY-MM-DD"));
+    }
+    setShowDateRangePicker(false);
+  };
+
+  const handleLogout = () => {
+    // logout logic
+    console.log("logout");
+  };
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
 
-        {/* Header */}
+        {/* Header: фото профиля + имя + кнопки + выбор периода */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
             <div>
-              <h1 className="text-2xl font-bold text-white">{loadingProfile ? 'Загрузка...' : name}</h1>
+              <h1 className="text-2xl font-bold text-white">
+                {loadingProfile ? "Загрузка..." : name}
+              </h1>
               <p className="text-sm text-white">
-                {dateRange
-                  ? `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
-                  : selectedMonth.format('MMMM YYYY')
-                }
+                {!dateRange
+                  ? selectedMonth.format("MMMM YYYY")
+                  : `${dayjs(dateRange.startDate).format("DD MMM YYYY")} — ${dayjs(dateRange.endDate).format("DD MMM YYYY")}`}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            {/* Date Picker */}
+            {/* Выбор периода */}
             <div className="flex items-center space-x-2 flex-wrap">
-              <button className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]" onClick={onPrevMonth}>
+              <button
+                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onPrevMonth}
+              >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-
-              <div className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none">
-                {selectedMonth.format('MMMM YYYY')}
+              <div
+                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+                onClick={() => { setShowDateRangePicker(false); setDateRange(null); }}
+                title="Показать текущий месяц"
+              >
+                {selectedMonth.format("MMMM YYYY")}
               </div>
-
-              <button className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]" onClick={onNextMonth}>
+              <button
+                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onNextMonth}
+              >
                 <ChevronRight className="w-4 h-4" />
               </button>
 
               <button
-                onClick={() => setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })}
+                onClick={() => {
+                  setDateRange({ startDate: dayjs().startOf("isoWeek").toDate(), endDate: dayjs().endOf("isoWeek").toDate() });
+                  setShowDateRangePicker(false);
+                }}
                 className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
               >
                 Текущая неделя
               </button>
 
               <div className="relative">
-                <button onClick={() => setShowDateRangePicker(prev => !prev)} className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center">
-                  <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
+                <button
+                  onClick={() => setShowDateRangePicker(prev => !prev)}
+                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+                >
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Произвольный период
+                  <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
 
                 {showDateRangePicker && (
@@ -162,20 +198,171 @@ export default function StatsPage() {
               </div>
             </div>
 
-            {/* Buttons */}
+            {/* Кнопки */}
             <div className="flex items-center space-x-2">
-              <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
                 <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
               </button>
-              <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
                 <LogOut className="w-4 h-4 mr-1" /> Выйти
               </button>
             </div>
           </div>
         </div>
 
-        {/* Остальной код таблиц и графиков без изменений */}
+        {/* ПАНЕЛЬ ВЫБОРА ОТЧЕТА */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#1a1a1a] p-4 rounded-2xl shadow-lg mb-6">
+          <div className="flex items-center gap-2">
+            <label className="text-gray-400 text-sm">Тип отчета:</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            >
+              <option>Общий отчет</option>
+            </select>
+          </div>
 
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label className="text-gray-400 text-sm">Период:</label>
+            <input
+              type="date"
+              value={startPeriod}
+              onChange={(e) => setStartPeriod(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            />
+            <input
+              type="date"
+              value={endPeriod}
+              onChange={(e) => setEndPeriod(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            />
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            >
+              <option>2025</option>
+              <option>2024</option>
+              <option>2023</option>
+            </select>
+          </div>
+        </div>
+
+        {/* TOTALSUM */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
+          <div className="flex flex-wrap gap-10 text-sm mt-3">
+            <div>
+              <p className="text-gray-400">Тренировочные дни</p>
+              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Сессий</p>
+              <p className="text-xl text-gray-100">{totals.sessions}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Время</p>
+              <p className="text-xl text-gray-100">{totals.time}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Диаграмма зон выносливости */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={filteredMonths.map((month, i) => {
+                  const data: any = { month };
+                  filteredEnduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
+                  return data;
+                })}
+                barSize={35}
+              >
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
+                <Tooltip
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
+                          {payload.map((p: any) => (
+                            <p key={p.dataKey} className="mt-1">
+                              <span
+                                className="inline-block w-3 h-3 mr-1 rounded-full"
+                                style={{ backgroundColor: p.fill }}
+                              ></span>
+                              {p.dataKey}: {formatTime(p.value)}
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {filteredEnduranceZones.map((zone) => (
+                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4, 4, 0, 0]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Таблицы */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость (Utholdenhet)</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEnduranceZones.map((z) => (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности (Bevegelsesformer)</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMovementTypes.map((m) => (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
