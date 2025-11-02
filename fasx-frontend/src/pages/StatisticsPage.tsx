@@ -31,11 +31,10 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // --- Динамическое формирование недель ---
   const computeWeeks = () => {
     const weeks: string[] = [];
     if (periodType === "week" || periodType === "year") {
-      const start = periodType === "week" ? dayjs().startOf("year") : dayjs().startOf("year");
+      const start = dayjs().startOf("year");
       const end = periodType === "week" ? dayjs() : dayjs().endOf("year");
       let current = start.startOf("week");
       while (current.isBefore(end) || current.isSame(end, "week")) {
@@ -62,10 +61,6 @@ export default function StatsPage() {
 
   const weeks = computeWeeks();
 
-  const sectionClass = "border border-gray-700 text-sm text-gray-200 bg-[#1a1a1d]";
-  const headerCell = "border border-gray-700 bg-[#222] font-semibold text-center text-xs py-1 px-2 text-gray-300";
-  const cell = "border border-gray-700 text-center text-xs py-1 px-2";
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -73,40 +68,47 @@ export default function StatsPage() {
 
   const applyDateRange = () => setShowDateRangePicker(false);
 
+  const intensityColors = {
+    I1: "#3b82f6",
+    I2: "#2563eb",
+    I3: "#facc15",
+    I4: "#f97316",
+    I5: "#ef4444",
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover border-2 border-blue-500" />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center transition-all duration-200 shadow-md">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+            <button onClick={handleLogout} className="bg-gray-800 hover:bg-gray-700 text-white text-sm px-3 py-1 rounded flex items-center transition-all duration-200 shadow-md">
               <LogOut className="w-4 h-4 mr-1" /> Выйти
             </button>
           </div>
         </div>
 
         {/* Верхнее меню */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        <div className="flex justify-around bg-[#1a1a1d] border border-gray-700 rounded-xl py-2 px-4 mb-6 shadow-inner">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                className={`flex flex-col items-center text-sm transition-colors duration-200 ${
+                  isActive ? "text-blue-500 font-semibold" : "text-gray-400 hover:text-white"
                 }`}
               >
-                <Icon className="w-6 h-6" />
+                <Icon className="w-6 h-6 mb-1" />
                 <span>{item.label}</span>
               </button>
             );
@@ -115,11 +117,11 @@ export default function StatsPage() {
 
         {/* Выбор периода */}
         <div className="flex flex-wrap gap-4 mb-4">
-          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
-          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
-          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Год</button>
           <div className="relative">
-            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] flex items-center">
               <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
             </button>
             {showDateRangePicker && (
@@ -145,83 +147,93 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблица тренировок */}
-        <div className="overflow-x-auto w-full p-4">
-          <table className="min-w-[1200px] border-collapse border border-gray-700 text-[13px]">
+        {/* Таблица FASX */}
+        <div className="overflow-x-auto w-full p-4 rounded-lg bg-[#1a1a1d] shadow-lg">
+          <table className="min-w-[1200px] border-separate border-spacing-0">
             <thead>
               <tr>
-                <th className={headerCell}></th>
-                {weeks.map((w) => (
-                  <th key={w} className={headerCell}>{w}</th>
+                <th className="sticky top-0 bg-[#222] text-gray-300 px-3 py-2 rounded-tl-lg text-left z-10">Показатель</th>
+                {weeks.map((w, i) => (
+                  <th key={i} className="sticky top-0 bg-[#222] text-gray-300 px-3 py-2 text-center z-10">{w}</th>
                 ))}
-                <th className={headerCell}>Total</th>
-                <th className={headerCell}>Snitt/Uke</th>
+                <th className="sticky top-0 bg-[#222] text-gray-300 px-3 py-2 text-center z-10">Total</th>
+                <th className="sticky top-0 bg-[#222] text-gray-300 px-3 py-2 text-center rounded-tr-lg z-10">Snitt/Uke</th>
               </tr>
             </thead>
             <tbody>
               {/* Dagsparametere */}
-              <tr>
-                <td colSpan={weeks.length + 3} className="bg-[#222] font-semibold text-left px-2 py-1 text-gray-300">Dagsparametere</td>
+              <tr className="bg-[#222] font-semibold text-gray-300">
+                <td colSpan={weeks.length + 3} className="px-3 py-2">Dagsparametere</td>
               </tr>
-              {["Syk", "Skadet", "Konkurranse", "Høydedøgn", "På reise", "Fridag"].map(item => (
-                <tr key={item}>
-                  <td className={`${sectionClass} text-left px-2`}>{item}</td>
-                  {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                  <td className={cell}></td>
-                  <td className={cell}></td>
+              {["Syk", "Skadet", "Konkurranse", "Høydedøgn", "På reise", "Fridag"].map((item) => (
+                <tr key={item} className="hover:bg-[#2a2a2d]">
+                  <td className="bg-[#1a1a1d] px-3 py-1">{item}</td>
+                  {weeks.map((w, i) => <td key={i} className="px-2 py-1 text-center">-</td>)}
+                  <td className="px-2 py-1 text-center">-</td>
+                  <td className="px-2 py-1 text-center">-</td>
                 </tr>
               ))}
 
               {/* Utholdenhet */}
-              <tr>
-                <td colSpan={weeks.length + 3} className="bg-[#222] font-semibold text-left px-2 py-1 text-gray-300">Utholdenhet</td>
+              <tr className="bg-[#222] font-semibold text-gray-300">
+                <td colSpan={weeks.length + 3} className="px-3 py-2">Utholdenhet</td>
               </tr>
-              {["I1","I2","I3","I4","I5","I6","I7","I8"].map(intensity => (
-                <tr key={intensity}>
-                  <td className={`${sectionClass} text-left px-2`}>{intensity}</td>
-                  {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                  <td className={cell}></td>
-                  <td className={cell}></td>
+              {["I1","I2","I3","I4","I5"].map((zone) => (
+                <tr key={zone} className="hover:bg-[#2a2a2d]">
+                  <td className="bg-[#1a1a1d] px-3 py-1 flex items-center">
+                    <span className="w-3 h-3 rounded mr-2" style={{ backgroundColor: intensityColors[zone as keyof typeof intensityColors] }}></span>
+                    {zone}
+                  </td>
+                  {weeks.map((w, i) => <td key={i} className="px-2 py-1 text-center">-</td>)}
+                  <td className="px-2 py-1 text-center">-</td>
+                  <td className="px-2 py-1 text-center">-</td>
                 </tr>
               ))}
-              <tr className="bg-[#222] font-semibold">
-                <td className={`${sectionClass} text-left px-2`}>Total Utholdenhet</td>
-                {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                <td className={cell}></td>
-                <td className={cell}></td>
+              <tr className="bg-[#111] font-semibold text-blue-400">
+                <td className="px-3 py-1">Total Utholdenhet</td>
+                {weeks.map((w, j) => <td key={j} className="px-2 py-1 text-center">-</td>)}
+                <td className="px-2 py-1 text-center">-</td>
+                <td className="px-2 py-1 text-center">-</td>
               </tr>
 
               {/* Bevegelsesformer */}
-              <tr>
-                <td colSpan={weeks.length + 3} className="bg-[#222] font-semibold text-left px-2 py-1 text-gray-300">Bevegelsesformer</td>
+              <tr className="bg-[#222] font-semibold text-gray-300">
+                <td colSpan={weeks.length + 3} className="px-3 py-2">Bevegelsesformer</td>
               </tr>
-              {["Løp / skigang","Ski, klassisk","Ski, skøyting","Rulleski, klassisk","Rulleski, skøyting","Sykling","Roing/padling","Annet"].map(form => (
-                <tr key={form}>
-                  <td className={`${sectionClass} text-left px-2`}>{form}</td>
-                  {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                  <td className={cell}></td>
-                  <td className={cell}></td>
+              {[
+                "Løp / skigang",
+                "Ski, klassisk",
+                "Ski, skøyting",
+                "Rulleski, klassisk",
+                "Rulleski, skøyting",
+                "Sykling",
+                "Roing/padling",
+                "Annet",
+              ].map((form) => (
+                <tr key={form} className="hover:bg-[#2a2a2d]">
+                  <td className="bg-[#1a1a1d] px-3 py-1">{form}</td>
+                  {weeks.map((w, i) => <td key={i} className="px-2 py-1 text-center">-</td>)}
+                  <td className="px-2 py-1 text-center">-</td>
+                  <td className="px-2 py-1 text-center">-</td>
                 </tr>
               ))}
-              <tr className="bg-[#222] font-semibold">
-                <td className={`${sectionClass} text-left px-2`}>Total Bevegelsesformer</td>
-                {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                <td className={cell}></td>
-                <td className={cell}></td>
+              <tr className="bg-[#111] font-semibold text-blue-400">
+                <td className="px-3 py-1">Total Bevegelsesformer</td>
+                {weeks.map((w, j) => <td key={j} className="px-2 py-1 text-center">-</td>)}
+                <td className="px-2 py-1 text-center">-</td>
+                <td className="px-2 py-1 text-center">-</td>
               </tr>
 
-              {/* Total */}
-              <tr className="bg-[#1a1a1d] font-bold">
-                <td className={`${sectionClass} text-left px-2`}>Total</td>
-                {weeks.map((w, i) => <td key={i} className={cell}></td>)}
-                <td className={cell}></td>
-                <td className={cell}></td>
+              {/* Общий Total */}
+              <tr className="bg-[#111] font-bold text-white">
+                <td className="px-3 py-1">Total</td>
+                {weeks.map((w, j) => <td key={j} className="px-2 py-1 text-center">-</td>)}
+                <td className="px-2 py-1 text-center">-</td>
+                <td className="px-2 py-1 text-center">-</td>
               </tr>
-
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   );
