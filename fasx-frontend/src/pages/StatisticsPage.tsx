@@ -17,6 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import CalendarModalMobile from "./CalendarModalMobile";
 
 dayjs.locale("ru");
 
@@ -27,9 +28,11 @@ export default function StatsPage() {
   const [name] = React.useState("Пользователь");
 
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
-  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
+  const [startPeriod, setStartPeriod] = React.useState(dayjs("2025-01-01").toDate());
+  const [endPeriod, setEndPeriod] = React.useState(dayjs("2025-12-31").toDate());
   const [year, setYear] = React.useState("2025");
+
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
 
   const totals = {
     trainingDays: 83,
@@ -63,17 +66,18 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Преобразуем выбранный период в номера месяцев (0-11)
+  // Фильтр по выбранному периоду
   const startMonth = dayjs(startPeriod).month();
   const endMonth = dayjs(endPeriod).month();
 
-  // Фильтр месяцев и данных по выбранному периоду
   const filteredMonths = months.slice(startMonth, endMonth + 1);
+
   const filteredEnduranceZones = enduranceZones.map((zone) => ({
     ...zone,
     months: zone.months.slice(startMonth, endMonth + 1),
     total: zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
   }));
+
   const filteredMovementTypes = movementTypes.map((m) => ({
     ...m,
     months: m.months.slice(startMonth, endMonth + 1),
@@ -158,29 +162,29 @@ export default function StatsPage() {
 
           <div className="flex items-center gap-2 mt-2 md:mt-0">
             <label className="text-gray-400 text-sm">Период:</label>
-            <input
-              type="date"
-              value={startPeriod}
-              onChange={(e) => setStartPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            />
-            <input
-              type="date"
-              value={endPeriod}
-              onChange={(e) => setEndPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            />
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            <button
+              onClick={() => setIsCalendarOpen(true)}
+              className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm"
             >
-              <option>2025</option>
-              <option>2024</option>
-              <option>2023</option>
-            </select>
+              Выбрать период
+            </button>
+            <span className="text-gray-300 text-sm">
+              {dayjs(startPeriod).format("D MMM")} – {dayjs(endPeriod).format("D MMM")}
+            </span>
           </div>
         </div>
+
+        {/* Календарь */}
+        <CalendarModalMobile
+          isOpen={isCalendarOpen}
+          onClose={() => setIsCalendarOpen(false)}
+          initialRange={{ startDate: startPeriod, endDate: endPeriod }}
+          onSelectRange={({ startDate, endDate }) => {
+            setStartPeriod(startDate);
+            setEndPeriod(endDate);
+            setIsCalendarOpen(false);
+          }}
+        />
 
         {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
