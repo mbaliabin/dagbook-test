@@ -1,131 +1,186 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import dayjs from "dayjs";
-import "dayjs/locale/ru";
+import React, { useEffect, useState, useCallback } from 'react'
 import {
+  Timer,
+  MapPin,
+  Zap,
+  Target,
+  Plus,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Calendar,
   Home,
   BarChart3,
   ClipboardList,
-  CalendarDays,
-  Plus,
-  LogOut,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  CalendarDays
+} from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import dayjs from 'dayjs'
+import isBetween from 'dayjs/plugin/isBetween'
+import isoWeek from 'dayjs/plugin/isoWeek'
+import 'react-date-range/dist/styles.css'
+import 'react-date-range/dist/theme/default.css'
+import { DateRange } from 'react-date-range'
+import { ru } from 'date-fns/locale'
 
-dayjs.locale("ru");
+import IntensityZones from '../components/IntensityZones'
+import TrainingLoadChart from "../components/TrainingLoadChart"
+import WeeklySessions from "../components/WeeklySessions"
+import RecentWorkouts from "../components/RecentWorkouts"
+import ActivityTable from "../components/ActivityTable"
+import AddWorkoutModal from "../components/AddWorkoutModal"
+import { getUserProfile } from "../api/getUserProfile"
+import TopSessions from "../components/TopSessions"
 
-export default function StatsPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+dayjs.extend(isBetween)
+dayjs.extend(isoWeek)
 
-  const [name] = React.useState("Пользователь");
-  const [reportType, setReportType] = React.useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
-  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
-  const [year, setYear] = React.useState("2025");
+interface Workout {
+  id: string
+  name: string
+  date: string
+  duration: number
+  type: string
+  distance?: number | null
+  zone1Min?: number
+  zone2Min?: number
+  zone3Min?: number
+  zone4Min?: number
+  zone5Min?: number
+}
 
-  const totals = {
-    trainingDays: 83,
-    sessions: 128,
-    time: "178:51",
-  };
+export default function ProfilePage() {
+  const [name, setName] = useState("")
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(dayjs())
+  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>({
+    startDate: dayjs().startOf('isoWeek').toDate(),
+    endDate: dayjs().endOf('isoWeek').toDate()
+  })
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false)
+  const [showBottomMenu, setShowBottomMenu] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const months = [
-    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
-  ];
+  const fetchWorkouts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error("Ошибка загрузки тренировок")
+      const data: Workout[] = await res.json()
+      setWorkouts(data)
+    } catch (err) {
+      console.error("Ошибка:", err)
+    } finally {
+      setLoadingWorkouts(false)
+    }
+  }, [])
 
-  const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
-    { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
-    { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
-    { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
-  ];
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile()
+        setName(data.name || "Пользователь")
+      } catch (err) {
+        console.error("Ошибка профиля:", err)
+      } finally {
+        setLoadingProfile(false)
+      }
+    }
+    fetchProfile()
+    fetchWorkouts()
+  }, [fetchWorkouts])
 
-  const movementTypes = [
-    { type: "Лыжи / скейтинг", months: [4,5,3,0,0,0,0,0,1,2,3,2] },
-    { type: "Лыжи, классика", months: [3,4,2,0,0,0,0,0,0,1,2,1] },
-    { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
-    { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
-    { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
-  ];
+  const handleAddWorkout = (w: Workout) => {
+    setWorkouts(prev => [w, ...prev])
+  }
 
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
-  };
-
-  const startMonth = dayjs(startPeriod).month();
-  const endMonth = dayjs(endPeriod).month();
-
-  const filteredMonths = months.slice(startMonth, endMonth + 1);
-  const filteredEnduranceZones = enduranceZones.map((zone) => ({
-    ...zone,
-    months: zone.months.slice(startMonth, endMonth + 1),
-    total: zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
-  }));
-  const filteredMovementTypes = movementTypes.map((m) => ({
-    ...m,
-    months: m.months.slice(startMonth, endMonth + 1),
-    total: m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
-  }));
+  const handleDeleteWorkout = (id: string) => {
+    setWorkouts(prev => prev.filter(w => w.id !== id))
+  }
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+    localStorage.removeItem('token')
+    navigate('/login')
+  }
+
+  const filteredWorkouts = workouts.filter(w => {
+    const workoutDate = dayjs(w.date)
+    if (dateRange) {
+      const start = dayjs(dateRange.startDate).startOf('day')
+      const end = dayjs(dateRange.endDate).endOf('day')
+      return workoutDate.isBetween(start, end, null, '[]')
+    }
+    return workoutDate.isSame(selectedMonth, 'month')
+  })
+
+  const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0)
+  const totalDistance = filteredWorkouts.reduce((sum, w) => sum + (w.distance || 0), 0)
+  const hours = Math.floor(totalDuration / 60)
+  const minutes = totalDuration % 60
+  const totalTimeStr = `${hours}:${minutes.toString().padStart(2, '0')}`
+
+  const intensiveSessions = filteredWorkouts.filter(w => {
+    const zones = [
+      w.zone1Min || 0,
+      w.zone2Min || 0,
+      w.zone3Min || 0,
+      w.zone4Min || 0,
+      w.zone5Min || 0
+    ]
+    const maxZone = zones.indexOf(Math.max(...zones)) + 1
+    return [3, 4, 5].includes(maxZone)
+  }).length
+
+  const onPrevMonth = () => {
+    setSelectedMonth(prev => prev.subtract(1, 'month'))
+    setDateRange(null)
+  }
+
+  const onNextMonth = () => {
+    setSelectedMonth(prev => prev.add(1, 'month'))
+    setDateRange(null)
+  }
+
+  const applyDateRange = () => {
+    if (dateRange) setShowDateRangePicker(false)
+  }
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
     { label: "Тренировки", icon: BarChart3, path: "/profile" },
     { label: "Планирование", icon: ClipboardList, path: "/planning" },
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
+  ]
+
+  // Появление нижнего меню при скролле
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      setShowBottomMenu(scrollY > 300) // например, после 300px
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
-          <div className="flex items-center space-x-4">
-            <img
-              src="/profile.jpg"
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-white">{name}</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 flex-wrap">
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
-          </div>
-        </div>
-
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
+      <div className="max-w-7xl mx-auto space-y-6 pb-24">
         {/* Верхнее меню */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const Icon = item.icon
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
             return (
               <button
                 key={item.path}
@@ -137,121 +192,220 @@ export default function StatsPage() {
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
-            );
+            )
           })}
         </div>
 
-        {/* TOTALSUM */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
+        {/* Header + кнопки + выбор периода */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
             <div>
-              <p className="text-gray-400">Тренировочные дни</p>
-              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Сессий</p>
-              <p className="text-xl text-gray-100">{totals.sessions}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Время</p>
-              <p className="text-xl text-gray-100">{totals.time}</p>
+              <h1 className="text-2xl font-bold text-white">
+                {loadingProfile ? 'Загрузка...' : name}
+              </h1>
+              <p className="text-sm text-white">
+                {!dateRange
+                  ? selectedMonth.format('MMMM YYYY')
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
+                }
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={filteredMonths.map((month, i) => {
-                  const data: any = { month };
-                  filteredEnduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
-                  return data;
-                })}
-                barSize={35}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Выбор периода */}
+            <div className="flex items-center space-x-2 flex-wrap">
+              <button
+                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onPrevMonth}
               >
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip
-                  content={({ active, payload }: any) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                          {payload.map((p: any) => (
-                            <p key={p.dataKey} className="mt-1">
-                              <span
-                                className="inline-block w-3 h-3 mr-1 rounded-full"
-                                style={{ backgroundColor: p.fill }}
-                              ></span>
-                              {p.dataKey}: {formatTime(p.value)}
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4, 4, 0, 0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div
+                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+                onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
+                title="Показать текущий месяц"
+              >
+                {selectedMonth.format('MMMM YYYY')}
+              </div>
+
+              <button
+                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onNextMonth}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
+                  setShowDateRangePicker(false)
+                }}
+                className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
+              >
+                Текущая неделя
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowDateRangePicker(prev => !prev)}
+                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+                >
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Произвольный период
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {showDateRangePicker && (
+                  <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                    <DateRange
+                      onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                      showSelectionPreview={true}
+                      moveRangeOnFirstSelection={false}
+                      months={1}
+                      ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
+                      direction="horizontal"
+                      rangeColors={['#3b82f6']}
+                      className="text-white"
+                      locale={ru}
+                      weekStartsOn={1}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={() => setShowDateRangePicker(false)}
+                        className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={applyDateRange}
+                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Применить
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Таблица выносливости */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEnduranceZones.map((z) => (
-                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
-                    {z.zone}
-                  </td>
-                  {z.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Статистика */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Timer className="w-4 h-4 mr-1" /> Total Training
+            </p>
+            <h2 className="text-xl font-semibold">{totalTimeStr}</h2>
+            <p className="text-xs text-gray-500">{filteredWorkouts.length} Sessions</p>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" /> Distance
+            </p>
+            <h2 className="text-xl font-semibold">{totalDistance.toFixed(1)} km</h2>
+            <p className="text-xs text-gray-500">
+              {filteredWorkouts.filter(w => w.distance).length} Sessions
+            </p>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Zap className="w-4 h-4 mr-1" /> Intensive
+            </p>
+            <h2 className="text-xl font-semibold">{intensiveSessions}</h2>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Target className="w-4 h-4 mr-1" /> Specific
+            </p>
+            <h2 className="text-xl font-semibold">1</h2>
+          </div>
         </div>
 
-        {/* Таблица активности */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMovementTypes.map((m) => (
-                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Графики и таблицы */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <TrainingLoadChart workouts={filteredWorkouts} />
+            <IntensityZones workouts={filteredWorkouts} />
+          </div>
+          <div className="space-y-6">
+            <TopSessions workouts={filteredWorkouts} />
+            <ActivityTable workouts={filteredWorkouts} />
+          </div>
         </div>
 
+        {/* Список тренировок */}
+        <div>
+          {loadingWorkouts ? (
+            <p className="text-gray-400">Загрузка тренировок...</p>
+          ) : (
+            <RecentWorkouts
+              workouts={filteredWorkouts}
+              onDeleteWorkout={handleDeleteWorkout}
+              onUpdateWorkout={fetchWorkouts}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Модалка */}
+      <AddWorkoutModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddWorkout={handleAddWorkout}
+      />
+
+      {/* Нижняя навигация — появляется при скролле */}
+      <div
+        className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
+          showBottomMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
+        }`}
+      >
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
-  );
+  )
 }
+
