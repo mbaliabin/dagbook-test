@@ -17,7 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import CalendarModalMobile from "../components/CalendarModalMobile";
+import CalendarModalMobile from "../components/CalendarModal";
 
 dayjs.locale("ru");
 
