@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Settings,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -92,15 +94,20 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Верхнее меню оставляем как в твоей старой странице */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-          {[
-            { label: "Главная", path: "/daily" },
-            { label: "Тренировки", path: "/profile" },
-            { label: "Планирование", path: "/planning" },
-            { label: "Статистика", path: "/statistics" },
+          {[ // Твои исходные кнопки
+            { label: "Главная", icon: Timer, path: "/daily" },
+            { label: "Тренировки", icon: BarChart3, path: "/profile" },
+            { label: "Планирование", icon: ClipboardList, path: "/planning" },
+            { label: "Статистика", icon: CalendarDays, path: "/statistics" },
           ].map((item) => {
-            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+
             return (
               <button
                 key={item.path}
@@ -109,6 +116,7 @@ export default function StatsPage() {
                   isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
                 }`}
               >
+                <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
             );
@@ -120,7 +128,6 @@ export default function StatsPage() {
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
             TOTALSUM
           </h1>
-
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div>
               <p className="text-gray-400">Тренировочные дни</p>
@@ -179,16 +186,14 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблица: Выносливость */}
+        {/* Таблицы */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость (Utholdenhet)</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {months.map((m) => (
-                  <th key={m} className="p-3 font-medium text-center">{m}</th>
-                ))}
+                {months.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
@@ -199,9 +204,7 @@ export default function StatsPage() {
                     <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
                     {z.zone}
                   </td>
-                  {z.months.map((val, i) => (
-                    <td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>
-                  ))}
+                  {z.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
                 </tr>
               ))}
@@ -209,16 +212,13 @@ export default function StatsPage() {
           </table>
         </div>
 
-        {/* Таблица: Формы активности */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности (Bevegelsesformer)</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {months.map((m) => (
-                  <th key={m} className="p-3 font-medium text-center">{m}</th>
-                ))}
+                {months.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
@@ -226,9 +226,7 @@ export default function StatsPage() {
               {movementTypes.map((m) => (
                 <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
                   <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val, i) => (
-                    <td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>
-                  ))}
+                  {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
                 </tr>
               ))}
