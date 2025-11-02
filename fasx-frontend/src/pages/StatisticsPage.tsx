@@ -182,6 +182,25 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* TOTALSUM */}
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
+                  <div className="flex flex-wrap gap-10 text-sm mt-3">
+                    <div>
+                      <p className="text-gray-400">Тренировочные дни</p>
+                      <p className="text-xl text-gray-100">{totals.trainingDays}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Сессий</p>
+                      <p className="text-xl text-gray-100">{totals.sessions}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Время</p>
+                      <p className="text-xl text-gray-100">{totals.time}</p>
+                    </div>
+                  </div>
+                </div>
+
         {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
@@ -221,25 +240,6 @@ export default function StatsPage() {
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* TOTALSUM */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div>
-              <p className="text-gray-400">Тренировочные дни</p>
-              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Сессий</p>
-              <p className="text-xl text-gray-100">{totals.sessions}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Время</p>
-              <p className="text-xl text-gray-100">{totals.time}</p>
-            </div>
           </div>
         </div>
 
