@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Plus,
   LogOut,
+  Calendar,
+  ChevronDown,
 } from "lucide-react";
 import {
   BarChart,
@@ -17,6 +19,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { DateRange } from "react-date-range";
+import { ru } from "date-fns/locale";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
 dayjs.locale("ru");
 
@@ -26,9 +32,9 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
-  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
-  const [year, setYear] = React.useState("2025");
+  const [startPeriod, setStartPeriod] = React.useState(dayjs().startOf('month').toDate());
+  const [endPeriod, setEndPeriod] = React.useState(dayjs().endOf('month').toDate());
+  const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
   const totals = {
     trainingDays: 83,
@@ -36,9 +42,7 @@ export default function StatsPage() {
     time: "178:51",
   };
 
-  const months = [
-    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
-  ];
+  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -89,6 +93,20 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
+  // Обработчики периодов
+  const setWeek = () => {
+    setStartPeriod(dayjs().startOf('isoWeek').toDate());
+    setEndPeriod(dayjs().endOf('isoWeek').toDate());
+  };
+  const setMonth = () => {
+    setStartPeriod(dayjs().startOf('month').toDate());
+    setEndPeriod(dayjs().endOf('month').toDate());
+  };
+  const setYear = () => {
+    setStartPeriod(dayjs().startOf('year').toDate());
+    setEndPeriod(dayjs().endOf('year').toDate());
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
@@ -96,26 +114,17 @@ export default function StatsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            <img
-              src="/profile.jpg"
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
 
           <div className="flex items-center space-x-2 flex-wrap">
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
-            <button
-              onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
+            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <LogOut className="w-4 h-4 mr-1" /> Выйти
             </button>
           </div>
@@ -127,18 +136,44 @@ export default function StatsPage() {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
-              >
+              <button key={item.path} onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
             );
           })}
+        </div>
+
+        {/* Выбор отчета и периода */}
+        <div className="flex flex-wrap gap-2 items-center mb-6">
+          <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-gray-200 px-3 py-1 rounded text-sm">
+            <option>Общий отчет</option>
+          </select>
+
+          <button onClick={setWeek} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={setMonth} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={setYear} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Год</button>
+
+          <div className="relative">
+            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center">
+              <Calendar className="w-4 h-4 mr-1"/> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+            {showDateRangePicker && (
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                <DateRange
+                  onChange={item => { setStartPeriod(item.selection.startDate); setEndPeriod(item.selection.endDate); }}
+                  moveRangeOnFirstSelection={false}
+                  ranges={[{ startDate: startPeriod, endDate: endPeriod, key: 'selection' }]}
+                  months={1} direction="horizontal" rangeColors={['#3b82f6']} locale={ru} weekStartsOn={1}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* TOTALSUM */}
