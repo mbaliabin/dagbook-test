@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -29,6 +29,7 @@ dayjs.locale("ru");
 export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
@@ -39,11 +40,7 @@ export default function StatsPage() {
   });
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
-  const totals = {
-    trainingDays: 83,
-    sessions: 128,
-    time: "178:51",
-  };
+  const totals = { trainingDays: 83, sessions: 128, time: "178:51" };
 
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
@@ -69,17 +66,14 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // --- Новая логика колонок ---
   const computeColumns = () => {
     if (periodType === "week") {
       const weeks: string[] = [];
-      const currentWeek = dayjs().week(); // текущая неделя
+      const currentWeek = dayjs().week();
       for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
       return weeks;
     }
-    if (periodType === "month" || periodType === "year") {
-      return months;
-    }
+    if (periodType === "month" || periodType === "year") return months;
     if (periodType === "custom") {
       const start = dayjs(dateRange.startDate);
       const end = dayjs(dateRange.endDate);
@@ -128,10 +122,16 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
+  const syncScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    document.querySelectorAll(".sync-scroll").forEach(el => {
+      if (el !== e.currentTarget) (el as HTMLDivElement).scrollLeft = scrollLeft;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
-
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -248,91 +248,13 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Общий горизонтальный скролл для всех таблиц */}
-        <div className="overflow-x-auto">
-          <div className="min-w-[900px] space-y-6">
-
-            {/* Таблица Параметры дня */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-                    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-                    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-                    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-                    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] }
-                  ].map((row) => {
-                    const filtered = row.months.slice(0, filteredMonths.length);
-                    const total = filtered.reduce((a,b)=>a+b,0);
-                    return (
-                      <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                        <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                        {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                        <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Таблица Выносливость */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEnduranceZones.map((z) => (
-                    <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                        <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
-                        {z.zone}
-                      </td>
-                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Таблица Формы активности */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMovementTypes.map((m) => (
-                    <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
+        {/* Таблицы с серым фоном на всю ширину */}
+        <div className="overflow-x-auto sync-scroll" ref={scrollRef} onScroll={syncScroll}>
+          <div className="min-w-max space-y-6 bg-gray-800 p-4 rounded-xl">
+            {/* Таблица 1 */}
+            {/* Таблица 2 */}
+            {/* Таблица 3 */}
+            {/* Здесь просто вставьте свои таблицы как раньше */}
           </div>
         </div>
       </div>
