@@ -45,24 +45,30 @@ export default function StatsPage() {
     time: "178:51",
   };
 
-  const months = [
-    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
-  ];
+  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+
+  // Генерация массива недель с начала года
+  const generateWeeks = () => {
+    const startOfYear = dayjs("2025-01-01");
+    const endOfYear = dayjs("2025-12-31");
+    const totalWeeks = endOfYear.diff(startOfYear, "week") + 1;
+    return Array.from({ length: totalWeeks }, (_, i) => `${i + 1} неделя`);
+  };
 
   const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
-    { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
-    { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
-    { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
+    { zone: "I1", color: "#4ade80", data: [10,8,12,9,11,14,13,10,8,5,3,2] },
+    { zone: "I2", color: "#22d3ee", data: [5,6,7,3,4,5,6,3,4,2,1,1] },
+    { zone: "I3", color: "#facc15", data: [2,1,1,1,2,1,1,1,0,1,0,1] },
+    { zone: "I4", color: "#fb923c", data: [1,1,2,0,1,1,0,0,1,0,0,0] },
+    { zone: "I5", color: "#ef4444", data: [0,0,1,0,0,0,0,0,1,0,1,0] },
   ];
 
   const movementTypes = [
-    { type: "Лыжи / скейтинг", months: [4,5,3,0,0,0,0,0,1,2,3,2] },
-    { type: "Лыжи, классика", months: [3,4,2,0,0,0,0,0,0,1,2,1] },
-    { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
-    { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
-    { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
+    { type: "Лыжи / скейтинг", data: [4,5,3,0,0,0,0,0,1,2,3,2] },
+    { type: "Лыжи, классика", data: [3,4,2,0,0,0,0,0,0,1,2,1] },
+    { type: "Роллеры, классика", data: [0,0,0,3,5,6,7,5,4,3,2,0] },
+    { type: "Роллеры, скейтинг", data: [0,0,0,2,6,7,8,6,5,3,2,0] },
+    { type: "Велосипед", data: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
   const formatTime = (minutes: number) => {
@@ -71,33 +77,37 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Вычисление фильтрованных месяцев для таблиц
-  const computeFilteredMonths = () => {
-    let start: number, end: number;
-    if (periodType === "year" || periodType === "custom") {
-      start = dayjs(dateRange.startDate).month();
-      end = dayjs(dateRange.endDate).month();
-    } else if (periodType === "month") {
-      start = 0; end = 3; // для примера недели
-    } else {
-      start = 0; end = 6; // для примера дней недели
-    }
-    return months.slice(start, end + 1);
+  // Генерация списка колонок по типу периода
+  const getColumns = () => {
+    if (periodType === "month") return months;
+    if (periodType === "week") return generateWeeks();
+    if (periodType === "year" || periodType === "custom")
+      return months; // пока для упрощения
+    return [];
   };
 
-  const filteredMonths = computeFilteredMonths();
+  const columns = getColumns();
 
-  const filteredEnduranceZones = enduranceZones.map((zone) => ({
-    ...zone,
-    months: zone.months.slice(0, filteredMonths.length),
-    total: zone.months.slice(0, filteredMonths.length).reduce((a,b) => a+b,0),
-  }));
+  // Преобразование данных под выбранный период
+  const filteredEnduranceZones = enduranceZones.map((zone) => {
+    const dataLength = periodType === "week" ? 10 : 12; // имитация данных на 10 недель
+    const fakeData = Array.from({ length: dataLength }, () =>
+      Math.floor(Math.random() * 15)
+    );
+    const arr = periodType === "week" ? fakeData : zone.data;
+    const total = arr.reduce((a, b) => a + b, 0);
+    return { ...zone, data: arr, total };
+  });
 
-  const filteredMovementTypes = movementTypes.map((m) => ({
-    ...m,
-    months: m.months.slice(0, filteredMonths.length),
-    total: m.months.slice(0, filteredMonths.length).reduce((a,b) => a+b,0),
-  }));
+  const filteredMovementTypes = movementTypes.map((m) => {
+    const dataLength = periodType === "week" ? 10 : 12;
+    const fakeData = Array.from({ length: dataLength }, () =>
+      Math.floor(Math.random() * 15)
+    );
+    const arr = periodType === "week" ? fakeData : m.data;
+    const total = arr.reduce((a, b) => a + b, 0);
+    return { ...m, data: arr, total };
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -115,7 +125,7 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -131,9 +141,7 @@ export default function StatsPage() {
           </div>
 
           <div className="flex items-center space-x-2 flex-wrap">
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
             <button
@@ -165,7 +173,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Кнопки выбора отчета и периода */}
+        {/* Кнопки выбора периода */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select
             className="bg-[#1f1f22] text-white px-3 py-1 rounded"
@@ -204,110 +212,14 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* TOTALSUM */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div>
-              <p className="text-gray-400">Тренировочные дни</p>
-              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Сессий</p>
-              <p className="text-xl text-gray-100">{totals.sessions}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Время</p>
-              <p className="text-xl text-gray-100">{totals.time}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={filteredMonths.map((month, i) => {
-                  const data: any = { month };
-                  filteredEnduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
-                  return data;
-                })}
-                barSize={35}
-              >
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip
-                  content={({ active, payload }: any) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                          {payload.map((p: any) => (
-                            <p key={p.dataKey} className="mt-1">
-                              <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                              {p.dataKey}: {formatTime(p.value)}
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4, 4, 0, 0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-{/* Таблица параметров дня */}
-<div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-  <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-  <table className="w-full min-w-[900px] text-sm border-collapse">
-    <thead>
-      <tr className="bg-[#222] text-gray-400 text-left">
-        <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-        {filteredMonths.map((m) => (
-          <th key={m} className="p-3 font-medium text-center">{m}</th>
-        ))}
-        <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-      </tr>
-    </thead>
-    <tbody>
-      {[
-        { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-        { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-        { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-        { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-        { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
-      ].map((row) => {
-        const filtered = row.months.slice(0, filteredMonths.length);
-        const total = filtered.reduce((a, b) => a + b, 0);
-        return (
-          <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-            <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-            {filtered.map((val, i) => (
-              <td key={i} className="p-3 text-center">{val > 0 ? val : "-"}</td>
-            ))}
-            <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-          </tr>
-        );
-      })}
-    </tbody>
-  </table>
-</div>
-
-
         {/* Таблица выносливости */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость ({periodType === "week" ? "по неделям" : "по месяцам"})</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {columns.map((c) => (<th key={c} className="p-3 font-medium text-center">{c}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
@@ -318,7 +230,7 @@ export default function StatsPage() {
                     <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
                     {z.zone}
                   </td>
-                  {z.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
+                  {z.data.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
                 </tr>
               ))}
@@ -333,7 +245,7 @@ export default function StatsPage() {
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {columns.map((c) => (<th key={c} className="p-3 font-medium text-center">{c}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
@@ -341,7 +253,7 @@ export default function StatsPage() {
               {filteredMovementTypes.map((m) => (
                 <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
                   <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
+                  {m.data.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
                 </tr>
               ))}
