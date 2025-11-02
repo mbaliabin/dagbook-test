@@ -66,6 +66,7 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
+  // --- вычисление колонок по периоду ---
   const computeColumns = () => {
     if (periodType === "week") {
       const weeks: string[] = [];
@@ -132,6 +133,7 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -140,7 +142,6 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -151,17 +152,14 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
-              >
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
@@ -169,7 +167,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
+        {/* Выбор периода */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
@@ -185,15 +183,10 @@ export default function StatsPage() {
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
                   onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                  showSelectionPreview
-                  moveRangeOnFirstSelection={false}
-                  months={1}
+                  showSelectionPreview moveRangeOnFirstSelection={false} months={1}
                   ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
-                  direction="horizontal"
-                  rangeColors={['#3b82f6']}
-                  className="text-white"
-                  locale={ru}
-                  weekStartsOn={1}
+                  direction="horizontal" rangeColors={['#3b82f6']}
+                  className="text-white" locale={ru} weekStartsOn={1}
                 />
                 <div className="flex justify-end mt-2 space-x-2">
                   <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
@@ -248,15 +241,94 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы с серым фоном на всю ширину */}
+        {/* Три таблицы с общим скроллом и серым фоном */}
         <div className="overflow-x-auto sync-scroll" ref={scrollRef} onScroll={syncScroll}>
           <div className="min-w-max space-y-6 bg-gray-800 p-4 rounded-xl">
-            {/* Таблица 1 */}
-            {/* Таблица 2 */}
-            {/* Таблица 3 */}
-            {/* Здесь просто вставьте свои таблицы как раньше */}
+
+            {/* Таблица 1 — Параметры дня */}
+            <div className="overflow-x-auto">
+              <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
+              <table className="w-full min-w-[900px] text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#222] text-gray-400 text-left">
+                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
+                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[{ param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
+                    { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
+                    { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
+                    { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
+                    { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] }]
+                    .map((row) => {
+                      const filtered = row.months.slice(0, filteredMonths.length);
+                      const total = filtered.reduce((a,b)=>a+b,0);
+                      return (
+                        <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                          <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
+                          {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                          <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Таблица 2 — Выносливость */}
+            <div className="overflow-x-auto">
+              <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
+              <table className="w-full min-w-[900px] text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#222] text-gray-400 text-left">
+                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEnduranceZones.map((z) => (
+                    <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                      <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                        <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
+                        {z.zone}
+                      </td>
+                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
+                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Таблица 3 — Форма активности */}
+            <div className="overflow-x-auto">
+              <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
+              <table className="w-full min-w-[900px] text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#222] text-gray-400 text-left">
+                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMovementTypes.map((m) => (
+                    <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                      <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
+                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         </div>
+
       </div>
     </div>
   );
