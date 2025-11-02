@@ -23,7 +23,9 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 
+dayjs.extend(weekOfYear);
 dayjs.locale("ru");
 
 export default function StatsPage() {
@@ -70,16 +72,26 @@ export default function StatsPage() {
   };
 
   // --- Новая логика колонок ---
+  const computeWeekColumns = () => {
+    const today = dayjs();
+    const currentWeek = today.week(); // текущая неделя
+    const weeks: string[] = [];
+    for (let i = 1; i <= currentWeek; i++) {
+      weeks.push(`Неделя ${i}`);
+    }
+    return weeks;
+  };
+
+  const computeMonthColumns = () => {
+    const today = dayjs();
+    const currentMonth = today.month(); // 0-11
+    return months.slice(0, currentMonth + 1);
+  };
+
   const computeColumns = () => {
-    if (periodType === "week") {
-      const weeks: string[] = [];
-      const currentWeek = dayjs().week(); // текущая неделя
-      for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
-      return weeks;
-    }
-    if (periodType === "month" || periodType === "year") {
-      return months;
-    }
+    if (periodType === "week") return computeWeekColumns();
+    if (periodType === "month") return computeMonthColumns();
+    if (periodType === "year") return months;
     if (periodType === "custom") {
       const start = dayjs(dateRange.startDate);
       const end = dayjs(dateRange.endDate);
@@ -248,93 +260,88 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Общий горизонтальный скролл для всех таблиц */}
-        <div className="overflow-x-auto">
-          <div className="min-w-[900px] space-y-6">
-
-            {/* Таблица Параметры дня */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+        {/* Таблицы */}
+        {/* Параметры дня */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
+                { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
+                { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
+                { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
+                { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
+              ].map((row) => {
+                const filtered = row.months.slice(0, filteredMonths.length);
+                const total = filtered.reduce((a,b)=>a+b,0);
+                return (
+                  <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
+                    {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-                    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-                    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-                    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-                    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] }
-                  ].map((row) => {
-                    const filtered = row.months.slice(0, filteredMonths.length);
-                    const total = filtered.reduce((a,b)=>a+b,0);
-                    return (
-                      <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                        <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                        {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                        <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Таблица Выносливость */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEnduranceZones.map((z) => (
-                    <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                        <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
-                        {z.zone}
-                      </td>
-                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Таблица Формы активности */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-[#222] text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMovementTypes.map((m) => (
-                    <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-          </div>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
+
+        {/* Выносливость */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEnduranceZones.map((z) => (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
+                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Формы активности */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMovementTypes.map((m) => (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   );
