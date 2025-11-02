@@ -148,6 +148,30 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* Верхнее меню */}
+                <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+                  {menuItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive =
+                      (item.path === "/daily" && location.pathname === "/daily") ||
+                      (item.path === "/profile" && location.pathname === "/profile") ||
+                      (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
+                    return (
+                      <button
+                        key={item.path}
+                        onClick={() => navigate(item.path)}
+                        className={`flex flex-col items-center text-sm transition-colors ${
+                          isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-6 h-6" />
+                        <span>{item.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
         {/* TOTALSUM */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
