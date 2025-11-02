@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Plus,
   LogOut,
+  Calendar,
+  ChevronDown,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,10 +31,12 @@ export default function StatsPage() {
   const location = useLocation();
 
   const [name] = React.useState("Пользователь");
-  const [reportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"Неделя" | "Месяц" | "Год" | "Произвольный период">("Год");
-  const [selectedDate, setSelectedDate] = React.useState(dayjs());
-  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date } | null>(null);
+  const [reportType, setReportType] = React.useState("Общий отчет");
+  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
+  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
+    startDate: dayjs("2025-01-01").toDate(),
+    endDate: dayjs("2025-12-31").toDate(),
+  });
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
   const totals = {
@@ -67,59 +71,40 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Вычисляем колонки для таблиц в зависимости от выбранного периода
-  const displayColumns = React.useMemo(() => {
-    if (periodType === "Год") return months;
-
-    if (periodType === "Месяц") {
-      const startOfMonth = selectedDate.startOf("month");
-      const numWeeks = Math.ceil(selectedDate.daysInMonth() / 7);
-      return Array.from({ length: numWeeks }, (_, i) => `Неделя ${i+1}`);
+  // Вычисление фильтрованных месяцев для таблиц
+  const computeFilteredMonths = () => {
+    let start: number, end: number;
+    if (periodType === "year" || periodType === "custom") {
+      start = dayjs(dateRange.startDate).month();
+      end = dayjs(dateRange.endDate).month();
+    } else if (periodType === "month") {
+      start = 0; end = 3; // для примера недели
+    } else {
+      start = 0; end = 6; // для примера дней недели
     }
+    return months.slice(start, end + 1);
+  };
 
-    if (periodType === "Неделя") {
-      const startOfWeek = selectedDate.startOf("isoWeek");
-      return Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, "day").format("DD.MM"));
-    }
+  const filteredMonths = computeFilteredMonths();
 
-    if (periodType === "Произвольный период" && dateRange) {
-      const start = dayjs(dateRange.startDate);
-      const end = dayjs(dateRange.endDate);
-      const startMonth = start.month();
-      const endMonth = end.month();
-      return months.slice(startMonth, endMonth + 1);
-    }
+  const filteredEnduranceZones = enduranceZones.map((zone) => ({
+    ...zone,
+    months: zone.months.slice(0, filteredMonths.length),
+    total: zone.months.slice(0, filteredMonths.length).reduce((a,b) => a+b,0),
+  }));
 
-    return [];
-  }, [periodType, selectedDate, dateRange]);
-
-  // Фильтруем данные для таблиц по колонкам
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const data = displayColumns.map((col) => {
-      if (periodType === "Год" || periodType === "Произвольный период") {
-        const monthIndex = months.indexOf(col);
-        return zone.months[monthIndex] || 0;
-      }
-      return 0; // пока не отображаем детально недели/дни
-    });
-    return { ...zone, months: data, total: data.reduce((a,b)=>a+b,0) };
-  });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const data = displayColumns.map((col) => {
-      if (periodType === "Год" || periodType === "Произвольный период") {
-        const monthIndex = months.indexOf(col);
-        return m.months[monthIndex] || 0;
-      }
-      return 0;
-    });
-    return { ...m, months: data, total: data.reduce((a,b)=>a+b,0) };
-  });
+  const filteredMovementTypes = movementTypes.map((m) => ({
+    ...m,
+    months: m.months.slice(0, filteredMonths.length),
+    total: m.months.slice(0, filteredMonths.length).reduce((a,b) => a+b,0),
+  }));
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
+
+  const applyDateRange = () => setShowDateRangePicker(false);
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
@@ -180,58 +165,43 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Период + отчет */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <button
-            className={`px-3 py-1 rounded border ${periodType==="Неделя" ? "bg-blue-600 text-white" : "bg-[#1f1f22] text-gray-300"}`}
-            onClick={() => { setPeriodType("Неделя"); setDateRange(null); }}
-          >Неделя</button>
-          <button
-            className={`px-3 py-1 rounded border ${periodType==="Месяц" ? "bg-blue-600 text-white" : "bg-[#1f1f22] text-gray-300"}`}
-            onClick={() => { setPeriodType("Месяц"); setDateRange(null); }}
-          >Месяц</button>
-          <button
-            className={`px-3 py-1 rounded border ${periodType==="Год" ? "bg-blue-600 text-white" : "bg-[#1f1f22] text-gray-300"}`}
-            onClick={() => { setPeriodType("Год"); setDateRange(null); }}
-          >Год</button>
-
-          <button
-            className={`px-3 py-1 rounded border flex items-center ${periodType==="Произвольный период" ? "bg-blue-600 text-white" : "bg-[#1f1f22] text-gray-300"}`}
-            onClick={() => setShowDateRangePicker(prev=>!prev)}
+        {/* Кнопки выбора отчета и периода */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <select
+            className="bg-[#1f1f22] text-white px-3 py-1 rounded"
+            value={reportType}
+            onChange={(e) => setReportType(e.target.value)}
           >
-            Произвольный период
-          </button>
-
-          {showDateRangePicker && (
-            <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-              <DateRange
-                onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                showSelectionPreview={true}
-                moveRangeOnFirstSelection={false}
-                months={1}
-                ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
-                direction="horizontal"
-                rangeColors={['#3b82f6']}
-                className="text-white"
-                locale={ru}
-                weekStartsOn={1}
-              />
-              <div className="flex justify-end mt-2 space-x-2">
-                <button
-                  onClick={() => setShowDateRangePicker(false)}
-                  className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
-                >
-                  Отмена
-                </button>
-                <button
-                  onClick={() => { setPeriodType("Произвольный период"); setShowDateRangePicker(false); }}
-                  className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Применить
-                </button>
+            <option>Общий отчет</option>
+          </select>
+          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+          <div className="relative">
+            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+              <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+            {showDateRangePicker && (
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                <DateRange
+                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                  showSelectionPreview={true}
+                  moveRangeOnFirstSelection={false}
+                  months={1}
+                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
+                  direction="horizontal"
+                  rangeColors={['#3b82f6']}
+                  className="text-white"
+                  locale={ru}
+                  weekStartsOn={1}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
+                  <button onClick={applyDateRange} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* TOTALSUM */}
@@ -259,8 +229,8 @@ export default function StatsPage() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={displayColumns.map((col, i) => {
-                  const data: any = { month: col };
+                data={filteredMonths.map((month, i) => {
+                  const data: any = { month };
                   filteredEnduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
                   return data;
                 })}
@@ -274,10 +244,7 @@ export default function StatsPage() {
                         <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
                           {payload.map((p: any) => (
                             <p key={p.dataKey} className="mt-1">
-                              <span
-                                className="inline-block w-3 h-3 mr-1 rounded-full"
-                                style={{ backgroundColor: p.fill }}
-                              ></span>
+                              <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
                               {p.dataKey}: {formatTime(p.value)}
                             </p>
                           ))}
@@ -302,7 +269,7 @@ export default function StatsPage() {
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {displayColumns.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
@@ -328,7 +295,7 @@ export default function StatsPage() {
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {displayColumns.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
