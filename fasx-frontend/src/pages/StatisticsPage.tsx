@@ -1,17 +1,24 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
-import { LogOut, Plus } from "lucide-react";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LogOut,
+  Plus,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 dayjs.locale("ru");
 
 export default function StatsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // Данные пользователя
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
   const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
@@ -24,7 +31,9 @@ export default function StatsPage() {
     time: "178:51",
   };
 
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const months = [
+    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек",
+  ];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -48,7 +57,6 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Фильтруем по выбранному периоду
   const startMonth = dayjs(startPeriod).month();
   const endMonth = dayjs(endPeriod).month();
 
@@ -69,15 +77,9 @@ export default function StatsPage() {
     // navigate("/login");
   };
 
-  // Меню
-  const menuItems = [
-    { path: "/daily", label: "Ежедневно", icon: Plus },
-    { path: "/profile", label: "Профиль", icon: LogOut },
-  ];
-
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="max-w-7xl mx-auto space-y-8 w-full">
+      <div className="w-full space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -107,7 +109,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Панель выбора отчета */}
+        {/* Panel */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#1a1a1a] p-4 rounded-2xl shadow-lg mb-6 w-full">
           <div className="flex items-center gap-2">
             <label className="text-gray-400 text-sm">Тип отчета:</label>
@@ -146,28 +148,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Меню */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                <Icon className="w-6 h-6" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Totals */}
+        {/* TOTALSUM */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
