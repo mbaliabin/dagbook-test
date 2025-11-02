@@ -142,7 +142,7 @@ export default function StatsPage() {
         </div>
 
         {/* Выбор отчета и периода */}
-        <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <label className="text-gray-400 text-sm">Тип отчета:</label>
             <select
