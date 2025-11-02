@@ -75,9 +75,10 @@ export default function StatsPage() {
   const computeWeekColumns = () => {
     const today = dayjs();
     const currentWeek = today.week(); // текущая неделя
+    const year = today.year();
     const weeks: string[] = [];
     for (let i = 1; i <= currentWeek; i++) {
-      weeks.push(`Неделя ${i}`);
+      weeks.push(`${i}/${year}`);
     }
     return weeks;
   };
@@ -319,13 +320,13 @@ export default function StatsPage() {
           </table>
         </div>
 
-        {/* Формы активности */}
+        {/* Типы движения */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип</th>
                 {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
