@@ -114,8 +114,8 @@ export default function StatsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 flex justify-center">
+      <div className="w-full max-w-6xl space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
