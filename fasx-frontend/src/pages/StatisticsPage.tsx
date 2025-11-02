@@ -151,26 +151,43 @@ export default function StatsPage() {
               className="bg-[#0f0f0f] text-gray-200 text-sm px-2 py-1 rounded border border-gray-700"
             >
               <option>Общий отчет</option>
+              {/* Можно добавить другие типы отчета */}
             </select>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <label className="text-gray-400 text-sm">Период с:</label>
-            <input
-              type="date"
-              value={startPeriod}
-              onChange={(e) => setStartPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 text-sm px-2 py-1 rounded border border-gray-700"
-            />
-            <label className="text-gray-400 text-sm">по:</label>
-            <input
-              type="date"
-              value={endPeriod}
-              onChange={(e) => setEndPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 text-sm px-2 py-1 rounded border border-gray-700"
-            />
+            <label className="text-gray-400 text-sm">Период:</label>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+              onClick={() => {
+                const today = dayjs();
+                setStartPeriod(today.startOf("week").format("YYYY-MM-DD"));
+                setEndPeriod(today.endOf("week").format("YYYY-MM-DD"));
+              }}
+            >
+              Неделя
+            </button>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+              onClick={() => {
+                const today = dayjs();
+                setStartPeriod(today.startOf("month").format("YYYY-MM-DD"));
+                setEndPeriod(today.endOf("month").format("YYYY-MM-DD"));
+              }}
+            >
+              Месяц
+            </button>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+              onClick={() => {
+                // Можно тут открыть модалку для произвольного выбора периода
+              }}
+            >
+              Произвольный
+            </button>
           </div>
         </div>
+
 
         {/* TOTALSUM */}
         <div>
