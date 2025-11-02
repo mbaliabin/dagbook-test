@@ -26,6 +26,11 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
 
+  const [reportType, setReportType] = React.useState("Общий отчет");
+  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
+  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
+  const [year, setYear] = React.useState("2025");
+
   const totals = {
     trainingDays: 83,
     sessions: 128,
@@ -57,6 +62,23 @@ export default function StatsPage() {
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
+
+  // Преобразуем выбранный период в номера месяцев (0-11)
+  const startMonth = dayjs(startPeriod).month();
+  const endMonth = dayjs(endPeriod).month();
+
+  // Фильтр месяцев и данных по выбранному периоду
+  const filteredMonths = months.slice(startMonth, endMonth + 1);
+  const filteredEnduranceZones = enduranceZones.map((zone) => ({
+    ...zone,
+    months: zone.months.slice(startMonth, endMonth + 1),
+    total: zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
+  }));
+  const filteredMovementTypes = movementTypes.map((m) => ({
+    ...m,
+    months: m.months.slice(startMonth, endMonth + 1),
+    total: m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
+  }));
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
@@ -121,15 +143,54 @@ export default function StatsPage() {
           })}
         </div>
 
+        {/* ПАНЕЛЬ ВЫБОРА ОТЧЕТА */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#1a1a1a] p-4 rounded-2xl shadow-lg mb-6">
+          <div className="flex items-center gap-2">
+            <label className="text-gray-400 text-sm">Тип отчета:</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            >
+              <option>Общий отчет</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label className="text-gray-400 text-sm">Период:</label>
+            <input
+              type="date"
+              value={startPeriod}
+              onChange={(e) => setStartPeriod(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            />
+            <input
+              type="date"
+              value={endPeriod}
+              onChange={(e) => setEndPeriod(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            />
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
+            >
+              <option>2025</option>
+              <option>2024</option>
+              <option>2023</option>
+            </select>
+          </div>
+        </div>
+
         {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={months.map((month, i) => {
+                data={filteredMonths.map((month, i) => {
                   const data: any = { month };
-                  enduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
+                  filteredEnduranceZones.forEach((zone) => (data[zone.zone] = zone.months[i]));
                   return data;
                 })}
                 barSize={35}
@@ -155,7 +216,7 @@ export default function StatsPage() {
                     return null;
                   }}
                 />
-                {enduranceZones.map((zone) => (
+                {filteredEnduranceZones.map((zone) => (
                   <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4, 4, 0, 0]} />
                 ))}
               </BarChart>
@@ -163,11 +224,9 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* TOTALSUM перенесён после диаграммы */}
+        {/* TOTALSUM */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
-            TOTALSUM
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div>
               <p className="text-gray-400">Тренировочные дни</p>
@@ -191,12 +250,12 @@ export default function StatsPage() {
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {months.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
             <tbody>
-              {enduranceZones.map((z) => (
+              {filteredEnduranceZones.map((z) => (
                 <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
                   <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
                     <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
@@ -216,12 +275,12 @@ export default function StatsPage() {
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
                 <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {months.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
             </thead>
             <tbody>
-              {movementTypes.map((m) => (
+              {filteredMovementTypes.map((m) => (
                 <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
                   <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
                   {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
