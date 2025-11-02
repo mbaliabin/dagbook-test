@@ -32,8 +32,16 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = React.useState(dayjs().startOf('month').toDate());
-  const [endPeriod, setEndPeriod] = React.useState(dayjs().endOf('month').toDate());
+  const [periodType, setPeriodType] = React.useState<
+    "week" | "month" | "year" | "custom"
+  >("year");
+  const [dateRange, setDateRange] = React.useState<{
+    startDate: Date;
+    endDate: Date;
+  }>({
+    startDate: dayjs("2025-01-01").toDate(),
+    endDate: dayjs("2025-12-31").toDate(),
+  });
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
   const totals = {
@@ -42,7 +50,10 @@ export default function StatsPage() {
     time: "178:51",
   };
 
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const months = [
+    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
+    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек",
+  ];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -60,31 +71,54 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
+  const dayParameters = [
+    { param: "Травма", months: [0,0,1,0,0,1,0,0,0,0,0,0] },
+    { param: "Болезнь", months: [0,1,0,0,0,0,0,0,1,0,0,0] },
+    { param: "Выходной", months: [3,2,4,1,2,3,4,3,2,1,1,2] },
+    { param: "Соревнования", months: [0,0,1,0,1,0,1,0,1,0,0,1] },
+    { param: "В пути", months: [0,0,0,0,0,1,1,1,0,0,0,0] },
+  ];
+
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  const startMonth = dayjs(startPeriod).month();
-  const endMonth = dayjs(endPeriod).month();
+  const computeFilteredMonths = () => {
+    let start: number, end: number;
+    if (periodType === "year" || periodType === "custom") {
+      start = dayjs(dateRange.startDate).month();
+      end = dayjs(dateRange.endDate).month();
+    } else if (periodType === "month") {
+      start = 0; end = 0;
+    } else {
+      start = 0; end = 6;
+    }
+    return months.slice(start, end + 1);
+  };
 
-  const filteredMonths = months.slice(startMonth, endMonth + 1);
-  const filteredEnduranceZones = enduranceZones.map((zone) => ({
-    ...zone,
-    months: zone.months.slice(startMonth, endMonth + 1),
-    total: zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
-  }));
-  const filteredMovementTypes = movementTypes.map((m) => ({
-    ...m,
-    months: m.months.slice(startMonth, endMonth + 1),
-    total: m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
-  }));
+  const filteredMonths = computeFilteredMonths();
+
+  const filterData = (arr: any[], key: string) =>
+    arr.map((item) => ({
+      ...item,
+      months: item.months.slice(0, filteredMonths.length),
+      total: item.months
+        .slice(0, filteredMonths.length)
+        .reduce((a, b) => a + b, 0),
+    }));
+
+  const filteredEnduranceZones = filterData(enduranceZones, "zone");
+  const filteredMovementTypes = filterData(movementTypes, "type");
+  const filteredDayParameters = filterData(dayParameters, "param");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
+
+  const applyDateRange = () => setShowDateRangePicker(false);
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
@@ -93,28 +127,18 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // Обработчики периодов
-  const setWeek = () => {
-    setStartPeriod(dayjs().startOf('isoWeek').toDate());
-    setEndPeriod(dayjs().endOf('isoWeek').toDate());
-  };
-  const setMonth = () => {
-    setStartPeriod(dayjs().startOf('month').toDate());
-    setEndPeriod(dayjs().endOf('month').toDate());
-  };
-  const setYear = () => {
-    setStartPeriod(dayjs().startOf('year').toDate());
-    setEndPeriod(dayjs().endOf('year').toDate());
-  };
-
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full flex justify-center">
+      <div className="w-full max-w-[1300px] space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
@@ -124,7 +148,10 @@ export default function StatsPage() {
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+            <button
+              onClick={handleLogout}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+            >
               <LogOut className="w-4 h-4 mr-1" /> Выйти
             </button>
           </div>
@@ -136,44 +163,18 @@ export default function StatsPage() {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
+              >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
             );
           })}
-        </div>
-
-        {/* Выбор отчета и периода */}
-        <div className="flex flex-wrap gap-2 items-center mb-6">
-          <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-gray-200 px-3 py-1 rounded text-sm">
-            <option>Общий отчет</option>
-          </select>
-
-          <button onClick={setWeek} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Неделя</button>
-          <button onClick={setMonth} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Месяц</button>
-          <button onClick={setYear} className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]">Год</button>
-
-          <div className="relative">
-            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center">
-              <Calendar className="w-4 h-4 mr-1"/> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
-            </button>
-            {showDateRangePicker && (
-              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-                <DateRange
-                  onChange={item => { setStartPeriod(item.selection.startDate); setEndPeriod(item.selection.endDate); }}
-                  moveRangeOnFirstSelection={false}
-                  ranges={[{ startDate: startPeriod, endDate: endPeriod, key: 'selection' }]}
-                  months={1} direction="horizontal" rangeColors={['#3b82f6']} locale={ru} weekStartsOn={1}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
-                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* TOTALSUM */}
@@ -237,93 +238,79 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблица параметров дня */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-                {filteredMonths.map((m) => (
-                  <th key={m} className="p-3 font-medium text-center">{m}</th>
-                ))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-                { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-                { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-                { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-                { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
-              ].map((row) => {
-                const filtered = row.months.slice(0, filteredMonths.length);
-                const total = filtered.reduce((a, b) => a + b, 0);
-                return (
-                  <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                    {filtered.map((val, i) => (
-                      <td key={i} className="p-3 text-center">{val > 0 ? val : "-"}</td>
-                    ))}
-                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-
         {/* Таблица выносливости */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEnduranceZones.map((z) => (
-                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
-                    {z.zone}
+        <TableBlock
+          title="Выносливость"
+          data={filteredEnduranceZones}
+          months={filteredMonths}
+          colorKey="color"
+          nameKey="zone"
+          formatTime={formatTime}
+        />
+
+        {/* Таблица формы активности */}
+        <TableBlock
+          title="Форма активности"
+          data={filteredMovementTypes}
+          months={filteredMonths}
+          nameKey="type"
+          formatTime={formatTime}
+        />
+
+        {/* Таблица параметры дня */}
+        <TableBlock
+          title="Параметры дня"
+          data={filteredDayParameters}
+          months={filteredMonths}
+          nameKey="param"
+          formatTime={(v) => (v > 0 ? v : "-")}
+          isCount
+        />
+
+      </div>
+    </div>
+  );
+}
+
+/* Компонент таблицы */
+function TableBlock({ title, data, months, nameKey, colorKey, formatTime, isCount = false }: any) {
+  return (
+    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg flex justify-center">
+      <div className="overflow-x-auto w-full max-w-[1000px]">
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-[#222] text-gray-400 text-left">
+              <th className="p-3 font-medium sticky left-0 bg-[#222]">{title === "Параметры дня" ? "Параметр" : title === "Форма активности" ? "Тип активности" : "Зона"}</th>
+              {months.map((m: string) => (
+                <th key={m} className="p-3 font-medium text-center">
+                  {m}
+                </th>
+              ))}
+              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item: any) => (
+              <tr key={item[nameKey]} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                  {colorKey && (
+                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: item[colorKey] }}></div>
+                  )}
+                  {item[nameKey]}
+                </td>
+                {item.months.map((val: number, i: number) => (
+                  <td key={i} className="p-3 text-center">
+                    {isCount ? (val > 0 ? val : "-") : val > 0 ? formatTime(val) : "-"}
                   </td>
-                  {z.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Таблица активности */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+                ))}
+                <td className="p-3 text-center font-medium bg-[#1f1f1f]">
+                  {isCount ? (item.total > 0 ? item.total : "-") : formatTime(item.total)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredMovementTypes.map((m) => (
-                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
