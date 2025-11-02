@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
@@ -18,6 +18,7 @@ dayjs.locale("ru");
 
 export default function StatsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
@@ -49,6 +50,12 @@ export default function StatsPage() {
     { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
     { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
+  ];
+
+  const menuItems = [
+    { path: "/daily", label: "Ежедневно", icon: Plus },
+    { path: "/profile", label: "Профиль", icon: LogOut },
+    // при необходимости можно добавить другие пункты
   ];
 
   const formatTime = (minutes: number) => {
@@ -109,7 +116,31 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Panel */}
+        {/* Верхнее меню */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
+
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Panel: выбор отчета и периода */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#1a1a1a] p-4 rounded-2xl shadow-lg mb-6 w-full">
           <div className="flex items-center gap-2">
             <label className="text-gray-400 text-sm">Тип отчета:</label>
