@@ -23,7 +23,9 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 
+dayjs.extend(weekOfYear);
 dayjs.locale("ru");
 
 export default function StatsPage() {
@@ -69,21 +71,27 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // --- Фильтрация месяцев для текущего года ---
-  const computeColumns = () => {
+  // --- Новая логика колонок ---
+  const computeWeekColumns = () => {
     const today = dayjs();
-    if (periodType === "week") {
-      const weeks: string[] = [];
-      for (let i = 1; i <= 52; i++) weeks.push(`Неделя ${i}`);
-      return weeks;
+    const currentWeek = today.week(); // текущая неделя
+    const weeks: string[] = [];
+    for (let i = 1; i <= currentWeek; i++) {
+      weeks.push(`Неделя ${i}`);
     }
-    if (periodType === "month" || periodType === "year") {
-      if (dayjs().year() === 2025) { // текущий год
-        const currentMonth = today.month(); // 0-11
-        return months.slice(0, currentMonth + 1);
-      }
-      return months;
-    }
+    return weeks;
+  };
+
+  const computeMonthColumns = () => {
+    const today = dayjs();
+    const currentMonth = today.month(); // 0-11
+    return months.slice(0, currentMonth + 1);
+  };
+
+  const computeColumns = () => {
+    if (periodType === "week") return computeWeekColumns();
+    if (periodType === "month") return computeMonthColumns();
+    if (periodType === "year") return months;
     if (periodType === "custom") {
       const start = dayjs(dateRange.startDate);
       const end = dayjs(dateRange.endDate);
@@ -265,8 +273,7 @@ export default function StatsPage() {
               </tr>
             </thead>
             <tbody>
-              {[
-                { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
+              {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
                 { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
                 { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
                 { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
@@ -300,25 +307,25 @@ export default function StatsPage() {
             <tbody>
               {filteredEnduranceZones.map((z) => (
                 <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
+                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
+                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
                     {z.zone}
                   </td>
-                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?formatTime(val):"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
+                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Активность */}
+        {/* Формы активности */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип</th>
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
                 {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                 <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
               </tr>
