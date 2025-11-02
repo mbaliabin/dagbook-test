@@ -3,8 +3,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
-  LogOut,
+  Home,
+  BarChart3,
+  ClipboardList,
+  CalendarDays,
   Plus,
+  LogOut,
 } from "lucide-react";
 import {
   BarChart,
@@ -52,12 +56,6 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
-  const menuItems = [
-    { path: "/daily", label: "Ежедневно", icon: Plus },
-    { path: "/profile", label: "Профиль", icon: LogOut },
-    // при необходимости можно добавить другие пункты
-  ];
-
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -80,9 +78,16 @@ export default function StatsPage() {
   }));
 
   const handleLogout = () => {
-    console.log("Выход");
-    // navigate("/login");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
+
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
@@ -120,11 +125,7 @@ export default function StatsPage() {
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              (item.path === "/daily" && location.pathname === "/daily") ||
-              (item.path === "/profile" && location.pathname === "/profile") ||
-              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path);
-
+            const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.path}
@@ -138,45 +139,6 @@ export default function StatsPage() {
               </button>
             );
           })}
-        </div>
-
-        {/* Panel: выбор отчета и периода */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#1a1a1a] p-4 rounded-2xl shadow-lg mb-6 w-full">
-          <div className="flex items-center gap-2">
-            <label className="text-gray-400 text-sm">Тип отчета:</label>
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            >
-              <option>Общий отчет</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 mt-2 md:mt-0">
-            <label className="text-gray-400 text-sm">Период:</label>
-            <input
-              type="date"
-              value={startPeriod}
-              onChange={(e) => setStartPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            />
-            <input
-              type="date"
-              value={endPeriod}
-              onChange={(e) => setEndPeriod(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            />
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="bg-[#0f0f0f] text-gray-200 border border-gray-700 rounded px-3 py-1 text-sm"
-            >
-              <option>2025</option>
-              <option>2024</option>
-              <option>2023</option>
-            </select>
-          </div>
         </div>
 
         {/* TOTALSUM */}
@@ -199,7 +161,7 @@ export default function StatsPage() {
         </div>
 
         {/* Диаграмма */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -241,7 +203,7 @@ export default function StatsPage() {
         </div>
 
         {/* Таблица выносливости */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
@@ -266,9 +228,9 @@ export default function StatsPage() {
           </table>
         </div>
 
-        {/* Таблица форм активности */}
-        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
+        {/* Таблица активности */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Форма активности</h2>
           <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-[#222] text-gray-400 text-left">
@@ -280,9 +242,7 @@ export default function StatsPage() {
             <tbody>
               {filteredMovementTypes.map((m) => (
                 <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
-                    {m.type}
-                  </td>
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
                   {m.months.map((val, i) => (<td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
                 </tr>
