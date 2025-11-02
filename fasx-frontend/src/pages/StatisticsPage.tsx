@@ -25,10 +25,10 @@ export default function StatsPage() {
   const location = useLocation();
 
   const [name] = React.useState("Пользователь");
-  const [reportType, setReportType] = React.useState("Общий отчет");
-  const [startPeriod, setStartPeriod] = React.useState("2025-01-01");
-  const [endPeriod, setEndPeriod] = React.useState("2025-12-31");
-  const [selectedPeriodType, setSelectedPeriodType] = React.useState("Год"); // Неделя, Месяц, Год, Произвольный
+  const [reportType] = React.useState("Общий отчет");
+  const [startPeriod, setStartPeriod] = React.useState(dayjs().startOf("year").format("YYYY-MM-DD"));
+  const [endPeriod, setEndPeriod] = React.useState(dayjs().endOf("year").format("YYYY-MM-DD"));
+  const [selectedPeriodType, setSelectedPeriodType] = React.useState("Год");
 
   const totals = {
     trainingDays: 83,
@@ -60,32 +60,43 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // Вычисляем диапазон месяцев
+  // Функция для обработки кнопок периода
+  const handlePeriodChange = (period: string) => {
+    const today = dayjs();
+    switch(period) {
+      case "Неделя":
+        setStartPeriod(today.startOf('week').format("YYYY-MM-DD"));
+        setEndPeriod(today.endOf('week').format("YYYY-MM-DD"));
+        break;
+      case "Месяц":
+        setStartPeriod(today.startOf('month').format("YYYY-MM-DD"));
+        setEndPeriod(today.endOf('month').format("YYYY-MM-DD"));
+        break;
+      case "Год":
+        setStartPeriod(today.startOf('year').format("YYYY-MM-DD"));
+        setEndPeriod(today.endOf('year').format("YYYY-MM-DD"));
+        break;
+      case "Произвольный":
+        // Здесь можно добавить календарь
+        break;
+    }
+    setSelectedPeriodType(period);
+  };
+
   const startMonth = dayjs(startPeriod).month();
   const endMonth = dayjs(endPeriod).month();
 
-  // Если период меньше месяца — используем одну колонку "Период"
-  const useSingleColumn = dayjs(endPeriod).diff(dayjs(startPeriod), "month") < 1;
-
-  const filteredMonths = useSingleColumn
-    ? ["Период"]
-    : months.slice(startMonth, endMonth + 1);
-
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const zoneMonths = useSingleColumn
-      ? [zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0)]
-      : zone.months.slice(startMonth, endMonth + 1);
-    const total = zoneMonths.reduce((a,b) => a+b, 0);
-    return { ...zone, months: zoneMonths, total };
-  });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const mMonths = useSingleColumn
-      ? [m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0)]
-      : m.months.slice(startMonth, endMonth + 1);
-    const total = mMonths.reduce((a,b) => a+b, 0);
-    return { ...m, months: mMonths, total };
-  });
+  const filteredMonths = months.slice(startMonth, endMonth + 1);
+  const filteredEnduranceZones = enduranceZones.map((zone) => ({
+    ...zone,
+    months: zone.months.slice(startMonth, endMonth + 1),
+    total: zone.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
+  }));
+  const filteredMovementTypes = movementTypes.map((m) => ({
+    ...m,
+    months: m.months.slice(startMonth, endMonth + 1),
+    total: m.months.slice(startMonth, endMonth + 1).reduce((a,b) => a+b, 0),
+  }));
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -117,11 +128,8 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
-            >
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
             <button
@@ -154,28 +162,30 @@ export default function StatsPage() {
         </div>
 
         {/* Выбор отчета и периода */}
-        <div className="flex flex-wrap gap-4 items-center mb-4">
-          <select
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-            className="bg-[#1f1f22] text-white px-3 py-1 rounded text-sm"
-          >
-            <option>Общий отчет</option>
-          </select>
-
-          {periodButtons.map((btn) => (
-            <button
-              key={btn}
-              onClick={() => setSelectedPeriodType(btn)}
-              className={`px-3 py-1 rounded text-sm border ${
-                selectedPeriodType === btn
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "border-gray-600 text-gray-300 hover:bg-[#2a2a2d]"
-              }`}
+        <div className="flex flex-wrap gap-4 items-center mb-6">
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-400">Отчет:</span>
+            <select
+              className="bg-[#1a1a1d] text-white px-3 py-1 rounded border border-gray-600"
+              value={reportType}
+              onChange={() => {}}
             >
-              {btn}
-            </button>
-          ))}
+              <option>Общий отчет</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            {periodButtons.map((btn) => (
+              <button
+                key={btn}
+                onClick={() => handlePeriodChange(btn)}
+                className={`px-3 py-1 rounded border ${
+                  selectedPeriodType === btn ? "bg-blue-600 text-white border-blue-600" : "bg-[#1a1a1d] text-gray-300 border-gray-600 hover:bg-[#2a2a2d]"
+                }`}
+              >
+                {btn}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* TOTALSUM */}
