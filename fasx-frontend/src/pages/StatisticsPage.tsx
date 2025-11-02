@@ -6,8 +6,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Settings, LogOut } from "lucide-react";
 
 export default function StatsPage() {
+  const today = new Date().toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   const totals = {
     trainingDays: 83,
     sessions: 128,
@@ -99,7 +106,33 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Diagram */}
+        {/* === Верхний блок профиля === */}
+        <div className="flex items-center justify-between bg-[#1a1a1a] rounded-2xl p-4 shadow-lg">
+          <div className="flex items-center space-x-4">
+            <img
+              src="/profile-avatar.png"
+              alt="User Avatar"
+              className="w-14 h-14 rounded-full border border-gray-700"
+            />
+            <div>
+              <h2 className="text-lg font-semibold">Иван Петров</h2>
+              <p className="text-sm text-gray-400">{today}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button className="flex items-center px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">
+              <Settings className="w-4 h-4 mr-1" />
+              Настройки
+            </button>
+            <button className="flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm transition">
+              <LogOut className="w-4 h-4 mr-1" />
+              Выйти
+            </button>
+          </div>
+        </div>
+
+        {/* === Диаграмма зон выносливости === */}
         <div className="bg-[#1a1a1a] rounded-2xl p-5 shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">
             Зоны выносливости
@@ -159,7 +192,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* TOTALSUM */}
+        {/* === TOTALSUM === */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
             TOTALSUM
@@ -181,7 +214,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Table: Endurance Zones by Month */}
+        {/* === Таблица выносливости === */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">
             Выносливость (Utholdenhet)
@@ -229,7 +262,7 @@ export default function StatsPage() {
           </table>
         </div>
 
-        {/* Table: Activity Types by Month */}
+        {/* === Таблица активностей === */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
           <h2 className="text-lg font-semibold text-gray-100 mb-4">
             Формы активности (Bevegelsesformer)
