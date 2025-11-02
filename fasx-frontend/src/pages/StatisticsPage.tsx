@@ -9,8 +9,6 @@ import {
   CalendarDays,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -94,9 +92,9 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню оставляем как в твоей старой странице */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
-          {[ // Твои исходные кнопки
+        {/* Верхнее меню */}
+        <div className="flex justify-around bg-[#1a1a1a] border-b border-gray-700 py-2 px-4 rounded-xl">
+          {[
             { label: "Главная", icon: Timer, path: "/daily" },
             { label: "Тренировки", icon: BarChart3, path: "/profile" },
             { label: "Планирование", icon: ClipboardList, path: "/planning" },
@@ -121,27 +119,6 @@ export default function StatsPage() {
               </button>
             );
           })}
-        </div>
-
-        {/* TOTALSUM */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
-            TOTALSUM
-          </h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div>
-              <p className="text-gray-400">Тренировочные дни</p>
-              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Сессий</p>
-              <p className="text-xl text-gray-100">{totals.sessions}</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Время</p>
-              <p className="text-xl text-gray-100">{totals.time}</p>
-            </div>
-          </div>
         </div>
 
         {/* Диаграмма зон выносливости */}
@@ -183,6 +160,27 @@ export default function StatsPage() {
                 ))}
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* TOTALSUM перенесён после диаграммы */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
+            TOTALSUM
+          </h1>
+          <div className="flex flex-wrap gap-10 text-sm mt-3">
+            <div>
+              <p className="text-gray-400">Тренировочные дни</p>
+              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Сессий</p>
+              <p className="text-xl text-gray-100">{totals.sessions}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Время</p>
+              <p className="text-xl text-gray-100">{totals.time}</p>
+            </div>
           </div>
         </div>
 
