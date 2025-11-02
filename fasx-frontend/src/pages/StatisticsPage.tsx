@@ -7,15 +7,9 @@ import {
   BarChart3,
   ClipboardList,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Settings,
   LogOut,
 } from "lucide-react";
-
-import { TenButtons, SingleSelectButton } from "../components/DailyParametersComponents"; // Если вынесем эти кнопки
-import { getUserProfile } from "../api/getUserProfile";
-
 import {
   BarChart,
   Bar,
@@ -30,19 +24,7 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [name, setName] = React.useState("");
-
-  React.useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setName(data.name || "Пользователь");
-      } catch (err) {
-        console.error("Ошибка загрузки профиля:", err);
-      }
-    };
-    fetchProfile();
-  }, []);
+  const [name] = React.useState("Пользователь");
 
   const totals = {
     trainingDays: 83,
@@ -89,7 +71,7 @@ export default function StatsPage() {
               className="w-16 h-16 rounded-full object-cover"
             />
             <div>
-              <h1 className="text-2xl font-bold text-white">{name || "Пользователь"}</h1>
+              <h1 className="text-2xl font-bold text-white">{name}</h1>
               <p className="text-sm text-gray-400">{dayjs().format("D MMMM")}</p>
             </div>
           </div>
@@ -113,12 +95,11 @@ export default function StatsPage() {
         {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {[
-            { label: "Главная", icon: Timer, path: "/daily" },
-            { label: "Тренировки", icon: BarChart3, path: "/profile" },
-            { label: "Планирование", icon: ClipboardList, path: "/planning" },
-            { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+            { label: "Главная", path: "/daily" },
+            { label: "Тренировки", path: "/profile" },
+            { label: "Планирование", path: "/planning" },
+            { label: "Статистика", path: "/statistics" },
           ].map((item) => {
-            const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
               <button
@@ -128,7 +109,6 @@ export default function StatsPage() {
                   isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
                 }`}
               >
-                <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
             );
@@ -157,7 +137,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы и диаграммы */}
+        {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
@@ -199,8 +179,62 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы по зонам и типам */}
-        {/* ... здесь можно вставить твою верстку таблиц, как была ранее ... */}
+        {/* Таблица: Выносливость */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость (Utholdenhet)</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {enduranceZones.map((z) => (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 flex items-center gap-3 sticky left-0 bg-[#1a1a1a]">
+                    <div className="w-5 h-5 rounded-md" style={{ backgroundColor: z.color }}></div>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(z.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Таблица: Формы активности */}
+        <div className="bg-[#1a1a1a] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности (Bevegelsesformer)</h2>
+          <table className="w-full min-w-[900px] text-sm border-collapse">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 text-left">
+                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+                {months.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movementTypes.map((m) => (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val, i) => (
+                    <td key={i} className="p-3 text-center">{val > 0 ? formatTime(val) : "-"}</td>
+                  ))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{formatTime(m.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
       </div>
     </div>
