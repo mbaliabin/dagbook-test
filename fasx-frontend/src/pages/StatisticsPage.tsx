@@ -12,13 +12,6 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
@@ -41,12 +34,6 @@ export default function StatsPage() {
   });
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
-  const totals = {
-    trainingDays: 83,
-    sessions: 128,
-    time: "178:51",
-  };
-
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
   const enduranceZones = [
@@ -65,29 +52,25 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
-  };
-
-  const computeWeekColumns = () => {
-    const today = dayjs();
-    const currentWeek = today.week();
-    const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
-    return weeks;
-  };
-
-  const computeMonthColumns = () => {
-    const today = dayjs();
-    const currentMonth = today.month();
-    return months.slice(0, currentMonth + 1);
-  };
+  const dayParams = [
+    { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
+    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
+    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
+    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
+    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
+  ];
 
   const computeColumns = () => {
-    if (periodType === "week") return computeWeekColumns();
-    if (periodType === "month") return computeMonthColumns();
+    if (periodType === "week") {
+      const today = dayjs();
+      const weeks = [];
+      for (let i = 1; i <= today.week(); i++) weeks.push(`Неделя ${i}`);
+      return weeks;
+    }
+    if (periodType === "month") {
+      const today = dayjs();
+      return months.slice(0, today.month()+1);
+    }
     if (periodType === "year") return months;
     if (periodType === "custom") {
       const start = dayjs(dateRange.startDate);
@@ -105,22 +88,14 @@ export default function StatsPage() {
 
   const filteredMonths = computeColumns();
 
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return {
-      ...zone,
-      months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
+  const filteredEnduranceZones = enduranceZones.map((z) => {
+    const sliceLength = Math.min(z.months.length, filteredMonths.length);
+    return {...z, months: z.months.slice(0, sliceLength), total: z.months.slice(0, sliceLength).reduce((a,b)=>a+b,0)};
   });
 
   const filteredMovementTypes = movementTypes.map((m) => {
     const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return {
-      ...m,
-      months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
+    return {...m, months: m.months.slice(0, sliceLength), total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0)};
   });
 
   const handleLogout = () => {
@@ -149,6 +124,7 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
+
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -166,7 +142,9 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -175,7 +153,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
+        {/* Период и отчёт */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
@@ -214,133 +192,59 @@ export default function StatsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
-            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
-            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
+            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">83</p></div>
+            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">128</p></div>
+            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">178:51</p></div>
           </div>
         </div>
 
-        {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month, i) => {
-                const data: any = { month };
-                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
-                return data;
-              })} barSize={35}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
-                          <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTime(p.value)}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}/>
-                {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Таблицы с фиксированными заголовками */}
-        <div className="space-y-6">
-
-          {/* Параметры дня */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-100 mb-2">Параметры дня</h2>
-            <div className="overflow-x-auto max-h-[300px]">
-              <table className="w-full min-w-[900px] text-sm border-collapse">
-                <thead className="sticky top-0 bg-[#222] z-20">
-                  <tr className="text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Параметр</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+        {/* Объединённая таблица */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">Общие показатели</h2>
+          <table className="min-w-[900px] text-sm border-collapse">
+            <thead className="sticky top-0 bg-[#222] z-20">
+              <tr className="text-gray-400 text-left">
+                <th className="p-3 sticky left-0 bg-[#222] z-30">Показатель</th>
+                {filteredMonths.map(m => <th key={m} className="p-3 text-center font-medium">{m}</th>)}
+                <th className="p-3 text-center font-medium bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Параметры дня */}
+              {dayParams.map(row => {
+                const vals = row.months.slice(0, filteredMonths.length);
+                const total = vals.reduce((a,b)=>a+b,0);
+                return (
+                  <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{row.param}</td>
+                    {vals.map((v,i)=><td key={i} className="p-3 text-center">{v>0?v:"-"}</td>)}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-                    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-                    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-                    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-                    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
-                  ].map((row) => {
-                    const filtered = row.months.slice(0, filteredMonths.length);
-                    const total = filtered.reduce((a,b)=>a+b,0);
-                    return (
-                      <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                        <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                        {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                        <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                )
+              })}
 
-          {/* Выносливость */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-100 mb-2">Выносливость</h2>
-            <div className="overflow-x-auto max-h-[300px]">
-              <table className="w-full min-w-[900px] text-sm border-collapse">
-                <thead className="sticky top-0 bg-[#222] z-20">
-                  <tr className="text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Зона</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEnduranceZones.map((z) => (
-                    <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{z.zone}</td>
-                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              {/* Зоны выносливости */}
+              {filteredEnduranceZones.map(z => (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{backgroundColor:z.color}}></span>
+                    {z.zone}
+                  </td>
+                  {z.months.map((v,i)=><td key={i} className="p-3 text-center">{v}</td>)}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
+                </tr>
+              ))}
 
-          {/* Формы активности */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-100 mb-2">Форма активности</h2>
-            <div className="overflow-x-auto max-h-[300px]">
-              <table className="w-full min-w-[900px] text-sm border-collapse">
-                <thead className="sticky top-0 bg-[#222] z-20">
-                  <tr className="text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Тип</th>
-                    {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                    <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMovementTypes.map((m) => (
-                    <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{m.type}</td>
-                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+              {/* Формы активности */}
+              {filteredMovementTypes.map(m => (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{m.type}</td>
+                  {m.months.map((v,i)=><td key={i} className="p-3 text-center">{v}</td>)}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
       </div>
