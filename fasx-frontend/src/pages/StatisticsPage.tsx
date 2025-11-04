@@ -71,20 +71,17 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // --- Новая логика колонок ---
   const computeWeekColumns = () => {
     const today = dayjs();
-    const currentWeek = today.week(); // текущая неделя
+    const currentWeek = today.week();
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) {
-      weeks.push(`Неделя ${i}`);
-    }
+    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
     return weeks;
   };
 
   const computeMonthColumns = () => {
     const today = dayjs();
-    const currentMonth = today.month(); // 0-11
+    const currentMonth = today.month();
     return months.slice(0, currentMonth + 1);
   };
 
@@ -170,9 +167,7 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -228,7 +223,7 @@ export default function StatsPage() {
 
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-100 sticky top-0 z-30 bg-[#0f0f0f]">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={filteredMonths.map((month, i) => {
@@ -261,86 +256,48 @@ export default function StatsPage() {
         </div>
 
         {/* Таблицы */}
-        {/* Параметры дня */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[{ param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-                { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-                { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-                { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-                { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
-              ].map((row) => {
-                const filtered = row.months.slice(0, filteredMonths.length);
-                const total = filtered.reduce((a,b)=>a+b,0);
-                return (
-                  <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                    {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Выносливость */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEnduranceZones.map((z) => (
-                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
-                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
-                    {z.zone}
-                  </td>
-                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
+        {/** Функция генерации таблицы для DRY */}
+        {[
+          { title: "Параметры дня", rows: [
+            { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
+            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
+            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
+            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
+            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
+          ], firstColName: "Параметр" },
+          { title: "Выносливость", rows: filteredEnduranceZones, firstColName: "Зона" },
+          { title: "Формы активности", rows: filteredMovementTypes, firstColName: "Тип активности" },
+        ].map((table, idx) => (
+          <div key={idx} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto relative">
+            <h2 className="text-lg font-semibold text-gray-100 mb-4 sticky top-0 z-30 bg-[#0f0f0f]">{table.title}</h2>
+            <table className="w-full min-w-[900px] text-sm border-collapse">
+              <thead className="sticky top-10 z-20">
+                <tr className="bg-[#222] text-gray-400 text-left">
+                  <th className="p-3 font-medium sticky left-0 bg-[#222] z-40">{table.firstColName}</th>
+                  {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
+                  <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Формы активности */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-          <table className="w-full min-w-[900px] text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#222] text-gray-400 text-left">
-                <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-                {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMovementTypes.map((m) => (
-                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {table.rows.map((row: any) => {
+                  const values = row.months || filteredMonths.map((_, i) => row.months[i] ?? 0);
+                  const total = values.reduce((a:number,b:number)=>a+b,0);
+                  return (
+                    <tr key={row.param || row.zone || row.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                      <td className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2">
+                        {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}></span>}
+                        {row.param || row.zone || row.type}
+                      </td>
+                      {values.map((val:number,i:number)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ))}
 
       </div>
     </div>
