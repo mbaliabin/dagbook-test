@@ -1,240 +1,193 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import dayjs from "dayjs";
-import "dayjs/locale/ru";
-import weekOfYear from "dayjs/plugin/weekOfYear";
-import {
-  Home,
-  BarChart3,
-  ClipboardList,
-  CalendarDays,
-  Plus,
-  LogOut,
-  Calendar,
-  ChevronDown,
-} from "lucide-react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   BarChart,
   Bar,
   XAxis,
+  YAxis,
   Tooltip,
+  Legend,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
-import { DateRange } from "react-date-range";
-import { ru } from "date-fns/locale";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
 
-// Импортируем ваш компонент
-import TrainingReportDashboard from "../components/StatisticsPage/TrainingReportDashboard"
+interface TrainingData {
+  week: string;
+  styrke: number;
+  kondisjon: number;
+  bevegelighet: number;
+  teknikk: number;
+}
 
-dayjs.extend(weekOfYear);
-dayjs.locale("ru");
+// Генерируем данные за 50 недель для примера
+const initialData: TrainingData[] = Array.from({ length: 50 }, (_, i) => ({
+  week: `W${i + 1} 2025`,
+  styrke: Math.floor(Math.random() * 12),
+  kondisjon: Math.floor(Math.random() * 8),
+  bevegelighet: Math.floor(Math.random() * 5),
+  teknikk: Math.floor(Math.random() * 4),
+}));
 
-export default function StatsPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+const columns: (keyof TrainingData)[] = ["styrke", "kondisjon", "bevegelighet", "teknikk"];
 
-  const [name] = React.useState("Пользователь");
-  const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
-  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
-    startDate: dayjs("2025-01-01").toDate(),
-    endDate: dayjs("2025-12-31").toDate(),
-  });
-  const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
+const TrainingReportDashboard: React.FC = () => {
+  const [fromDate, setFromDate] = useState("2025-01-01");
+  const [toDate, setToDate] = useState("2025-12-31");
 
-  const totals = {
-    trainingDays: 83,
-    sessions: 128,
-    time: "178:51",
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const filteredData = useMemo(() => {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    return initialData.filter((d) => {
+      const weekNumber = parseInt(d.week.match(/\d+/)?.[0] || "0", 10);
+      const weekStart = new Date(2025, 0, 1 + (weekNumber - 1) * 7);
+      return weekStart >= from && weekStart <= to;
+    });
+  }, [fromDate, toDate]);
+
+  const handleGenerateReport = () => {
+    console.log("Generate report for", fromDate, "to", toDate);
   };
 
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const syncScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const tables = document.querySelectorAll(".data-scroll-sync");
+    tables.forEach((t) => {
+      if (t !== e.currentTarget) (t as HTMLElement).scrollLeft = scrollLeft;
+    });
+  };
 
-  const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
-    { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
-    { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
-    { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
+  const totalSum = useMemo(() => {
+    const sum: Record<string, number> = {};
+    columns.forEach((col) => {
+      sum[col] = filteredData.reduce((a, b) => a + b[col], 0);
+    });
+    sum.total = columns.reduce((acc, col) => acc + sum[col], 0);
+    return sum;
+  }, [filteredData]);
+
+  // Для таблиц примера
+  const parametersDay = [
+    { param: "Травма", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "Болезнь", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "Выходной", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 3)) },
+    { param: "Соревнования", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "В пути", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
   ];
 
-  const movementTypes = [
-    { type: "Лыжи / скейтинг", months: [4,5,3,0,0,0,0,0,1,2,3,2] },
-    { type: "Лыжи, классика", months: [3,4,2,0,0,0,0,0,0,1,2,1] },
-    { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
-    { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
-    { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
-  ];
-
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
-  };
-
-  const computeWeekColumns = () => {
-    const today = dayjs();
-    const currentWeek = today.week();
-    const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
-    return weeks;
-  };
-
-  const computeMonthColumns = () => {
-    const today = dayjs();
-    const currentMonth = today.month();
-    return months.slice(0, currentMonth + 1);
-  };
-
-  const computeColumns = () => {
-    if (periodType === "week") return computeWeekColumns();
-    if (periodType === "month") return computeMonthColumns();
-    if (periodType === "year") return months;
-    if (periodType === "custom") {
-      const start = dayjs(dateRange.startDate);
-      const end = dayjs(dateRange.endDate);
-      const result: string[] = [];
-      let current = start.startOf("day");
-      while (current.isBefore(end) || current.isSame(end, "day")) {
-        result.push(current.format("DD MMM"));
-        current = current.add(1, "day");
-      }
-      return result;
-    }
-    return months;
-  };
-
-  const filteredMonths = computeColumns();
-
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return {
-      ...zone,
-      months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return {
-      ...m,
-      months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  const applyDateRange = () => setShowDateRangePicker(false);
-
-  const menuItems = [
-    { label: "Главная", icon: Home, path: "/daily" },
-    { label: "Тренировки", icon: BarChart3, path: "/profile" },
-    { label: "Планирование", icon: ClipboardList, path: "/planning" },
-    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
+  const monthLabels = Array.from({ length: 50 }, (_, i) => `W${i + 1}`);
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
-          <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
-            <div>
-              <h1 className="text-2xl font-bold text-white">{name}</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 flex-wrap">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-            </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
-          </div>
-        </div>
-
-        {/* Верхнее меню */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
-              >
-                <Icon className="w-6 h-6" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Выбор отчета и периода */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
-            <option>Общий отчет</option>
-          </select>
-          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
-          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
-          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
-          <div className="relative">
-            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
-              <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
-            </button>
-            {showDateRangePicker && (
-              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
-                <DateRange
-                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                  showSelectionPreview
-                  moveRangeOnFirstSelection={false}
-                  months={1}
-                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
-                  direction="horizontal"
-                  rangeColors={['#3b82f6']}
-                  className="text-white"
-                  locale={ru}
-                  weekStartsOn={1}
-                />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
-                  <button onClick={applyDateRange} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* TOTALSUM */}
+    <div className="p-6 bg-[#0f0f0f] text-gray-200 min-h-screen space-y-6">
+      {/* Панель фильтров */}
+      <div className="grid grid-cols-5 gap-4 bg-[#1a1a1d] rounded-2xl shadow-lg p-4 border border-gray-700">
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
-            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
-            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-          </div>
+          <label className="block text-sm font-medium mb-1">Type rapport</label>
+          <select className="w-full border border-gray-600 rounded-lg p-2 bg-[#1a1a1d] text-gray-200 text-sm">
+            <option>Totalrapport</option>
+            <option>Ukevis</option>
+          </select>
         </div>
-
-        {/* Training Report Dashboard */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mt-6">
-          <TrainingReportDashboard />
+        <div>
+          <label className="block text-sm font-medium mb-1">Treningsnivå</label>
+          <select className="w-full border border-gray-600 rounded-lg p-2 bg-[#1a1a1d] text-gray-200 text-sm">
+            <option>Alle</option>
+            <option>Nybegynner</option>
+            <option>Viderekommen</option>
+          </select>
         </div>
-
-        {/* Диаграмма и таблицы остаются без изменений */}
-        {/* ... весь остальной код после TOTALSUM ... */}
-
+        <div>
+          <label className="block text-sm font-medium mb-1">Fra</label>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-full border border-gray-600 rounded-lg p-2 bg-[#1a1a1d] text-gray-200 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Til</label>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-full border border-gray-600 rounded-lg p-2 bg-[#1a1a1d] text-gray-200 text-sm"
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm"
+            onClick={handleGenerateReport}
+          >
+            Generer rapport
+          </button>
+        </div>
       </div>
+
+      {/* Диаграмма */}
+      <div className="bg-[#1a1a1d] rounded-2xl shadow-lg p-6 border border-gray-700">
+        <h2 className="text-lg font-semibold mb-4">Treningstimer per uke</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={filteredData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="week" stroke="#888" />
+            <YAxis stroke="#888" />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }}
+            />
+            <Legend wrapperStyle={{ color: "#fff" }} />
+            <Bar dataKey="styrke" stackId="a" fill="#34d399" name="Styrke" />
+            <Bar dataKey="kondisjon" stackId="a" fill="#fbbf24" name="Kondisjon" />
+            <Bar dataKey="bevegelighet" stackId="a" fill="#60a5fa" name="Bevegelighet" />
+            <Bar dataKey="teknikk" stackId="a" fill="#f87171" name="Teknikk" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Таблицы (sticky заголовки и первая колонка) */}
+      {["Параметры дня", "Выносливость", "Формы активности"].map((title, idx) => (
+        <div key={idx} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg border border-gray-700 overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
+          <table className="min-w-[1200px] text-sm border-collapse w-full">
+            <thead className="bg-[#222] text-gray-400">
+              <tr>
+                <th className="p-3 font-medium sticky left-0 bg-[#222] z-10">{title === "Параметры дня" ? "Параметр" : title === "Выносливость" ? "Зона" : "Тип активности"}</th>
+                {monthLabels.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(title === "Параметры дня" ? parametersDay : filteredData).map((row: any, rowIdx) => {
+                const values = title === "Параметры дня" ? row.months : columns.map((col) => row[col]);
+                const total = values.reduce((a: number, b: number) => a + b, 0);
+                return (
+                  <tr key={rowIdx} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a] z-0">{title === "Параметры дня" ? row.param : title === "Выносливость" ? `I${rowIdx+1}` : columns[rowIdx%columns.length]}</td>
+                    {values.map((val: number, i: number) => (
+                      <td key={i} className="p-3 text-center">{val > 0 ? val : "-"}</td>
+                    ))}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                  </tr>
+                );
+              })}
+              {title !== "Параметры дня" && (
+                <tr className="bg-[#222] font-semibold">
+                  <td className="p-3 sticky left-0 bg-[#222] z-0">Sum</td>
+                  {columns.map((col) => (
+                    <td key={col} className="p-3 text-center">{totalSum[col]}</td>
+                  ))}
+                  <td className="p-3 text-center bg-[#1f1f1f]">{totalSum.total}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
     </div>
   );
-}
+};
+
+export default TrainingReportDashboard;
