@@ -198,56 +198,88 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Объединённая таблица */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Общие показатели</h2>
-          <table className="min-w-[900px] text-sm border-collapse">
-            <thead className="sticky top-0 bg-[#222] z-20">
-              <tr className="text-gray-400 text-left">
-                <th className="p-3 sticky left-0 bg-[#222] z-30">Показатель</th>
-                {filteredMonths.map(m => <th key={m} className="p-3 text-center font-medium">{m}</th>)}
-                <th className="p-3 text-center font-medium bg-[#1f1f1f]">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Параметры дня */}
-              {dayParams.map(row => {
-                const vals = row.months.slice(0, filteredMonths.length);
-                const total = vals.reduce((a,b)=>a+b,0);
-                return (
-                  <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
-                    <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{row.param}</td>
-                    {vals.map((v,i)=><td key={i} className="p-3 text-center">{v>0?v:"-"}</td>)}
-                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                  </tr>
-                )
-              })}
+        {/* Обёртка для горизонтального скролла */}
+        <div className="overflow-x-auto">
+          <div className="inline-block min-w-[900px] space-y-6">
 
-              {/* Зоны выносливости */}
-              {filteredEnduranceZones.map(z => (
-                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{backgroundColor:z.color}}></span>
-                    {z.zone}
-                  </td>
-                  {z.months.map((v,i)=><td key={i} className="p-3 text-center">{v}</td>)}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
-                </tr>
-              ))}
+            {/* Таблица Параметры дня */}
+            <Table
+              title="Параметры дня"
+              headers={filteredMonths}
+              rows={dayParams.map(r => ({
+                label: r.param,
+                values: r.months.slice(0, filteredMonths.length),
+                total: r.months.slice(0, filteredMonths.length).reduce((a,b)=>a+b,0)
+              }))}
+            />
 
-              {/* Формы активности */}
-              {filteredMovementTypes.map(m => (
-                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{m.type}</td>
-                  {m.months.map((v,i)=><td key={i} className="p-3 text-center">{v}</td>)}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            {/* Таблица Зоны выносливости */}
+            <Table
+              title="Зоны выносливости"
+              headers={filteredMonths}
+              rows={filteredEnduranceZones.map(z => ({
+                label: z.zone,
+                color: z.color,
+                values: z.months,
+                total: z.total
+              }))}
+            />
+
+            {/* Таблица Формы активности */}
+            <Table
+              title="Формы активности"
+              headers={filteredMonths}
+              rows={filteredMovementTypes.map(m => ({
+                label: m.type,
+                values: m.months,
+                total: m.total
+              }))}
+            />
+          </div>
         </div>
 
       </div>
     </div>
   );
 }
+
+// Компонент таблицы с фиксацией первого столбца и заголовка
+interface TableRow {
+  label: string;
+  color?: string;
+  values: number[];
+  total: number;
+}
+
+interface TableProps {
+  title: string;
+  headers: string[];
+  rows: TableRow[];
+}
+
+const Table: React.FC<TableProps> = ({ title, headers, rows }) => (
+  <div className="bg-[#1a1a1d] p-4 rounded-2xl shadow-lg min-w-[900px]">
+    <h2 className="text-lg font-semibold mb-4 text-gray-100">{title}</h2>
+    <table className="border-collapse text-sm min-w-full">
+      <thead className="sticky top-0 bg-[#222] z-10">
+        <tr className="text-gray-400 text-left">
+          <th className="p-3 sticky left-0 bg-[#222] z-20">Показатель</th>
+          {headers.map(h => <th key={h} className="p-3 text-center font-medium">{h}</th>)}
+          <th className="p-3 text-center font-medium bg-[#1f1f1f]">Всего</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, idx) => (
+          <tr key={idx} className="border-t border-[#2a2a2a] hover:bg-[#252525]/50">
+            <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium flex items-center gap-2">
+              {row.color && <span className="w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
+              {row.label}
+            </td>
+            {row.values.map((v,i)=> <td key={i} className="p-3 text-center">{v>0?v:"-"}</td>)}
+            <td className="p-3 text-center font-medium bg-[#1f1f1f]">{row.total}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
