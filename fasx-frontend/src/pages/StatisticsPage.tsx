@@ -18,7 +18,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 
-// импорт твоих новых компонентов
+// импорт твоих компонентов
 import IntensityChart from "../components/StatisticsPage/IntensityChart";
 import EnduranceAndActivityTables from "../components/StatisticsPage/EnduranceAndActivityTables";
 
@@ -31,11 +31,15 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
+  const [periodType, setPeriodType] = React.useState<
+    "week" | "month" | "year" | "custom"
+  >("year");
+
   const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
     startDate: dayjs("2025-01-01").toDate(),
     endDate: dayjs("2025-12-31").toDate(),
   });
+
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
   const totals = {
@@ -49,7 +53,10 @@ export default function StatsPage() {
     navigate("/login");
   };
 
-  const applyDateRange = () => setShowDateRangePicker(false);
+  const applyDateRange = () => {
+    setPeriodType("custom");
+    setShowDateRangePicker(false);
+  };
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
@@ -114,19 +121,25 @@ export default function StatsPage() {
           </select>
           <button
             onClick={() => setPeriodType("week")}
-            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
+            className={`px-3 py-1 rounded ${
+              periodType === "week" ? "bg-blue-600" : "bg-[#1f1f22]"
+            } text-gray-200 hover:bg-[#2a2a2d]`}
           >
             Неделя
           </button>
           <button
             onClick={() => setPeriodType("month")}
-            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
+            className={`px-3 py-1 rounded ${
+              periodType === "month" ? "bg-blue-600" : "bg-[#1f1f22]"
+            } text-gray-200 hover:bg-[#2a2a2d]`}
           >
             Месяц
           </button>
           <button
             onClick={() => setPeriodType("year")}
-            className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
+            className={`px-3 py-1 rounded ${
+              periodType === "year" ? "bg-blue-600" : "bg-[#1f1f22]"
+            } text-gray-200 hover:bg-[#2a2a2d]`}
           >
             Год
           </button>
@@ -202,10 +215,10 @@ export default function StatsPage() {
         </div>
 
         {/* График зон интенсивности */}
-        <IntensityChart />
+        <IntensityChart periodType={periodType} dateRange={dateRange} />
 
-        {/* Таблицы выносливости и форм активности */}
-        <EnduranceAndActivityTables />
+        {/* Таблицы выносливости и активности */}
+        <EnduranceAndActivityTables periodType={periodType} dateRange={dateRange} />
       </div>
     </div>
   );
