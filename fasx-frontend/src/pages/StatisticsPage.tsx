@@ -65,6 +65,14 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
+  const dayParams = [
+    { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
+    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
+    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
+    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
+    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
+  ];
+
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
@@ -72,11 +80,7 @@ export default function StatsPage() {
   };
 
   const computeColumns = () => {
-    if (periodType === "week") {
-      const weeks: string[] = [];
-      for (let i = 1; i <= dayjs().week(); i++) weeks.push(`Неделя ${i}`);
-      return weeks;
-    }
+    if (periodType === "week") return Array.from({ length: dayjs().week() }, (_, i) => `Неделя ${i+1}`);
     if (periodType === "month") return months.slice(0, dayjs().month() + 1);
     if (periodType === "year") return months;
     if (periodType === "custom") {
@@ -127,51 +131,59 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // --- Таблицы данные ---
-  const dayParams = [
-    { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
-    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
-    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
-    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
-    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
-  ];
+  // --- Синхронный скролл ---
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  // --- Функция рендеринга таблицы с фиксированной первой колонкой ---
-  const renderFixedTable = (title: string, firstColName: string, rows: any[], showColor: boolean = false) => (
+  const syncScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const tables = document.querySelectorAll(".data-scroll-sync");
+    tables.forEach(t => {
+      if (t !== e.currentTarget) (t as HTMLElement).scrollLeft = scrollLeft;
+    });
+  };
+
+  const renderTable = (title: string, firstCol: string, rows: any[]) => (
     <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mb-6">
       <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
-      <div className="relative flex">
-        {/* Левая колонка */}
-        <div className="flex flex-col min-w-[160px] border-r border-gray-700 bg-[#1f1f1f] z-20">
-          <div className="p-3 font-medium text-gray-400 sticky top-0 bg-[#1f1f1f] z-30">{firstColName}</div>
-          {rows.map((row) => (
-            <div key={row.param || row.zone || row.type} className="p-3 border-b border-gray-700 flex items-center gap-2 text-gray-100">
-              {showColor && row.color && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}></span>}
-              {row.param || row.zone || row.type}
-            </div>
-          ))}
-        </div>
-
-        {/* Правая часть с данными */}
-        <div className="overflow-auto flex-1">
-          <div className="flex sticky top-0 z-10 bg-[#1a1a1d] border-b border-gray-700">
-            {filteredMonths.map((m) => (
-              <div key={m} className="p-3 min-w-[60px] text-center font-medium text-gray-400">{m}</div>
+      <div className="flex">
+        {/* Фиксированная первая колонка */}
+        <table className="border-collapse">
+          <thead>
+            <tr>
+              <th className="p-3 bg-[#222] text-gray-400 sticky top-0">{firstCol}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.param || row.zone || row.type}>
+                <td className="p-3 bg-[#1a1a1a] sticky left-0">{row.param ?? row.zone ?? row.type}</td>
+              </tr>
             ))}
-            <div className="p-3 min-w-[60px] text-center font-medium text-gray-400 bg-[#1f1f1f]">Всего</div>
-          </div>
-          {rows.map((row) => {
-            const values = row.months || filteredMonths.map((_, i) => row.months[i] ?? 0);
-            const total = values.reduce((a:number,b:number)=>a+b,0);
-            return (
-              <div key={row.param || row.zone || row.type} className="flex border-b border-gray-700 hover:bg-[#252525]/60 transition">
-                {values.map((val:number,i:number)=>(
-                  <div key={i} className="p-3 min-w-[60px] text-center">{val>0?val:"-"}</div>
-                ))}
-                <div className="p-3 min-w-[60px] text-center font-medium bg-[#1f1f1f]">{total}</div>
-              </div>
-            );
-          })}
+          </tbody>
+        </table>
+
+        {/* Скроллируемая правая часть */}
+        <div className="overflow-x-auto data-scroll-sync flex-1" onScroll={syncScroll} ref={scrollRef}>
+          <table className="border-collapse min-w-[700px] text-center">
+            <thead>
+              <tr className="bg-[#222] text-gray-400 sticky top-0">
+                {filteredMonths.map((m) => <th key={m} className="p-3">{m}</th>)}
+                <th className="p-3 bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const vals = row.months ?? [];
+                const total = vals.reduce((a,b)=>a+b,0);
+                return (
+                  <tr key={row.param || row.zone || row.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    {vals.map((v:number,i:number)=><td key={i} className="p-3">{v>0?v:"-"}</td>)}
+                    <td className="p-3 bg-[#1f1f1f] font-medium">{total}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -207,9 +219,7 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -218,7 +228,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
+        {/* Выбор периода */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
@@ -297,12 +307,14 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы */}
-        {renderFixedTable("Параметры дня", "Параметр", dayParams)}
-        {renderFixedTable("Выносливость", "Зона", filteredEnduranceZones, true)}
-        {renderFixedTable("Формы активности", "Тип активности", filteredMovementTypes)}
+        {/* Таблицы с единым скроллом */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[max-content]">
+            {renderTable("Параметры дня", "Параметр", dayParams)}
+            {renderTable("Выносливость", "Зона", filteredEnduranceZones)}
+            {renderTable("Формы активности", "Тип активности", filteredMovementTypes)}
+          </div>
+        </div>
 
       </div>
     </div>
-  );
-}
