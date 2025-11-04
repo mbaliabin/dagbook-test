@@ -12,7 +12,13 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
@@ -28,15 +34,29 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
-  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
+  const [periodType, setPeriodType] = React.useState<
+    "week" | "month" | "year" | "custom"
+  >("year");
+  const [dateRange, setDateRange] = React.useState<{
+    startDate: Date;
+    endDate: Date;
+  }>({
     startDate: dayjs("2025-01-01").toDate(),
     endDate: dayjs("2025-12-31").toDate(),
   });
-  const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] =
+    React.useState(false);
 
-  const totals = { trainingDays: 83, sessions: 128, time: "178:51" };
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const totals = {
+    trainingDays: 83,
+    sessions: 128,
+    time: "178:51",
+  };
+
+  const months = [
+    "Янв","Фев","Мар","Апр","Май","Июн",
+    "Июл","Авг","Сен","Окт","Ноя","Дек"
+  ];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -60,11 +80,14 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
+  // --- Колонки по периоду ---
   const computeWeekColumns = () => {
     const today = dayjs();
     const currentWeek = today.week();
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
+    for (let i = 1; i <= currentWeek; i++) {
+      weeks.push(`Неделя ${i}`);
+    }
     return weeks;
   };
 
@@ -96,15 +119,27 @@ export default function StatsPage() {
 
   const filteredEnduranceZones = enduranceZones.map((zone) => {
     const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return { ...zone, months: zone.months.slice(0, sliceLength), total: zone.months.slice(0, sliceLength).reduce((a,b)=>a+b,0) };
+    return {
+      ...zone,
+      months: zone.months.slice(0, sliceLength),
+      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+    };
   });
 
   const filteredMovementTypes = movementTypes.map((m) => {
     const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return { ...m, months: m.months.slice(0, sliceLength), total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0) };
+    return {
+      ...m,
+      months: m.months.slice(0, sliceLength),
+      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+    };
   });
 
-  const handleLogout = () => { localStorage.removeItem("token"); navigate("/login"); };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   const applyDateRange = () => setShowDateRangePicker(false);
 
   const menuItems = [
@@ -122,7 +157,9 @@ export default function StatsPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
-            <div><h1 className="text-2xl font-bold text-white">{name}</h1></div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">{name}</h1>
+            </div>
           </div>
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
@@ -141,7 +178,8 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+              >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
@@ -165,9 +203,15 @@ export default function StatsPage() {
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
                   onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                  showSelectionPreview moveRangeOnFirstSelection={false} months={1}
+                  showSelectionPreview
+                  moveRangeOnFirstSelection={false}
+                  months={1}
                   ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
-                  direction="horizontal" rangeColors={['#3b82f6']} className="text-white" locale={ru} weekStartsOn={1}
+                  direction="horizontal"
+                  rangeColors={['#3b82f6']}
+                  className="text-white"
+                  locale={ru}
+                  weekStartsOn={1}
                 />
                 <div className="flex justify-end mt-2 space-x-2">
                   <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
@@ -193,9 +237,9 @@ export default function StatsPage() {
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month,i)=>{
+              <BarChart data={filteredMonths.map((month, i) => {
                 const data: any = { month };
-                filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]??0);
+                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
                 return data;
               })} barSize={35}>
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
@@ -214,28 +258,27 @@ export default function StatsPage() {
                   }
                   return null;
                 }}/>
-                {filteredEnduranceZones.map(z=>(
-                  <Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]} />
+                {filteredEnduranceZones.map((zone) => (
+                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Таблицы с одним скроллом */}
-        <div className="overflow-x-auto mt-6">
-
+        {/* Общий scrollable блок для таблиц */}
+        <div className="overflow-x-auto relative">
           {/* Заголовки таблиц */}
-          <div className="flex gap-10 mb-2">
-            <h2 className="text-lg font-semibold text-gray-100 min-w-[300px]">Параметры дня</h2>
-            <h2 className="text-lg font-semibold text-gray-100 min-w-[300px]">Выносливость</h2>
-            <h2 className="text-lg font-semibold text-gray-100 min-w-[300px]">Формы активности</h2>
+          <div className="flex gap-6 mb-2">
+            <h3 className="text-gray-100 font-semibold min-w-[900px]">Параметры дня</h3>
+            <h3 className="text-gray-100 font-semibold min-w-[900px]">Выносливость</h3>
+            <h3 className="text-gray-100 font-semibold min-w-[900px]">Формы активности</h3>
           </div>
 
-          {/* Таблицы */}
-          <div className="flex gap-10 min-w-max">
+          <div className="flex gap-6 min-w-max">
+
             {/* Параметры дня */}
-            <table className="w-full min-w-[900px] text-sm border-collapse bg-[#1a1a1d]">
+            <table className="w-[900px] text-sm border-collapse bg-[#1a1a1d]">
               <thead>
                 <tr className="bg-[#222] text-gray-400 text-left">
                   <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
@@ -264,7 +307,7 @@ export default function StatsPage() {
             </table>
 
             {/* Выносливость */}
-            <table className="w-full min-w-[900px] text-sm border-collapse bg-[#1a1a1d]">
+            <table className="w-[900px] text-sm border-collapse bg-[#1a1a1d]">
               <thead>
                 <tr className="bg-[#222] text-gray-400 text-left">
                   <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
@@ -273,21 +316,18 @@ export default function StatsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredEnduranceZones.map((z)=>(
-                  <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
-                      <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
-                      {z.zone}
-                    </td>
-                    {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
+                {filteredEnduranceZones.map((row)=>(
+                  <tr key={row.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.zone}</td>
+                    {row.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {/* Формы активности */}
-            <table className="w-full min-w-[900px] text-sm border-collapse bg-[#1a1a1d]">
+            <table className="w-[900px] text-sm border-collapse bg-[#1a1a1d]">
               <thead>
                 <tr className="bg-[#222] text-gray-400 text-left">
                   <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип</th>
@@ -296,11 +336,11 @@ export default function StatsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredMovementTypes.map((m)=>(
-                  <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                    {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
+                {filteredMovementTypes.map((row)=>(
+                  <tr key={row.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.type}</td>
+                    {row.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
