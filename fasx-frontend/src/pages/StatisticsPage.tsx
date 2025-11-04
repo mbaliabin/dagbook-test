@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -23,7 +24,6 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -133,7 +133,6 @@ export default function StatsPage() {
 
   // --- Синхронный скролл ---
   const scrollRef = React.useRef<HTMLDivElement>(null);
-
   const syncScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     const tables = document.querySelectorAll(".data-scroll-sync");
@@ -318,3 +317,5 @@ export default function StatsPage() {
 
       </div>
     </div>
+  );
+}
