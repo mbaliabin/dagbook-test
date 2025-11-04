@@ -12,13 +12,7 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
@@ -83,7 +77,7 @@ export default function StatsPage() {
 
   const computeMonthColumns = () => {
     const today = dayjs();
-    const currentMonth = today.month();
+    const currentMonth = today.month(); // 0-11
     return months.slice(0, currentMonth + 1);
   };
 
@@ -169,9 +163,7 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -225,7 +217,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Диаграмма */}
+        {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
@@ -259,7 +251,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Общий скролл таблиц */}
+        {/* Все таблицы с одним скроллом */}
         <div className="overflow-x-auto">
           {/* Параметры дня */}
           <h2 className="text-lg font-semibold text-gray-100 mb-2">Параметры дня</h2>
@@ -282,7 +274,7 @@ export default function StatsPage() {
                 const total = filtered.reduce((a,b)=>a+b,0);
                 return (
                   <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    <td className="p-3 sticky left-0 bg-[#1a1a1d]">{row.param}</td>
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
                     {filtered.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
                     <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
                   </tr>
@@ -304,11 +296,11 @@ export default function StatsPage() {
             <tbody>
               {filteredEnduranceZones.map((z) => (
                 <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1d]">
+                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
                     <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
                     {z.zone}
                   </td>
-                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
                 </tr>
               ))}
@@ -328,8 +320,8 @@ export default function StatsPage() {
             <tbody>
               {filteredMovementTypes.map((m) => (
                 <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1d]">{m.type}</td>
-                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
                   <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
                 </tr>
               ))}
