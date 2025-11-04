@@ -71,23 +71,13 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  const computeWeekColumns = () => {
-    const today = dayjs();
-    const currentWeek = today.week();
-    const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
-    return weeks;
-  };
-
-  const computeMonthColumns = () => {
-    const today = dayjs();
-    const currentMonth = today.month();
-    return months.slice(0, currentMonth + 1);
-  };
-
   const computeColumns = () => {
-    if (periodType === "week") return computeWeekColumns();
-    if (periodType === "month") return computeMonthColumns();
+    if (periodType === "week") {
+      const weeks: string[] = [];
+      for (let i = 1; i <= dayjs().week(); i++) weeks.push(`Неделя ${i}`);
+      return weeks;
+    }
+    if (periodType === "month") return months.slice(0, dayjs().month() + 1);
     if (periodType === "year") return months;
     if (periodType === "custom") {
       const start = dayjs(dateRange.startDate);
@@ -137,6 +127,56 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
+  // --- Таблицы данные ---
+  const dayParams = [
+    { param: "Травма", months: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0] },
+    { param: "Болезнь", months: [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
+    { param: "Выходной", months: [2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 1] },
+    { param: "Соревнования", months: [0, 1, 0, 2, 1, 1, 2, 1, 1, 0, 0, 0] },
+    { param: "В пути", months: [1, 0, 1, 0, 1, 2, 1, 1, 0, 1, 1, 0] },
+  ];
+
+  // --- Функция рендеринга таблицы с фиксированной первой колонкой ---
+  const renderFixedTable = (title: string, firstColName: string, rows: any[], showColor: boolean = false) => (
+    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mb-6">
+      <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
+      <div className="relative flex">
+        {/* Левая колонка */}
+        <div className="flex flex-col min-w-[160px] border-r border-gray-700 bg-[#1f1f1f] z-20">
+          <div className="p-3 font-medium text-gray-400 sticky top-0 bg-[#1f1f1f] z-30">{firstColName}</div>
+          {rows.map((row) => (
+            <div key={row.param || row.zone || row.type} className="p-3 border-b border-gray-700 flex items-center gap-2 text-gray-100">
+              {showColor && row.color && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}></span>}
+              {row.param || row.zone || row.type}
+            </div>
+          ))}
+        </div>
+
+        {/* Правая часть с данными */}
+        <div className="overflow-auto flex-1">
+          <div className="flex sticky top-0 z-10 bg-[#1a1a1d] border-b border-gray-700">
+            {filteredMonths.map((m) => (
+              <div key={m} className="p-3 min-w-[60px] text-center font-medium text-gray-400">{m}</div>
+            ))}
+            <div className="p-3 min-w-[60px] text-center font-medium text-gray-400 bg-[#1f1f1f]">Всего</div>
+          </div>
+          {rows.map((row) => {
+            const values = row.months || filteredMonths.map((_, i) => row.months[i] ?? 0);
+            const total = values.reduce((a:number,b:number)=>a+b,0);
+            return (
+              <div key={row.param || row.zone || row.type} className="flex border-b border-gray-700 hover:bg-[#252525]/60 transition">
+                {values.map((val:number,i:number)=>(
+                  <div key={i} className="p-3 min-w-[60px] text-center">{val>0?val:"-"}</div>
+                ))}
+                <div className="p-3 min-w-[60px] text-center font-medium bg-[#1f1f1f]">{total}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
@@ -167,7 +207,9 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-col items-center text-sm transition-colors ${
+                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+                }`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -223,7 +265,7 @@ export default function StatsPage() {
 
         {/* Диаграмма */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100 sticky top-0 z-30 bg-[#0f0f0f]">Зоны выносливости</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={filteredMonths.map((month, i) => {
@@ -256,48 +298,9 @@ export default function StatsPage() {
         </div>
 
         {/* Таблицы */}
-
-        {/** Функция генерации таблицы для DRY */}
-        {[
-          { title: "Параметры дня", rows: [
-            { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-          ], firstColName: "Параметр" },
-          { title: "Выносливость", rows: filteredEnduranceZones, firstColName: "Зона" },
-          { title: "Формы активности", rows: filteredMovementTypes, firstColName: "Тип активности" },
-        ].map((table, idx) => (
-          <div key={idx} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto relative">
-            <h2 className="text-lg font-semibold text-gray-100 mb-4 sticky top-0 z-30 bg-[#0f0f0f]">{table.title}</h2>
-            <table className="w-full min-w-[900px] text-sm border-collapse">
-              <thead className="sticky top-10 z-20">
-                <tr className="bg-[#222] text-gray-400 text-left">
-                  <th className="p-3 font-medium sticky left-0 bg-[#222] z-40">{table.firstColName}</th>
-                  {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
-                  <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-                </tr>
-              </thead>
-              <tbody>
-                {table.rows.map((row: any) => {
-                  const values = row.months || filteredMonths.map((_, i) => row.months[i] ?? 0);
-                  const total = values.reduce((a:number,b:number)=>a+b,0);
-                  return (
-                    <tr key={row.param || row.zone || row.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2">
-                        {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}></span>}
-                        {row.param || row.zone || row.type}
-                      </td>
-                      {values.map((val:number,i:number)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                      <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ))}
+        {renderFixedTable("Параметры дня", "Параметр", dayParams)}
+        {renderFixedTable("Выносливость", "Зона", filteredEnduranceZones, true)}
+        {renderFixedTable("Формы активности", "Тип активности", filteredMovementTypes)}
 
       </div>
     </div>
