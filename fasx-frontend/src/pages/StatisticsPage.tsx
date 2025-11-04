@@ -19,6 +19,8 @@ import {
   XAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
+  Legend,
 } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
@@ -141,6 +143,37 @@ export default function StatsPage() {
     });
   };
 
+  // --- Диаграмма тренировок (TrainingReportDashboard встроена) ---
+  const trainingData = [
+    { week: "W1 2025", styrke: 8, kondisjon: 4, bevegelighet: 2, teknikk: 1 },
+    { week: "W2 2025", styrke: 7, kondisjon: 6, bevegelighet: 2, teknikk: 2 },
+    { week: "W3 2025", styrke: 10, kondisjon: 5, bevegelighet: 3, teknikk: 1 },
+    { week: "W4 2025", styrke: 6, kondisjon: 3, bevegelighet: 1, teknikk: 2 },
+    { week: "W5 2025", styrke: 11, kondisjon: 7, bevegelighet: 3, teknikk: 1 },
+  ];
+
+  const renderTrainingChart = () => (
+    <div className="bg-[#1a1a1d] rounded-2xl shadow-lg p-6 border border-gray-700 mb-6">
+      <h2 className="text-lg font-semibold mb-4 text-gray-100">Treningstimer per uke</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={trainingData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis dataKey="week" stroke="#888" />
+          <YAxis stroke="#888" />
+          <Tooltip
+            contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }}
+          />
+          <Legend wrapperStyle={{ color: "#fff" }} />
+          <Bar dataKey="styrke" stackId="a" fill="#34d399" name="Styrke" />
+          <Bar dataKey="kondisjon" stackId="a" fill="#fbbf24" name="Kondisjon" />
+          <Bar dataKey="bevegelighet" stackId="a" fill="#60a5fa" name="Bevegelighet" />
+          <Bar dataKey="teknikk" stackId="a" fill="#f87171" name="Teknikk" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  // --- Таблицы ---
   const renderTable = (title: string, firstCol: string, rows: any[]) => (
     <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mb-6">
       <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
@@ -272,7 +305,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Диаграмма */}
+        {/* Диаграмма endurance zones */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
@@ -305,6 +338,9 @@ export default function StatsPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* TrainingReportDashboard встроенный */}
+        {renderTrainingChart()}
 
         {/* Таблицы с единым скроллом */}
         <div className="overflow-x-auto">
