@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import dayjs from "dayjs";
 
 interface TrainingData {
   week: string;
@@ -19,18 +18,14 @@ interface TrainingData {
   teknikk: number;
 }
 
-// Генерация большого количества недель для теста скролла
-const generateWeeks = (year: number, totalWeeks: number): TrainingData[] => {
-  return Array.from({ length: totalWeeks }, (_, i) => ({
-    week: `W${i + 1} ${year}`,
-    styrke: Math.floor(Math.random() * 10),
-    kondisjon: Math.floor(Math.random() * 10),
-    bevegelighet: Math.floor(Math.random() * 5),
-    teknikk: Math.floor(Math.random() * 3),
-  }));
-};
-
-const initialData = generateWeeks(2025, 50); // 50 недель
+// Генерируем данные за 50 недель для примера
+const initialData: TrainingData[] = Array.from({ length: 50 }, (_, i) => ({
+  week: `W${i + 1} 2025`,
+  styrke: Math.floor(Math.random() * 12),
+  kondisjon: Math.floor(Math.random() * 8),
+  bevegelighet: Math.floor(Math.random() * 5),
+  teknikk: Math.floor(Math.random() * 4),
+}));
 
 const columns: (keyof TrainingData)[] = ["styrke", "kondisjon", "bevegelighet", "teknikk"];
 
@@ -50,14 +45,9 @@ const TrainingReportDashboard: React.FC = () => {
     });
   }, [fromDate, toDate]);
 
-  const totalSum = useMemo(() => {
-    const sum: Record<string, number> = {};
-    columns.forEach((col) => {
-      sum[col] = filteredData.reduce((a, b) => a + b[col], 0);
-    });
-    sum.total = columns.reduce((acc, col) => acc + sum[col], 0);
-    return sum;
-  }, [filteredData]);
+  const handleGenerateReport = () => {
+    console.log("Generate report for", fromDate, "to", toDate);
+  };
 
   const syncScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
     const scrollLeft = e.currentTarget.scrollLeft;
@@ -67,23 +57,25 @@ const TrainingReportDashboard: React.FC = () => {
     });
   };
 
-  const monthLabels = filteredData.map((d) => d.week);
+  const totalSum = useMemo(() => {
+    const sum: Record<string, number> = {};
+    columns.forEach((col) => {
+      sum[col] = filteredData.reduce((a, b) => a + b[col], 0);
+    });
+    sum.total = columns.reduce((acc, col) => acc + sum[col], 0);
+    return sum;
+  }, [filteredData]);
 
-  const parametersDay = Array.from({ length: 15 }, (_, i) => ({
-    param: `Параметр ${i + 1}`,
-    months: filteredData.map(() => Math.floor(Math.random() * 3)),
-  }));
+  // Для таблиц примера
+  const parametersDay = [
+    { param: "Травма", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "Болезнь", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "Выходной", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 3)) },
+    { param: "Соревнования", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+    { param: "В пути", months: Array(50).fill(0).map(() => Math.floor(Math.random() * 2)) },
+  ];
 
-  const enduranceZones = Array.from({ length: 6 }, (_, i) => ({
-    zone: `I${i + 1}`,
-    color: ["#4ade80", "#22d3ee", "#facc15", "#fb923c", "#ef4444", "#a78bfa"][i],
-    months: filteredData.map(() => Math.floor(Math.random() * 5)),
-  }));
-
-  const movementTypes = Array.from({ length: 8 }, (_, i) => ({
-    type: `Тип ${i + 1}`,
-    months: filteredData.map(() => Math.floor(Math.random() * 4)),
-  }));
+  const monthLabels = Array.from({ length: 50 }, (_, i) => `W${i + 1}`);
 
   return (
     <div className="p-6 bg-[#0f0f0f] text-gray-200 min-h-screen space-y-6">
@@ -125,7 +117,7 @@ const TrainingReportDashboard: React.FC = () => {
         <div className="flex items-end">
           <button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm"
-            onClick={() => console.log("Generate report")}
+            onClick={handleGenerateReport}
           >
             Generer rapport
           </button>
@@ -140,7 +132,9 @@ const TrainingReportDashboard: React.FC = () => {
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
             <XAxis dataKey="week" stroke="#888" />
             <YAxis stroke="#888" />
-            <Tooltip contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }}
+            />
             <Legend wrapperStyle={{ color: "#fff" }} />
             <Bar dataKey="styrke" stackId="a" fill="#34d399" name="Styrke" />
             <Bar dataKey="kondisjon" stackId="a" fill="#fbbf24" name="Kondisjon" />
@@ -150,87 +144,48 @@ const TrainingReportDashboard: React.FC = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Таблицы */}
-      {/* Параметры дня */}
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll} ref={scrollRef}>
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-        <table className="w-full min-w-[1200px] text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#222] text-gray-400 text-left">
-              <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
-              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
-              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parametersDay.map((row) => {
-              const total = row.months.reduce((a,b)=>a+b,0);
-              return (
-                <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
-                  {row.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+      {/* Таблицы (sticky заголовки и первая колонка) */}
+      {["Параметры дня", "Выносливость", "Формы активности"].map((title, idx) => (
+        <div key={idx} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg border border-gray-700 overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
+          <table className="min-w-[1200px] text-sm border-collapse w-full">
+            <thead className="bg-[#222] text-gray-400">
+              <tr>
+                <th className="p-3 font-medium sticky left-0 bg-[#222] z-10">{title === "Параметры дня" ? "Параметр" : title === "Выносливость" ? "Зона" : "Тип активности"}</th>
+                {monthLabels.map((m) => (
+                  <th key={m} className="p-3 font-medium text-center">{m}</th>
+                ))}
+                <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(title === "Параметры дня" ? parametersDay : filteredData).map((row: any, rowIdx) => {
+                const values = title === "Параметры дня" ? row.months : columns.map((col) => row[col]);
+                const total = values.reduce((a: number, b: number) => a + b, 0);
+                return (
+                  <tr key={rowIdx} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                    <td className="p-3 sticky left-0 bg-[#1a1a1a] z-0">{title === "Параметры дня" ? row.param : title === "Выносливость" ? `I${rowIdx+1}` : columns[rowIdx%columns.length]}</td>
+                    {values.map((val: number, i: number) => (
+                      <td key={i} className="p-3 text-center">{val > 0 ? val : "-"}</td>
+                    ))}
+                    <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                  </tr>
+                );
+              })}
+              {title !== "Параметры дня" && (
+                <tr className="bg-[#222] font-semibold">
+                  <td className="p-3 sticky left-0 bg-[#222] z-0">Sum</td>
+                  {columns.map((col) => (
+                    <td key={col} className="p-3 text-center">{totalSum[col]}</td>
+                  ))}
+                  <td className="p-3 text-center bg-[#1f1f1f]">{totalSum.total}</td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ))}
 
-      {/* Выносливость */}
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-        <table className="w-full min-w-[1200px] text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#222] text-gray-400 text-left">
-              <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
-              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
-              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-            </tr>
-          </thead>
-          <tbody>
-            {enduranceZones.map((z) => {
-              const total = z.months.reduce((a,b)=>a+b,0);
-              return (
-                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
-                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
-                    {z.zone}
-                  </td>
-                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Формы активности */}
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-        <table className="w-full min-w-[1200px] text-sm border-collapse">
-          <thead>
-            <tr className="bg-[#222] text-gray-400 text-left">
-              <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
-              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
-              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movementTypes.map((m) => {
-              const total = m.months.reduce((a,b)=>a+b,0);
-              return (
-                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
-                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
