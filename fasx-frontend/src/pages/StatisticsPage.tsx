@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -31,6 +31,7 @@ dayjs.locale("ru");
 export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
@@ -54,7 +55,7 @@ export default function StatsPage() {
     { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
     { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
     { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,0,0] },
+    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
   ];
 
   const movementTypes = [
@@ -107,20 +108,12 @@ export default function StatsPage() {
 
   const filteredEnduranceZones = enduranceZones.map((zone) => {
     const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return {
-      ...zone,
-      months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
+    return { ...zone, months: zone.months.slice(0, sliceLength), total: zone.months.slice(0, sliceLength).reduce((a,b)=>a+b,0) };
   });
 
   const filteredMovementTypes = movementTypes.map((m) => {
     const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return {
-      ...m,
-      months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
+    return { ...m, months: m.months.slice(0, sliceLength), total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0) };
   });
 
   const handleLogout = () => {
@@ -137,21 +130,15 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // --- Ссылка для синхронного скролла ---
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-
+  // Синхронный скролл (если нужно)
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    if (scrollRef.current && scrollRef.current !== target) {
-      scrollRef.current.scrollLeft = target.scrollLeft;
-    }
+    // можно добавить синхронизацию всех таблиц, если потребуется
   };
-
-  const tableWrapperStyle = "flex border-t border-[#2a2a2a]";
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -178,15 +165,48 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
             );
           })}
+        </div>
+
+        {/* Выбор отчета и периода */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
+            <option>Общий отчет</option>
+          </select>
+          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+          <div className="relative">
+            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+              <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+            {showDateRangePicker && (
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                <DateRange
+                  onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                  showSelectionPreview
+                  moveRangeOnFirstSelection={false}
+                  months={1}
+                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
+                  direction="horizontal"
+                  rangeColors={['#3b82f6']}
+                  className="text-white"
+                  locale={ru}
+                  weekStartsOn={1}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
+                  <button onClick={applyDateRange} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* TOTALSUM */}
@@ -233,7 +253,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы с фиксированной первой колонкой и синхронным скроллом */}
+        {/* Таблицы с фиксированной первой колонкой */}
         {[
           { title: "Параметры дня", data: [
             { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
@@ -250,7 +270,9 @@ export default function StatsPage() {
             <div className="flex w-full border border-[#2a2a2a] overflow-hidden">
               {/* Первая колонка */}
               <div className="flex-shrink-0 bg-[#1a1a1a] border-r border-[#2a2a2a]">
-                <div className="font-medium p-3 sticky top-0 bg-[#222] border-b border-[#2a2a2a]">{table.firstKey === "param" ? "Параметр" : table.firstKey === "zone" ? "Зона" : "Тип активности"}</div>
+                <div className="font-medium p-3 sticky top-0 bg-[#222] border-b border-[#2a2a2a]">
+                  {table.firstKey === "param" ? "Параметр" : table.firstKey === "zone" ? "Зона" : "Тип активности"}
+                </div>
                 {table.data.map((row:any) => (
                   <div key={row[table.firstKey]} className="p-3 border-b border-[#2a2a2a]">{row[table.firstKey]}</div>
                 ))}
@@ -272,7 +294,9 @@ export default function StatsPage() {
                       {row.months.map((val:number,j:number)=>(
                         <div key={j} className="flex-1 p-3 text-center">{val>0?val:"-"}</div>
                       ))}
-                      <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f]">{row.total ?? row.months.reduce((a:number,b:number)=>a+b,0)}</div>
+                      <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f]">
+                        {row.total ?? row.months.reduce((a:number,b:number)=>a+b,0)}
+                      </div>
                     </div>
                   ))}
                 </div>
