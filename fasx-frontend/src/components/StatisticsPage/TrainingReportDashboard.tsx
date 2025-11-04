@@ -19,13 +19,18 @@ interface TrainingData {
   teknikk: number;
 }
 
-const initialData: TrainingData[] = [
-  { week: "W1 2025", styrke: 8, kondisjon: 4, bevegelighet: 2, teknikk: 1 },
-  { week: "W2 2025", styrke: 7, kondisjon: 6, bevegelighet: 2, teknikk: 2 },
-  { week: "W3 2025", styrke: 10, kondisjon: 5, bevegelighet: 3, teknikk: 1 },
-  { week: "W4 2025", styrke: 6, kondisjon: 3, bevegelighet: 1, teknikk: 2 },
-  { week: "W5 2025", styrke: 11, kondisjon: 7, bevegelighet: 3, teknikk: 1 },
-];
+// Генерация большого количества недель для теста скролла
+const generateWeeks = (year: number, totalWeeks: number): TrainingData[] => {
+  return Array.from({ length: totalWeeks }, (_, i) => ({
+    week: `W${i + 1} ${year}`,
+    styrke: Math.floor(Math.random() * 10),
+    kondisjon: Math.floor(Math.random() * 10),
+    bevegelighet: Math.floor(Math.random() * 5),
+    teknikk: Math.floor(Math.random() * 3),
+  }));
+};
+
+const initialData = generateWeeks(2025, 20); // 20 недель для примера
 
 const columns: (keyof TrainingData)[] = ["styrke", "kondisjon", "bevegelighet", "teknikk"];
 
@@ -35,6 +40,7 @@ const TrainingReportDashboard: React.FC = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Фильтрация данных по выбранному диапазону
   const filteredData = useMemo(() => {
     const from = new Date(fromDate);
     const to = new Date(toDate);
@@ -62,32 +68,24 @@ const TrainingReportDashboard: React.FC = () => {
     });
   };
 
-  // --- Новые таблицы ---
-  const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: [10, 8, 12, 9, 11] },
-    { zone: "I2", color: "#22d3ee", months: [5, 6, 7, 3, 4] },
-    { zone: "I3", color: "#facc15", months: [2, 1, 1, 1, 2] },
-    { zone: "I4", color: "#fb923c", months: [1, 1, 2, 0, 1] },
-    { zone: "I5", color: "#ef4444", months: [0, 0, 1, 0, 0] },
-  ];
+  // --- Таблицы FASX ---
+  const monthLabels = filteredData.map((d) => d.week);
 
-  const movementTypes = [
-    { type: "Лыжи / скейтинг", months: [4, 5, 3, 0, 0] },
-    { type: "Лыжи, классика", months: [3, 4, 2, 0, 0] },
-    { type: "Роллеры, классика", months: [0, 0, 3, 5, 6] },
-    { type: "Роллеры, скейтинг", months: [0, 0, 2, 6, 7] },
-    { type: "Велосипед", months: [0, 0, 1, 2, 3] },
-  ];
+  const parametersDay = Array.from({ length: 15 }, (_, i) => ({
+    param: `Параметр ${i + 1}`,
+    months: filteredData.map(() => Math.floor(Math.random() * 3)),
+  }));
 
-  const parametersDay = [
-    { param: "Травма", months: [0, 1, 0, 0, 0] },
-    { param: "Болезнь", months: [1, 0, 0, 0, 0] },
-    { param: "Выходной", months: [2, 3, 1, 2, 1] },
-    { param: "Соревнования", months: [0, 1, 0, 2, 1] },
-    { param: "В пути", months: [1, 0, 1, 0, 1] },
-  ];
+  const enduranceZones = Array.from({ length: 6 }, (_, i) => ({
+    zone: `I${i + 1}`,
+    color: ["#4ade80", "#22d3ee", "#facc15", "#fb923c", "#ef4444", "#a78bfa"][i],
+    months: filteredData.map(() => Math.floor(Math.random() * 5)),
+  }));
 
-  const monthLabels = ["W1", "W2", "W3", "W4", "W5"];
+  const movementTypes = Array.from({ length: 8 }, (_, i) => ({
+    type: `Тип ${i + 1}`,
+    months: filteredData.map(() => Math.floor(Math.random() * 4)),
+  }));
 
   return (
     <div className="p-6 bg-[#0f0f0f] text-gray-200 min-h-screen space-y-6">
@@ -158,7 +156,7 @@ const TrainingReportDashboard: React.FC = () => {
       {/** Параметры дня */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll} ref={scrollRef}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-        <table className="w-full min-w-[700px] text-sm border-collapse">
+        <table className="w-full min-w-[900px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
@@ -184,7 +182,7 @@ const TrainingReportDashboard: React.FC = () => {
       {/** Выносливость */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-        <table className="w-full min-w-[700px] text-sm border-collapse">
+        <table className="w-full min-w-[900px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
@@ -213,7 +211,7 @@ const TrainingReportDashboard: React.FC = () => {
       {/** Формы активности */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-        <table className="w-full min-w-[700px] text-sm border-collapse">
+        <table className="w-full min-w-[900px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
