@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import dayjs from "dayjs";
 
 interface TrainingData {
   week: string;
@@ -44,9 +45,14 @@ const TrainingReportDashboard: React.FC = () => {
     });
   }, [fromDate, toDate]);
 
-  const handleGenerateReport = () => {
-    console.log("Generate report for", fromDate, "to", toDate);
-  };
+  const totalSum = useMemo(() => {
+    const sum: Record<string, number> = {};
+    columns.forEach((col) => {
+      sum[col] = filteredData.reduce((a, b) => a + b[col], 0);
+    });
+    sum.total = columns.reduce((acc, col) => acc + sum[col], 0);
+    return sum;
+  }, [filteredData]);
 
   const syncScroll = (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
     const scrollLeft = e.currentTarget.scrollLeft;
@@ -56,14 +62,32 @@ const TrainingReportDashboard: React.FC = () => {
     });
   };
 
-  const totalSum = useMemo(() => {
-    const sum: Record<string, number> = {};
-    columns.forEach((col) => {
-      sum[col] = filteredData.reduce((a, b) => a + b[col], 0);
-    });
-    sum.total = columns.reduce((acc, col) => acc + sum[col], 0);
-    return sum;
-  }, [filteredData]);
+  // --- Новые таблицы ---
+  const enduranceZones = [
+    { zone: "I1", color: "#4ade80", months: [10, 8, 12, 9, 11] },
+    { zone: "I2", color: "#22d3ee", months: [5, 6, 7, 3, 4] },
+    { zone: "I3", color: "#facc15", months: [2, 1, 1, 1, 2] },
+    { zone: "I4", color: "#fb923c", months: [1, 1, 2, 0, 1] },
+    { zone: "I5", color: "#ef4444", months: [0, 0, 1, 0, 0] },
+  ];
+
+  const movementTypes = [
+    { type: "Лыжи / скейтинг", months: [4, 5, 3, 0, 0] },
+    { type: "Лыжи, классика", months: [3, 4, 2, 0, 0] },
+    { type: "Роллеры, классика", months: [0, 0, 3, 5, 6] },
+    { type: "Роллеры, скейтинг", months: [0, 0, 2, 6, 7] },
+    { type: "Велосипед", months: [0, 0, 1, 2, 3] },
+  ];
+
+  const parametersDay = [
+    { param: "Травма", months: [0, 1, 0, 0, 0] },
+    { param: "Болезнь", months: [1, 0, 0, 0, 0] },
+    { param: "Выходной", months: [2, 3, 1, 2, 1] },
+    { param: "Соревнования", months: [0, 1, 0, 2, 1] },
+    { param: "В пути", months: [1, 0, 1, 0, 1] },
+  ];
+
+  const monthLabels = ["W1", "W2", "W3", "W4", "W5"];
 
   return (
     <div className="p-6 bg-[#0f0f0f] text-gray-200 min-h-screen space-y-6">
@@ -105,7 +129,7 @@ const TrainingReportDashboard: React.FC = () => {
         <div className="flex items-end">
           <button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm"
-            onClick={handleGenerateReport}
+            onClick={() => console.log("Generate report")}
           >
             Generer rapport
           </button>
@@ -120,9 +144,7 @@ const TrainingReportDashboard: React.FC = () => {
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
             <XAxis dataKey="week" stroke="#888" />
             <YAxis stroke="#888" />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }}
-            />
+            <Tooltip contentStyle={{ backgroundColor: "#1f1f1f", borderColor: "#333", color: "#fff" }} />
             <Legend wrapperStyle={{ color: "#fff" }} />
             <Bar dataKey="styrke" stackId="a" fill="#34d399" name="Styrke" />
             <Bar dataKey="kondisjon" stackId="a" fill="#fbbf24" name="Kondisjon" />
@@ -132,49 +154,86 @@ const TrainingReportDashboard: React.FC = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Таблица */}
-      <div className="bg-[#1a1a1d] rounded-2xl shadow-lg border border-gray-700 p-4">
-        <h2 className="text-lg font-semibold mb-3">Treningsoversikt</h2>
-        <div
-          className="overflow-x-auto data-scroll-sync"
-          onScroll={syncScroll}
-          ref={scrollRef}
-        >
-          <table className="min-w-full text-sm border-collapse">
-            <thead className="bg-[#222] text-gray-400 sticky top-0">
-              <tr>
-                <th className="border p-2 text-left sticky left-0 bg-[#222] z-10">Uke</th>
-                {columns.map((col) => (
-                  <th key={col} className="border p-2 text-center">
-                    {col.charAt(0).toUpperCase() + col.slice(1)}
-                  </th>
-                ))}
-                <th className="border p-2 text-center font-semibold bg-[#1f1f1f]">Totalt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((row) => {
-                const total = columns.reduce((sum, col) => sum + row[col], 0);
-                return (
-                  <tr key={row.week} className="hover:bg-[#252525]/50 transition">
-                    <td className="border p-2 sticky left-0 bg-[#1a1a1d] z-0">{row.week}</td>
-                    {columns.map((col) => (
-                      <td key={col} className="border p-2 text-center">{row[col]}</td>
-                    ))}
-                    <td className="border p-2 text-center font-semibold bg-[#1f1f1f]">{total}</td>
-                  </tr>
-                );
-              })}
-              <tr className="bg-[#222] font-semibold">
-                <td className="border p-2 sticky left-0 bg-[#222] z-0">Sum</td>
-                {columns.map((col) => (
-                  <td key={col} className="border p-2 text-center">{totalSum[col]}</td>
-                ))}
-                <td className="border p-2 text-center bg-[#1f1f1f]">{totalSum.total}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      {/* Таблицы */}
+      {/** Параметры дня */}
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll} ref={scrollRef}>
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
+        <table className="w-full min-w-[700px] text-sm border-collapse">
+          <thead>
+            <tr className="bg-[#222] text-gray-400 text-left">
+              <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
+              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
+              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+            </tr>
+          </thead>
+          <tbody>
+            {parametersDay.map((row) => {
+              const total = row.months.reduce((a,b)=>a+b,0);
+              return (
+                <tr key={row.param} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{row.param}</td>
+                  {row.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/** Выносливость */}
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
+        <table className="w-full min-w-[700px] text-sm border-collapse">
+          <thead>
+            <tr className="bg-[#222] text-gray-400 text-left">
+              <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
+              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
+              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+            </tr>
+          </thead>
+          <tbody>
+            {enduranceZones.map((z) => {
+              const total = z.months.reduce((a,b)=>a+b,0);
+              return (
+                <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
+                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
+                    {z.zone}
+                  </td>
+                  {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/** Формы активности */}
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
+        <table className="w-full min-w-[700px] text-sm border-collapse">
+          <thead>
+            <tr className="bg-[#222] text-gray-400 text-left">
+              <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
+              {monthLabels.map((m) => <th key={m} className="p-3 font-medium text-center">{m}</th>)}
+              <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movementTypes.map((m) => {
+              const total = m.months.reduce((a,b)=>a+b,0);
+              return (
+                <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
+                  {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                  <td className="p-3 text-center font-medium bg-[#1f1f1f]">{total}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
