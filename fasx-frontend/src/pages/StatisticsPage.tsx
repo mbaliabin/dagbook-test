@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -12,18 +13,11 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -31,6 +25,7 @@ dayjs.locale("ru");
 export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
@@ -71,13 +66,14 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // --- Вычисляем колонки ---
   const computeWeekColumns = () => {
     const today = dayjs();
     const currentWeek = today.week();
-    const currentYear = today.year();
+    const year = today.year();
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`${i} / ${currentYear}`);
+    for (let i = 1; i <= currentWeek; i++) {
+      weeks.push(`${i} / ${year}`);
+    }
     return weeks;
   };
 
@@ -139,15 +135,17 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // --- Ссылки для синхронного скролла ---
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    scrollRefs.forEach((ref, i) => {
-      if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft;
-    });
-  };
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLDivElement;
+      if (scrollRef.current && target !== scrollRef.current) {
+        scrollRef.current.scrollLeft = target.scrollLeft;
+      }
+    };
+    const container = scrollRef.current;
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
@@ -161,7 +159,6 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -233,85 +230,58 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month, i) => {
-                const data: any = { month };
-                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
-                return data;
-              })} barSize={35}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
-                          <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTime(p.value)}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}/>
+        {/* Scrollable tables container */}
+        <div ref={scrollRef} className="overflow-x-auto space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+          {/* Таблица зон выносливости */}
+          <div className="min-w-max">
+            <h2 className="text-lg font-semibold mb-2">Зоны выносливости</h2>
+            <table className="table-auto border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 bg-[#0f0f0f] z-10 border border-gray-700 px-2">Зона</th>
+                  {filteredMonths.map((m, i) => (
+                    <th key={i} className="border border-gray-700 px-2 min-w-[60px]">{m}</th>
+                  ))}
+                  <th className="border border-gray-700 px-2 min-w-[60px]">Итого</th>
+                </tr>
+              </thead>
+              <tbody>
                 {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
+                  <tr key={zone.zone} className="hover:bg-gray-900">
+                    <td className="sticky left-0 bg-[#0f0f0f] z-10 border border-gray-700 px-2">{zone.zone}</td>
+                    {zone.months.map((val, idx) => <td key={idx} className="border border-gray-700 px-2 text-center">{val}</td>)}
+                    <td className="border border-gray-700 px-2 text-center">{zone.total}</td>
+                  </tr>
                 ))}
-              </BarChart>
-            </ResponsiveContainer>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Таблица форм активности */}
+          <div className="min-w-max">
+            <h2 className="text-lg font-semibold mb-2">Формы активности</h2>
+            <table className="table-auto border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 bg-[#0f0f0f] z-10 border border-gray-700 px-2">Тип</th>
+                  {filteredMonths.map((m, i) => (
+                    <th key={i} className="border border-gray-700 px-2 min-w-[60px]">{m}</th>
+                  ))}
+                  <th className="border border-gray-700 px-2 min-w-[60px]">Итого</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMovementTypes.map((m) => (
+                  <tr key={m.type} className="hover:bg-gray-900">
+                    <td className="sticky left-0 bg-[#0f0f0f] z-10 border border-gray-700 px-2">{m.type}</td>
+                    {m.months.map((val, idx) => <td key={idx} className="border border-gray-700 px-2 text-center">{val}</td>)}
+                    <td className="border border-gray-700 px-2 text-center">{m.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        {/* Таблицы */}
-        {[
-          { title: "Параметры дня", data: [
-            { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-          ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })) },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }
-        ].map((table,i)=>(
-          <div key={i} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
-            <div
-              ref={scrollRefs[i]}
-              className="overflow-x-auto"
-              onScroll={(e)=>handleScroll(e,i)}
-            >
-              <div className="min-w-[900px]">
-                {/* Заголовки */}
-                <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
-                  <div className="p-3 font-medium sticky left-0 bg-[#222] z-20 w-40">{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
-                  {filteredMonths.map((m)=>(<div key={m} className={`p-3 text-center box-border font-medium ${periodType==="week"?"min-w-[80px]":"flex-1"}`}>{m}</div>))}
-                  <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f] box-border">Всего</div>
-                </div>
-                {/* Данные */}
-                <div>
-                  {table.data.map((row:any,j:number)=>(
-                    <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 w-40 flex items-center gap-2">
-                        {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
-                        {row.param}
-                      </div>
-                      {row.months.map((val:number,k:number)=>(
-                        <div key={k} className="flex-1 p-3 text-center box-border">{val}</div>
-                      ))}
-                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">{row.total ?? row.months.reduce((a:number,b:number)=>a+b,0)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
 
       </div>
     </div>
