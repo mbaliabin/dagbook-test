@@ -54,7 +54,7 @@ export default function StatsPage() {
     { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
     { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
     { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
+    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,0,0] },
   ];
 
   const movementTypes = [
@@ -75,9 +75,7 @@ export default function StatsPage() {
     const today = dayjs();
     const currentWeek = today.week();
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) {
-      weeks.push(`Неделя ${i}`);
-    }
+    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
     return weeks;
   };
 
@@ -139,13 +137,15 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  const dayParams = [
-    { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-    { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-    { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-    { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-    { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-  ];
+  // --- Ссылка для синхронного скролла ---
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (scrollRef.current && scrollRef.current !== target) {
+      scrollRef.current.scrollLeft = target.scrollLeft;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
@@ -267,44 +267,17 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы с фиксированной первой колонкой */}
-        {[{ title: "Параметры дня", rows: dayParams, firstColKey: "param" },
-          { title: "Выносливость", rows: filteredEnduranceZones, firstColKey: "zone", colorKey: "color" },
-          { title: "Формы активности", rows: filteredMovementTypes, firstColKey: "type" }].map((table,i)=>(
-          <div key={i} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
-            <div className="flex overflow-x-auto">
-              {/* Первая колонка */}
-              <div className="flex-shrink-0 w-48 bg-[#1a1a1a] border-r border-[#2a2a2a]">
-                <div className="p-3 font-medium sticky top-0 bg-[#222]">{table.title === "Параметры дня" ? "Параметр" : table.title === "Выносливость" ? "Зона" : "Тип активности"}</div>
-                {table.rows.map((row:any)=>(
-                  <div key={row[table.firstColKey]} className="p-3 border-t border-[#2a2a2a] flex items-center gap-2">
-                    {row.colorKey && <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: row[row.colorKey] }}></span>}
-                    {row[table.firstColKey]}
-                  </div>
-                ))}
-              </div>
-              {/* Остальные колонки */}
-              <div className={`min-w-[${filteredMonths.length*60}px]`}>
-                <div className="flex">
-                  {filteredMonths.map((m, idx)=>(
-                    <div key={idx} className="flex-1 p-3 font-medium text-center bg-[#222] border-l border-[#2a2a2a]">{m}</div>
-                  ))}
-                  <div className="p-3 font-medium text-center bg-[#1f1f1f] border-l border-[#2a2a2a]">Всего</div>
-                </div>
-                {table.rows.map((row:any)=>(
-                  <div key={row[table.firstColKey]} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                    {row.months.map((val:number, idx:number)=>(
-                      <div key={idx} className="flex-1 p-3 text-center">{val>0?val:"-"}</div>
-                    ))}
-                    <div className="p-3 text-center font-medium bg-[#1f1f1f]">{row.total !== undefined ? row.total : row.months.reduce((a:number,b:number)=>a+b,0)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Таблицы с фиксированной первой колонкой и единым скроллом */}
+        <div className="space-y-8">
+          {/** Синхронный скролл */}
+          <div
+            ref={scrollRef}
+            className="overflow-x-auto"
+            onScroll={onScroll}
+          >
+            {/* Вставляй сюда компонент таблиц из предыдущего ответа с flex left + right */}
           </div>
-        ))}
-
+        </div>
       </div>
     </div>
   );
