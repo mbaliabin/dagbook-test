@@ -75,9 +75,7 @@ export default function StatsPage() {
     const today = dayjs();
     const currentWeek = today.week();
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) {
-      weeks.push(`Неделя ${i}`);
-    }
+    for (let i = 1; i <= currentWeek; i++) weeks.push(`Неделя ${i}`);
     return weeks;
   };
 
@@ -151,7 +149,6 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -169,9 +166,7 @@ export default function StatsPage() {
             const isActive = location.pathname === item.path;
             return (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${
-                  isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
-                }`}
+                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -259,14 +254,14 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Общий контейнер для всех таблиц с фиксацией */}
-        <div className="overflow-x-auto">
-          <div className="min-w-[900px] space-y-6">
+        {/* Таблицы с фиксированными заголовками */}
+        <div className="space-y-6">
 
-            {/* Параметры дня */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-              <table className="w-full text-sm border-collapse">
+          {/* Параметры дня */}
+          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">Параметры дня</h2>
+            <div className="overflow-x-auto max-h-[300px]">
+              <table className="w-full min-w-[900px] text-sm border-collapse">
                 <thead className="sticky top-0 bg-[#222] z-20">
                   <tr className="text-gray-400 text-left">
                     <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Параметр</th>
@@ -294,11 +289,13 @@ export default function StatsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Выносливость */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-              <table className="w-full text-sm border-collapse">
+          {/* Выносливость */}
+          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">Выносливость</h2>
+            <div className="overflow-x-auto max-h-[300px]">
+              <table className="w-full min-w-[900px] text-sm border-collapse">
                 <thead className="sticky top-0 bg-[#222] z-20">
                   <tr className="text-gray-400 text-left">
                     <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Зона</th>
@@ -309,25 +306,24 @@ export default function StatsPage() {
                 <tbody>
                   {filteredEnduranceZones.map((z) => (
                     <tr key={z.zone} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 flex items-center gap-2 sticky left-0 bg-[#1a1a1a]">
-                        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: z.color }}></span>
-                        {z.zone}
-                      </td>
-                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                      <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{z.zone}</td>
+                      {z.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
                       <td className="p-3 text-center font-medium bg-[#1f1f1f]">{z.total}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Формы активности */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-              <table className="w-full text-sm border-collapse">
+          {/* Формы активности */}
+          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-100 mb-2">Форма активности</h2>
+            <div className="overflow-x-auto max-h-[300px]">
+              <table className="w-full min-w-[900px] text-sm border-collapse">
                 <thead className="sticky top-0 bg-[#222] z-20">
                   <tr className="text-gray-400 text-left">
-                    <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Тип активности</th>
+                    <th className="p-3 font-medium sticky left-0 bg-[#222] z-30">Тип</th>
                     {filteredMonths.map((m) => (<th key={m} className="p-3 font-medium text-center">{m}</th>))}
                     <th className="p-3 font-medium text-center bg-[#1f1f1f]">Всего</th>
                   </tr>
@@ -335,16 +331,16 @@ export default function StatsPage() {
                 <tbody>
                   {filteredMovementTypes.map((m) => (
                     <tr key={m.type} className="border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                      <td className="p-3 sticky left-0 bg-[#1a1a1a]">{m.type}</td>
-                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val>0?val:"-"}</td>))}
+                      <td className="p-3 sticky left-0 bg-[#1a1a1a] font-medium">{m.type}</td>
+                      {m.months.map((val,i)=>(<td key={i} className="p-3 text-center">{val}</td>))}
                       <td className="p-3 text-center font-medium bg-[#1f1f1f]">{m.total}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
           </div>
+
         </div>
 
       </div>
