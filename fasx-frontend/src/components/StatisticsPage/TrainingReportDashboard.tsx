@@ -30,7 +30,7 @@ const generateWeeks = (year: number, totalWeeks: number): TrainingData[] => {
   }));
 };
 
-const initialData = generateWeeks(2025, 20); // 20 недель для примера
+const initialData = generateWeeks(2025, 50); // 50 недель
 
 const columns: (keyof TrainingData)[] = ["styrke", "kondisjon", "bevegelighet", "teknikk"];
 
@@ -40,7 +40,6 @@ const TrainingReportDashboard: React.FC = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Фильтрация данных по выбранному диапазону
   const filteredData = useMemo(() => {
     const from = new Date(fromDate);
     const to = new Date(toDate);
@@ -68,7 +67,6 @@ const TrainingReportDashboard: React.FC = () => {
     });
   };
 
-  // --- Таблицы FASX ---
   const monthLabels = filteredData.map((d) => d.week);
 
   const parametersDay = Array.from({ length: 15 }, (_, i) => ({
@@ -153,10 +151,10 @@ const TrainingReportDashboard: React.FC = () => {
       </div>
 
       {/* Таблицы */}
-      {/** Параметры дня */}
+      {/* Параметры дня */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll} ref={scrollRef}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Параметры дня</h2>
-        <table className="w-full min-w-[900px] text-sm border-collapse">
+        <table className="w-full min-w-[1200px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Параметр</th>
@@ -179,10 +177,10 @@ const TrainingReportDashboard: React.FC = () => {
         </table>
       </div>
 
-      {/** Выносливость */}
+      {/* Выносливость */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Выносливость</h2>
-        <table className="w-full min-w-[900px] text-sm border-collapse">
+        <table className="w-full min-w-[1200px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Зона</th>
@@ -208,10 +206,10 @@ const TrainingReportDashboard: React.FC = () => {
         </table>
       </div>
 
-      {/** Формы активности */}
+      {/* Формы активности */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg overflow-x-auto data-scroll-sync" onScroll={syncScroll}>
         <h2 className="text-lg font-semibold text-gray-100 mb-4">Формы активности</h2>
-        <table className="w-full min-w-[900px] text-sm border-collapse">
+        <table className="w-full min-w-[1200px] text-sm border-collapse">
           <thead>
             <tr className="bg-[#222] text-gray-400 text-left">
               <th className="p-3 font-medium sticky left-0 bg-[#222]">Тип активности</th>
