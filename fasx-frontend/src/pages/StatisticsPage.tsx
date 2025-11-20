@@ -49,29 +49,30 @@ export default function StatsPage() {
 
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
-  // Заглушки минут для примера
-  const sampleMinutes = [120, 90, 45, 60, 150, 80, 30, 50, 70, 100, 60, 90];
-
   const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: sampleMinutes },
-    { zone: "I2", color: "#22d3ee", months: sampleMinutes },
-    { zone: "I3", color: "#facc15", months: sampleMinutes },
-    { zone: "I4", color: "#fb923c", months: sampleMinutes },
-    { zone: "I5", color: "#ef4444", months: sampleMinutes },
+    { zone: "I1", color: "#4ade80", months: [80,70,90,50,75,65,70] },
+    { zone: "I2", color: "#22d3ee", months: [40,50,45,35,50,40,45] },
+    { zone: "I3", color: "#facc15", months: [15,10,20,5,15,10,10] },
+    { zone: "I4", color: "#fb923c", months: [5,10,5,0,5,5,5] },
+    { zone: "I5", color: "#ef4444", months: [0,0,5,0,0,0,0] },
   ];
 
   const movementTypes = [
-    { type: "Лыжи / скейтинг", months: sampleMinutes },
-    { type: "Лыжи, классика", months: sampleMinutes },
-    { type: "Роллеры, классика", months: sampleMinutes },
-    { type: "Роллеры, скейтинг", months: sampleMinutes },
-    { type: "Велосипед", months: sampleMinutes },
+    { type: "Лыжи / скейтинг", months: [70,50,60,45,65,75,80] },
+    { type: "Лыжи, классика", months: [60,40,50,35,55,60,65] },
+    { type: "Велосипед", months: [40,35,50,30,45,30,40] },
   ];
 
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
+  };
+
+  // для произвольного времени, если уже строка чч:мм
+  const formatTimeSafe = (val: number | string) => {
+    if (typeof val === "number") return formatTime(val);
+    return val;
   };
 
   const computeWeekColumns = () => {
@@ -109,23 +110,80 @@ export default function StatsPage() {
 
   const filteredMonths = computeColumns();
 
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return {
-      ...zone,
-      months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
+  // суммируем столбцы для footer
+  const sumColumn = (rows: any[], colIndex: number) => {
+    let sum = 0;
+    rows.forEach(row => {
+      const val = row.months[colIndex];
+      if (typeof val === "number") sum += val;
+      else if (typeof val === "string") {
+        const [h,m] = val.split(":").map(Number);
+        sum += h*60+m;
+      }
+    });
+    return formatTime(sum);
+  };
 
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return {
-      ...m,
-      months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
+  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    scrollRefs.forEach((ref, i) => {
+      if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft;
+    });
+  };
+
+  const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
+    const weekColWidth = 80;
+    const monthColWidth = 100;
+    const yearColWidth = 80;
+    const leftColWidth = 160;
+    const totalColWidth = 80;
+
+    const colWidth = periodType === 'week' ? weekColWidth : periodType === 'month' ? monthColWidth : yearColWidth;
+    const computedMinWidth = Math.max(900, filteredMonths.length * colWidth + leftColWidth + totalColWidth);
+
+    return (
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
+        <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,index)}>
+          <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
+            {/* header */}
+            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
+              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
+                {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
+              </div>
+              {filteredMonths.map((m, idx)=>(<div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>))}
+              <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
+            </div>
+            {/* rows */}
+            <div>
+              {table.data.map((row:any,j:number)=>(
+                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{ width: leftColWidth }}>
+                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
+                    <div className="truncate">{row.param}</div>
+                  </div>
+                  {filteredMonths.map((val:number|string,k:number)=>(
+                    <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>
+                      {formatTimeSafe(row.months[k]) ?? 0}
+                    </div>
+                  ))}
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (typeof row.months[0]==="number"?row.months.reduce((a:number,b:number)=>a+b,0):row.months.reduce((a:any,b:any)=>a+b,0))}</div>
+                </div>
+              ))}
+              {/* Footer row */}
+              <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
+                <div className="p-3 sticky left-0 bg-[#222] z-10" style={{ width: leftColWidth }}>Итого</div>
+                {filteredMonths.map((_,idx)=>(<div key={idx} className="p-3 text-center flex-none" style={{ width: colWidth }}>{sumColumn(table.data, idx)}</div>))}
+                <div className="p-3 text-center flex-none" style={{ width: totalColWidth }}>—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -141,83 +199,9 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    scrollRefs.forEach((ref, i) => {
-      if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft;
-    });
-  };
-
-  // --- Таблица в отдельном компоненте для выравнивания ---
-  const TableSection: React.FC<{ table: any; index: number; isTimeTable?: boolean }> = ({ table, index, isTimeTable=false }) => {
-    const weekColWidth = 80;
-    const monthColWidth = 100;
-    const yearColWidth = 80;
-    const leftColWidth = 160;
-    const totalColWidth = 80;
-
-    const colWidth = periodType === 'week' ? weekColWidth : periodType === 'month' ? monthColWidth : periodType === 'year' ? yearColWidth : monthColWidth;
-    const computedMinWidth = Math.max(900, filteredMonths.length * colWidth + leftColWidth + totalColWidth);
-
-    return (
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
-        <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,index)}>
-          <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
-            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
-              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
-                {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
-              </div>
-              {filteredMonths.map((m, idx)=>(<div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>))}
-              {isTimeTable && <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Итого</div>}
-            </div>
-            <div>
-              {table.data.map((row:any,j:number)=>(
-                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{ width: leftColWidth }}>
-                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
-                    <div className="truncate">{row.param}</div>
-                  </div>
-                  {filteredMonths.map((val:number,k:number)=>(
-                    <div key={k} className="p-3 text-center box-border flex-none">
-                      {isTimeTable ? formatTime(row.months[k]) : row.months[k] ?? 0}
-                    </div>
-                  ))}
-                  {isTimeTable &&
-                    <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
-                      {formatTime(row.total)}
-                    </div>
-                  }
-                </div>
-              ))}
-
-              {/* Нижняя строка с общим временем для timeTables */}
-              {isTimeTable && (
-                <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
-                  <div className="p-3 sticky left-0 bg-[#222] z-10" style={{ width: leftColWidth }}>Общее</div>
-                  {filteredMonths.map((_,idx)=> {
-                    const sum = table.data.reduce((acc:number,row:any)=>acc + (row.months[idx] ?? 0),0);
-                    return <div key={idx} className="p-3 text-center flex-none">{formatTime(sum)}</div>;
-                  })}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
-                    {formatTime(table.data.reduce((acc:number,row:any)=>acc + row.total,0))}
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="max-w-[1200px] mx-auto space-y-8">
-
+      <div className="w-full max-w-[1400px] mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -236,7 +220,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Menu */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -252,7 +236,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
+        {/* Report & Period */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
@@ -297,20 +281,16 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Таблицы */}
+        {/* Tables */}
         {[
           { title: "Параметры дня", data: [
-              { param: "Травма", months: [0,1,0,0,0,0,0,0,0,1,0,0] },
-              { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-              { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-              { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-              { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-            ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })), isTimeTable: true },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })), isTimeTable: true }
-        ].map((table,i)=>(
-          <TableSection key={i} table={table} index={i} isTimeTable={table.isTimeTable}/>
-        ))}
+            { param: "Тренировочные дни", months: [5,6,7,8,4,5,6], total: 41 },
+            { param: "Сессий", months: [10,12,14,11,9,8,13], total: 77 },
+            { param: "Общее время", months: ["1:30","2:15","1:45","2:00","1:20","1:50","2:10"], total: "12:50" },
+          ] },
+          { title: "Выносливость", data: enduranceZones.map(z=>({ param: z.zone, months: z.months.map(m=>formatTime(m)), total: formatTime(z.months.reduce((a,b)=>a+b,0)), color: z.color })) },
+          { title: "Формы активности", data: movementTypes.map(m=>({ param: m.type, months: m.months.map(mv=>formatTime(mv)), total: formatTime(m.months.reduce((a,b)=>a+b,0)) })) }
+        ].map((table,i)=>(<TableSection key={i} table={table} index={i} />))}
 
       </div>
     </div>
