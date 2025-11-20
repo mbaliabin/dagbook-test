@@ -13,13 +13,7 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
@@ -66,18 +60,23 @@ export default function StatsPage() {
   ];
 
   const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
+    if (reportType === "Общий отчет") {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return `${h}:${m.toString().padStart(2, "0")}`;
+    }
+    return minutes;
   };
 
-  // --- Вычисляем колонки ---
   const computeWeekColumns = () => {
-    const today = dayjs();
-    const currentWeek = today.week();
-    const currentYear = today.year();
+    const startOfYear = dayjs().startOf("year");
+    const endOfYear = dayjs().endOf("year");
     const weeks: string[] = [];
-    for (let i = 1; i <= currentWeek; i++) weeks.push(`${i} / ${currentYear}`);
+    let current = startOfYear;
+    while (current.isBefore(endOfYear) || current.isSame(endOfYear, "week")) {
+      weeks.push(`${current.week()} / ${current.year()}`);
+      current = current.add(1, "week");
+    }
     return weeks;
   };
 
@@ -105,23 +104,24 @@ export default function StatsPage() {
     return months;
   };
 
-  const filteredMonths = computeColumns();
+  const filteredColumns = computeColumns();
 
+  // Подгоняем данные под колонки
   const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
+    const sliceLength = Math.min(zone.months.length, filteredColumns.length);
     return {
       ...zone,
       months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: zone.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
   const filteredMovementTypes = movementTypes.map((m) => {
-    const sliceLength = Math.min(m.months.length, filteredMonths.length);
+    const sliceLength = Math.min(m.months.length, filteredColumns.length);
     return {
       ...m,
       months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
@@ -149,7 +149,7 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 flex justify-center">
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full flex justify-center">
       <div className="w-full max-w-[1400px] space-y-8">
 
         {/* Header */}
@@ -236,19 +236,19 @@ export default function StatsPage() {
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month, i) => {
-                const data: any = { month };
-                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
+              <BarChart data={filteredColumns.map((col,i)=>{
+                const data:any = { label: col };
+                filteredEnduranceZones.forEach(zone => data[zone.zone] = zone.months[i] ?? 0);
                 return data;
               })} barSize={35}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill:"#888", fontSize:12 }} />
+                <Tooltip content={({active,payload}:any)=>{
+                  if(active && payload && payload.length){
                     return (
                       <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
+                        {payload.map((p:any)=>(
                           <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
+                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{backgroundColor:p.fill}}></span>
                             {p.dataKey}: {formatTime(p.value)}
                           </p>
                         ))}
@@ -257,7 +257,7 @@ export default function StatsPage() {
                   }
                   return null;
                 }}/>
-                {filteredEnduranceZones.map((zone) => (
+                {filteredEnduranceZones.map(zone=>(
                   <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
                 ))}
               </BarChart>
@@ -267,28 +267,26 @@ export default function StatsPage() {
 
         {/* Таблицы */}
         {[
-          { title: "Параметры дня", data: [
+          { title: "Параметры дня", data:[
             { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
             { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
             { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
             { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
             { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-          ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })) },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }
-        ].map((table,i)=>(
+          ]},
+          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param:z.zone, months:z.months, total:z.total, color:z.color }))},
+          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param:m.type, months:m.months, total:m.total })),
+        }].map((table,i)=>(
           <div key={i} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
             <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
-            <div
-              ref={scrollRefs[i]}
-              className="overflow-x-auto"
-              onScroll={(e)=>handleScroll(e,i)}
-            >
-              <div className={`min-w-[${filteredMonths.length*80}px]`}>
+            <div ref={scrollRefs[i]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,i)}>
+              <div className="min-w-[900px]">
                 {/* Заголовки */}
                 <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
                   <div className="p-3 font-medium sticky left-0 bg-[#222] z-20 w-40">{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
-                  {filteredMonths.map((m)=>(<div key={m} className="p-3 text-center box-border font-medium min-w-[80px]">{m}</div>))}
+                  {filteredColumns.map((m,j)=>(
+                    <div key={j} className="flex-1 min-w-[80px] p-3 text-center font-medium box-border">{m}</div>
+                  ))}
                   <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f] box-border">Всего</div>
                 </div>
                 {/* Данные */}
@@ -300,11 +298,9 @@ export default function StatsPage() {
                         {row.param}
                       </div>
                       {row.months.map((val:number,k:number)=>(
-                        <div key={k} className="p-3 text-center box-border min-w-[80px]">
-                          {table.title==="Выносливость" || table.title==="Формы активности" ? formatTime(val) : val}
-                        </div>
+                        <div key={k} className="flex-1 min-w-[80px] p-3 text-center">{(table.title==="Выносливость" || table.title==="Формы активности") ? formatTime(val) : val}</div>
                       ))}
-                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">{table.title==="Выносливость" || table.title==="Формы активности" ? formatTime(row.total):row.total}</div>
+                      <div className="w-20 p-3 text-center font-medium">{(table.title==="Выносливость" || table.title==="Формы активности") ? formatTime(row.total) : row.total}</div>
                     </div>
                   ))}
                 </div>
