@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -23,7 +24,6 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -147,7 +147,6 @@ export default function StatsPage() {
     });
   };
 
-  // --- Таблица в отдельном компоненте для выравнивания ---
   const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
     const weekColWidth = 80;
     const monthColWidth = 100;
@@ -180,9 +179,19 @@ export default function StatsPage() {
                     <div className="truncate">{row.param}</div>
                   </div>
                   {filteredMonths.map((val:number,k:number)=>(
-                    <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>{row.months[k] ?? 0}</div>
+                    <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>
+                      {table.title==="Выносливость" || table.title==="Формы активности"
+                        ? formatTime(val)
+                        : val ?? 0
+                      }
+                    </div>
                   ))}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)}</div>
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
+                    {table.title==="Выносливость" || table.title==="Формы активности"
+                      ? formatTime(row.total)
+                      : row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)
+                    }
+                  </div>
                 </div>
               ))}
             </div>
@@ -194,7 +203,7 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
+      <div className="max-w-[1400px] mx-auto space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -310,19 +319,10 @@ export default function StatsPage() {
         </div>
 
         {/* Таблицы */}
-        {[
-          { title: "Параметры дня", data: [
-            { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-          ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })) },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }
-        ].map((table,i)=>(
-          <TableSection key={i} table={table} index={i} />
-        ))}
+        <div className="space-y-8">
+          <TableSection index={0} table={{ title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, color: z.color, months: z.months, total: z.total })) }} />
+          <TableSection index={1} table={{ title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }} />
+        </div>
 
       </div>
     </div>
