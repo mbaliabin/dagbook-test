@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -24,6 +23,7 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -50,26 +50,29 @@ export default function StatsPage() {
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
   const enduranceZones = [
-    { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
-    { zone: "I2", color: "#22d3ee", months: [5,6,7,3,4,5,6,3,4,2,1,1] },
-    { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
-    { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
-    { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
+    { zone: "I1", color: "#4ade80", months: [80,70,90,50,75,65,70] },
+    { zone: "I2", color: "#22d3ee", months: [40,50,45,35,50,40,45] },
+    { zone: "I3", color: "#facc15", months: [15,10,20,5,15,10,10] },
+    { zone: "I4", color: "#fb923c", months: [5,10,5,0,5,5,5] },
+    { zone: "I5", color: "#ef4444", months: [0,0,5,0,0,0,0] },
   ];
 
   const movementTypes = [
-    { type: "Лыжи / скейтинг", months: [4,5,3,0,0,0,0,0,1,2,3,2] },
-    { type: "Лыжи, классика", months: [3,4,2,0,0,0,0,0,0,1,2,1] },
-    { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
-    { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
-    { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
+    { type: "Лыжи / скейтинг", months: [70,50,60,45,65,75,80] },
+    { type: "Лыжи, классика", months: [60,40,50,35,55,60,65] },
+    { type: "Велосипед", months: [40,35,50,30,45,30,40] },
   ];
 
-  const formatTimeSafe = (minutes?: number) => {
-    if (minutes === undefined || minutes === null) return "0:00";
+  const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
+  };
+
+  // для произвольного времени, если уже строка чч:мм
+  const formatTimeSafe = (val: number | string) => {
+    if (typeof val === "number") return formatTime(val);
+    return val;
   };
 
   const computeWeekColumns = () => {
@@ -107,37 +110,19 @@ export default function StatsPage() {
 
   const filteredMonths = computeColumns();
 
-  const filteredEnduranceZones = enduranceZones.map((zone) => {
-    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
-    return {
-      ...zone,
-      months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const sliceLength = Math.min(m.months.length, filteredMonths.length);
-    return {
-      ...m,
-      months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
-    };
-  });
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  // суммируем столбцы для footer
+  const sumColumn = (rows: any[], colIndex: number) => {
+    let sum = 0;
+    rows.forEach(row => {
+      const val = row.months[colIndex];
+      if (typeof val === "number") sum += val;
+      else if (typeof val === "string") {
+        const [h,m] = val.split(":").map(Number);
+        sum += h*60+m;
+      }
+    });
+    return formatTime(sum);
   };
-
-  const applyDateRange = () => setShowDateRangePicker(false);
-
-  const menuItems = [
-    { label: "Главная", icon: Home, path: "/daily" },
-    { label: "Тренировки", icon: BarChart3, path: "/profile" },
-    { label: "Планирование", icon: ClipboardList, path: "/planning" },
-    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
 
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
@@ -155,7 +140,7 @@ export default function StatsPage() {
     const leftColWidth = 160;
     const totalColWidth = 80;
 
-    const colWidth = periodType === 'week' ? weekColWidth : periodType === 'month' ? monthColWidth : periodType === 'year' ? yearColWidth : monthColWidth;
+    const colWidth = periodType === 'week' ? weekColWidth : periodType === 'month' ? monthColWidth : yearColWidth;
     const computedMinWidth = Math.max(900, filteredMonths.length * colWidth + leftColWidth + totalColWidth);
 
     return (
@@ -163,6 +148,7 @@ export default function StatsPage() {
         <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
         <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,index)}>
           <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
+            {/* header */}
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
                 {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
@@ -170,6 +156,7 @@ export default function StatsPage() {
               {filteredMonths.map((m, idx)=>(<div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>))}
               <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
             </div>
+            {/* rows */}
             <div>
               {table.data.map((row:any,j:number)=>(
                 <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
@@ -177,16 +164,20 @@ export default function StatsPage() {
                     {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
                     <div className="truncate">{row.param}</div>
                   </div>
-                  {filteredMonths.map((val:number,k:number)=>(
+                  {filteredMonths.map((val:number|string,k:number)=>(
                     <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>
-                      {(table.title==="Выносливость" || table.title==="Формы активности") ? formatTimeSafe(val) : (val ?? 0)}
+                      {formatTimeSafe(row.months[k]) ?? 0}
                     </div>
                   ))}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
-                    {(table.title==="Выносливость" || table.title==="Формы активности") ? formatTimeSafe(row.total) : (row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0))}
-                  </div>
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (typeof row.months[0]==="number"?row.months.reduce((a:number,b:number)=>a+b,0):row.months.reduce((a:any,b:any)=>a+b,0))}</div>
                 </div>
               ))}
+              {/* Footer row */}
+              <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
+                <div className="p-3 sticky left-0 bg-[#222] z-10" style={{ width: leftColWidth }}>Итого</div>
+                {filteredMonths.map((_,idx)=>(<div key={idx} className="p-3 text-center flex-none" style={{ width: colWidth }}>{sumColumn(table.data, idx)}</div>))}
+                <div className="p-3 text-center flex-none" style={{ width: totalColWidth }}>—</div>
+              </div>
             </div>
           </div>
         </div>
@@ -194,10 +185,23 @@ export default function StatsPage() {
     );
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  const applyDateRange = () => setShowDateRangePicker(false);
+
+  const menuItems = [
+    { label: "Главная", icon: Home, path: "/daily" },
+    { label: "Тренировки", icon: BarChart3, path: "/profile" },
+    { label: "Планирование", icon: ClipboardList, path: "/planning" },
+    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full max-w-[1300px] mx-auto space-y-8">
-
+      <div className="w-full max-w-[1400px] mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -216,7 +220,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню */}
+        {/* Menu */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -232,7 +236,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
+        {/* Report & Period */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
@@ -277,59 +281,16 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Диаграмма */}
-        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month, i) => {
-                const data: any = { month };
-                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
-                return data;
-              })} barSize={35}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
-                          <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTimeSafe(p.value)}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}/>
-                {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Таблицы */}
-        <div className="flex flex-col space-y-6">
-          <TableSection index={0} table={{
-            title: "Параметры дня",
-            data: [
-              { param: "Тренировочные дни", months: [10,8,12,9,11,14,13,10,8,5,3,2], total: 95 },
-              { param: "Сессий", months: [12,10,15,9,12,16,14,11,9,6,4,3], total: 111 },
-              { param: "Время", months: [60,90,120,45,80,70,100,110,95,85,40,30], total: 935 },
-            ],
-          }}/>
-          <TableSection index={1} table={{
-            title: "Выносливость",
-            data: filteredEnduranceZones.map(z=>({ param:z.zone, color:z.color, months:z.months, total:z.total })),
-          }}/>
-          <TableSection index={2} table={{
-            title: "Формы активности",
-            data: filteredMovementTypes.map(m=>({ param:m.type, months:m.months, total:m.total })),
-          }}/>
-        </div>
+        {/* Tables */}
+        {[
+          { title: "Параметры дня", data: [
+            { param: "Тренировочные дни", months: [5,6,7,8,4,5,6], total: 41 },
+            { param: "Сессий", months: [10,12,14,11,9,8,13], total: 77 },
+            { param: "Общее время", months: ["1:30","2:15","1:45","2:00","1:20","1:50","2:10"], total: "12:50" },
+          ] },
+          { title: "Выносливость", data: enduranceZones.map(z=>({ param: z.zone, months: z.months.map(m=>formatTime(m)), total: formatTime(z.months.reduce((a,b)=>a+b,0)), color: z.color })) },
+          { title: "Формы активности", data: movementTypes.map(m=>({ param: m.type, months: m.months.map(mv=>formatTime(mv)), total: formatTime(m.months.reduce((a,b)=>a+b,0)) })) }
+        ].map((table,i)=>(<TableSection key={i} table={table} index={i} />))}
 
       </div>
     </div>
