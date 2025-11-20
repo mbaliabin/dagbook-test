@@ -13,13 +13,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { DateRange } from "react-date-range";
+  DateRange
+} from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -69,7 +64,6 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // для произвольного времени, если уже строка чч:мм
   const formatTimeSafe = (val: number | string) => {
     if (typeof val === "number") return formatTime(val);
     return val;
@@ -166,18 +160,22 @@ export default function StatsPage() {
                   </div>
                   {filteredMonths.map((val:number|string,k:number)=>(
                     <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>
-                      {formatTimeSafe(row.months[k]) ?? 0}
+                      {formatTimeSafe(val) ?? 0}
                     </div>
                   ))}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (typeof row.months[0]==="number"?row.months.reduce((a:number,b:number)=>a+b,0):row.months.reduce((a:any,b:any)=>a+b,0))}</div>
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
+                    {row.total ?? (typeof row.months[0]==="number"?row.months.reduce((a:number,b:number)=>a+b,0):row.months.reduce((a:any,b:any)=>a+b,0))}
+                  </div>
                 </div>
               ))}
-              {/* Footer row */}
-              <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
-                <div className="p-3 sticky left-0 bg-[#222] z-10" style={{ width: leftColWidth }}>Итого</div>
-                {filteredMonths.map((_,idx)=>(<div key={idx} className="p-3 text-center flex-none" style={{ width: colWidth }}>{sumColumn(table.data, idx)}</div>))}
-                <div className="p-3 text-center flex-none" style={{ width: totalColWidth }}>—</div>
-              </div>
+              {/* Footer row только для таблиц с временем */}
+              {(table.title==="Выносливость" || table.title==="Формы активности") && (
+                <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
+                  <div className="p-3 sticky left-0 bg-[#222] z-10" style={{ width: leftColWidth }}>Итого</div>
+                  {filteredMonths.map((_,idx)=>(<div key={idx} className="p-3 text-center flex-none" style={{ width: colWidth }}>{sumColumn(table.data, idx)}</div>))}
+                  <div className="p-3 text-center flex-none" style={{ width: totalColWidth }}>—</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -286,7 +284,7 @@ export default function StatsPage() {
           { title: "Параметры дня", data: [
             { param: "Тренировочные дни", months: [5,6,7,8,4,5,6], total: 41 },
             { param: "Сессий", months: [10,12,14,11,9,8,13], total: 77 },
-            { param: "Общее время", months: ["1:30","2:15","1:45","2:00","1:20","1:50","2:10"], total: "12:50" },
+            { param: "Дни отдыха", months: [2,2,3,2,3,2,1], total: 15 },
           ] },
           { title: "Выносливость", data: enduranceZones.map(z=>({ param: z.zone, months: z.months.map(m=>formatTime(m)), total: formatTime(z.months.reduce((a,b)=>a+b,0)), color: z.color })) },
           { title: "Формы активности", data: movementTypes.map(m=>({ param: m.type, months: m.months.map(mv=>formatTime(mv)), total: formatTime(m.months.reduce((a,b)=>a+b,0)) })) }
