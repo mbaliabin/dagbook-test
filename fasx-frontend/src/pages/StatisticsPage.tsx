@@ -65,7 +65,8 @@ export default function StatsPage() {
     { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
-  const formatTime = (minutes: number) => {
+  const formatTimeSafe = (minutes?: number) => {
+    if (minutes === undefined || minutes === null) return "0:00";
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}:${m.toString().padStart(2, "0")}`;
@@ -166,9 +167,7 @@ export default function StatsPage() {
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
                 {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
               </div>
-              {filteredMonths.map((m, idx)=>(
-                <div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>
-              ))}
+              {filteredMonths.map((m, idx)=>(<div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>))}
               <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
             </div>
             <div>
@@ -180,17 +179,11 @@ export default function StatsPage() {
                   </div>
                   {filteredMonths.map((val:number,k:number)=>(
                     <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>
-                      {table.title==="Выносливость" || table.title==="Формы активности"
-                        ? formatTime(val)
-                        : val ?? 0
-                      }
+                      {(table.title==="Выносливость" || table.title==="Формы активности") ? formatTimeSafe(val) : (val ?? 0)}
                     </div>
                   ))}
                   <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
-                    {table.title==="Выносливость" || table.title==="Формы активности"
-                      ? formatTime(row.total)
-                      : row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)
-                    }
+                    {(table.title==="Выносливость" || table.title==="Формы активности") ? formatTimeSafe(row.total) : (row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0))}
                   </div>
                 </div>
               ))}
@@ -203,7 +196,7 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="max-w-[1400px] mx-auto space-y-8">
+      <div className="w-full max-w-[1300px] mx-auto space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -302,7 +295,7 @@ export default function StatsPage() {
                         {payload.map((p: any) => (
                           <p key={p.dataKey} className="mt-1">
                             <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTime(p.value)}
+                            {p.dataKey}: {formatTimeSafe(p.value)}
                           </p>
                         ))}
                       </div>
@@ -319,9 +312,23 @@ export default function StatsPage() {
         </div>
 
         {/* Таблицы */}
-        <div className="space-y-8">
-          <TableSection index={0} table={{ title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, color: z.color, months: z.months, total: z.total })) }} />
-          <TableSection index={1} table={{ title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }} />
+        <div className="flex flex-col space-y-6">
+          <TableSection index={0} table={{
+            title: "Параметры дня",
+            data: [
+              { param: "Тренировочные дни", months: [10,8,12,9,11,14,13,10,8,5,3,2], total: 95 },
+              { param: "Сессий", months: [12,10,15,9,12,16,14,11,9,6,4,3], total: 111 },
+              { param: "Время", months: [60,90,120,45,80,70,100,110,95,85,40,30], total: 935 },
+            ],
+          }}/>
+          <TableSection index={1} table={{
+            title: "Выносливость",
+            data: filteredEnduranceZones.map(z=>({ param:z.zone, color:z.color, months:z.months, total:z.total })),
+          }}/>
+          <TableSection index={2} table={{
+            title: "Формы активности",
+            data: filteredMovementTypes.map(m=>({ param:m.type, months:m.months, total:m.total })),
+          }}/>
         </div>
 
       </div>
