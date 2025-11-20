@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -23,7 +24,6 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -139,7 +139,6 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // --- Ссылки для синхронного скролла ---
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
@@ -150,8 +149,8 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 mx-auto max-w-[1400px]">
-      <div className="w-full space-y-8">
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 flex justify-center">
+      <div className="w-full max-w-[1400px] space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -286,7 +285,7 @@ export default function StatsPage() {
               className="overflow-x-auto"
               onScroll={(e)=>handleScroll(e,i)}
             >
-              <div className="min-w-[900px]">
+              <div className={`min-w-[${Math.max(filteredMonths.length * 80, 900)}px]`}>
                 {/* Заголовки */}
                 <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
                   <div className="p-3 font-medium sticky left-0 bg-[#222] z-20 w-40">{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
@@ -296,18 +295,17 @@ export default function StatsPage() {
                 {/* Данные */}
                 <div>
                   {table.data.map((row:any,j:number)=>(
-
                     <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
                       <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 w-40 flex items-center gap-2">
                         {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
                         {row.param}
                       </div>
                       {row.months.map((val:number,k:number)=>(
-                        <div key={k} className="flex-1 p-3 text-center box-border">
-                          { (table.title==="Выносливость" || table.title==="Формы активности") && reportType==="Общий отчет" ? formatTime(val) : val }
-                        </div>
+                        <div key={k} className="flex-1 p-3 text-center box-border">{table.title==="Выносливость" || table.title==="Формы активности" && reportType==="Общий отчет" ? formatTime(val) : val}</div>
                       ))}
-                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">{ (table.title==="Выносливость" || table.title==="Формы активности") && reportType==="Общий отчет" ? formatTime(row.total) : row.total }</div>
+                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">
+                        {(table.title==="Выносливость" || table.title==="Формы активности") && reportType==="Общий отчет" ? formatTime(row.total) : row.total}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -315,7 +313,6 @@ export default function StatsPage() {
             </div>
           </div>
         ))}
-
       </div>
     </div>
   );
