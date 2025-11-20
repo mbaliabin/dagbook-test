@@ -310,8 +310,14 @@ export default function StatsPage() {
   type TableDef = { title: string; data: any[] };
 
   const TableSection: React.FC<{ table: TableDef; index: number }> = React.memo(({ table, index }) => {
-    // минимальная ширина контейнера зависит от количества колонок
-    const minWidth = Math.max(900, filteredMonths.length * (periodType === 'week' ? 80 : 80));
+    // рассчитываем фиксированную ширину для недельной колонки и общую minWidth
+    const colWidth = periodType === 'week' ? 80 : undefined; // px when week
+    const leftColWidth = 160; // w-40 ~ 160px
+    const totalColWidth = 80;
+    const computedMinWidth = React.useMemo(() => {
+      if (periodType === 'week') return Math.max(900, filteredMonths.length * (colWidth as number) + leftColWidth + totalColWidth);
+      return Math.max(900, filteredMonths.length * 120 + leftColWidth + totalColWidth);
+    }, [periodType, filteredMonths.length]);
 
     return (
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
@@ -321,25 +327,35 @@ export default function StatsPage() {
           className="overflow-x-auto"
           onScroll={(e)=>handleScroll(e,index)}
         >
-          <div style={{ minWidth }} className="transition-all duration-300">
+          <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
             {/* Заголовки */}
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
-              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20 w-40">{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
-              {filteredMonths.map((m)=>(<div key={m} className={`p-3 text-center box-border font-medium ${periodType==="week"?"min-w-[80px]":"flex-1"}`}>{m}</div>))}
-              <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f] box-border">Всего</div>
+              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
+              {filteredMonths.map((m, idx)=>(
+                <div
+                  key={m+"-h-"+idx}
+                  className="p-3 text-center box-border font-medium flex-none"
+                  style={{ width: periodType === 'week' ? colWidth : undefined }}
+                >{m}</div>
+              ))}
+              <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
             </div>
             {/* Данные */}
             <div>
               {table.data.map((row:any,j:number)=>(
                 <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 w-40 flex items-center gap-2">
+                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{ width: leftColWidth }}>
                     {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
-                    {row.param}
+                    <div className="truncate">{row.param}</div>
                   </div>
-                  {row.months.map((val:number,k:number)=>(
-                    <div key={k} className="flex-1 p-3 text-center box-border">{val}</div>
+                  {filteredMonths.map((val:number,k:number)=>(
+                    <div
+                      key={k}
+                      className="p-3 text-center box-border flex-none"
+                      style={{ width: periodType === 'week' ? colWidth : undefined }}
+                    >{row.months[k] ?? 0}</div>
                   ))}
-                  <div className="w-20 p-3 text-center bg-[#1f1f1f]">{row.total ?? row.months.reduce((a:number,b:number)=>a+b,0)}</div>
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)}</div>
                 </div>
               ))}
             </div>
