@@ -41,7 +41,7 @@ export default function ActivityTable({ workouts }: Props) {
     .sort((a, b) => b.sessions - a.sessions); // по убыванию по числу сессий
 return (
     <div className="bg-[#1a1a1d] rounded-xl p-4 w-full">
-      <h2 className="text-lg font-semibold text-white mb-3">Activities</h2>
+      <h2 className="text-lg font-semibold text-white mb-3">Активность</h2>
 
       <div className="flex text-gray-400 text-xs border-b border-[#333] pb-1 mb-1">
         <div className="flex-1">Type</div>
