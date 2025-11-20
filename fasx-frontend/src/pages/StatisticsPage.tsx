@@ -160,7 +160,6 @@ export default function StatsPage() {
               <h1 className="text-2xl font-bold text-white">{name}</h1>
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
@@ -285,11 +284,11 @@ export default function StatsPage() {
               className="overflow-x-auto"
               onScroll={(e)=>handleScroll(e,i)}
             >
-              <div className={`min-w-[${Math.max(filteredMonths.length * 80, 900)}px]`}>
+              <div className={`min-w-[${filteredMonths.length*80}px]`}>
                 {/* Заголовки */}
                 <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
                   <div className="p-3 font-medium sticky left-0 bg-[#222] z-20 w-40">{table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}</div>
-                  {filteredMonths.map((m)=>(<div key={m} className={`p-3 text-center box-border font-medium ${periodType==="week"?"min-w-[80px]":"flex-1"}`}>{m}</div>))}
+                  {filteredMonths.map((m)=>(<div key={m} className="p-3 text-center box-border font-medium min-w-[80px]">{m}</div>))}
                   <div className="w-20 p-3 text-center font-medium bg-[#1f1f1f] box-border">Всего</div>
                 </div>
                 {/* Данные */}
@@ -301,11 +300,11 @@ export default function StatsPage() {
                         {row.param}
                       </div>
                       {row.months.map((val:number,k:number)=>(
-                        <div key={k} className="flex-1 p-3 text-center box-border">{table.title==="Выносливость" || table.title==="Формы активности" && reportType==="Общий отчет" ? formatTime(val) : val}</div>
+                        <div key={k} className="p-3 text-center box-border min-w-[80px]">
+                          {table.title==="Выносливость" || table.title==="Формы активности" ? formatTime(val) : val}
+                        </div>
                       ))}
-                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">
-                        {(table.title==="Выносливость" || table.title==="Формы активности") && reportType==="Общий отчет" ? formatTime(row.total) : row.total}
-                      </div>
+                      <div className="w-20 p-3 text-center bg-[#1f1f1f]">{table.title==="Выносливость" || table.title==="Формы активности" ? formatTime(row.total):row.total}</div>
                     </div>
                   ))}
                 </div>
@@ -313,6 +312,7 @@ export default function StatsPage() {
             </div>
           </div>
         ))}
+
       </div>
     </div>
   );
