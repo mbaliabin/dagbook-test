@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -12,18 +13,11 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -68,7 +62,7 @@ export default function StatsPage() {
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
+    return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
   const computeWeekColumns = () => {
@@ -111,7 +105,7 @@ export default function StatsPage() {
     return {
       ...zone,
       months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: zone.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
@@ -120,7 +114,7 @@ export default function StatsPage() {
     return {
       ...m,
       months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
@@ -147,30 +141,23 @@ export default function StatsPage() {
     });
   };
 
-  // --- Таблица в отдельном компоненте для выравнивания ---
-  const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
-    const weekColWidth = 80;
-    const monthColWidth = 100;
-    const yearColWidth = 80;
+  // --- Компонент таблицы ---
+  const TableSection = ({ table, index }: { table: any; index: number }) => {
     const leftColWidth = 160;
-    const totalColWidth = 80;
-
-    const colWidth = periodType === 'week' ? weekColWidth : periodType === 'month' ? monthColWidth : periodType === 'year' ? yearColWidth : monthColWidth;
-    const computedMinWidth = Math.max(900, filteredMonths.length * colWidth + leftColWidth + totalColWidth);
+    const colWidth = 80;
+    const totalColWidth = 100;
 
     return (
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mb-6">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
         <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,index)}>
-          <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
-            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
-              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
+          <div style={{ minWidth: `${filteredMonths.length*colWidth + leftColWidth + totalColWidth}px` }}>
+            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
+              <div style={{ width: leftColWidth }} className="p-3 font-medium sticky left-0 bg-[#222] z-20">
                 {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
               </div>
-              {filteredMonths.map((m, idx)=>(
-                <div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>
-              ))}
-              <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
+              {filteredMonths.map((m)=>(<div key={m} style={{ width: colWidth }} className="p-3 text-center font-medium">{m}</div>))}
+              <div style={{ width: totalColWidth }} className="p-3 text-center font-medium bg-[#1f1f1f]">Всего</div>
             </div>
             <div>
               {table.data.map((row:any,j:number)=>(
@@ -179,10 +166,20 @@ export default function StatsPage() {
                     {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
                     <div className="truncate">{row.param}</div>
                   </div>
-                  {filteredMonths.map((val:number,k:number)=>(
-                    <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>{row.months[k] ?? 0}</div>
+                  {filteredMonths.map((_,k)=>(
+                    <div key={k} className="p-3 text-center flex-none" style={{ width: colWidth }}>
+                      {(table.title === "Выносливость" || table.title === "Формы активности")
+                        ? formatTime(row.months[k] ?? 0)
+                        : row.months[k] ?? 0
+                      }
+                    </div>
                   ))}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)}</div>
+                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>
+                    {(table.title === "Выносливость" || table.title === "Формы активности")
+                      ? formatTime(row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0))
+                      : row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)
+                    }
+                  </div>
                 </div>
               ))}
             </div>
@@ -313,15 +310,12 @@ export default function StatsPage() {
         {[
           { title: "Параметры дня", data: [
             { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
+            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,0,0,0] },
           ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })) },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }
-        ].map((table,i)=>(
-          <TableSection key={i} table={table} index={i} />
+          { title: "Выносливость", data: filteredEnduranceZones.map(z => ({ param: z.zone, color: z.color, months: z.months, total: z.total })) },
+          { title: "Формы активности", data: filteredMovementTypes.map(m => ({ param: m.type, months: m.months, total: m.total })) },
+        ].map((table, index) => (
+          <TableSection key={index} table={table} index={index} />
         ))}
 
       </div>
