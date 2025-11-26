@@ -493,7 +493,6 @@ export default function StatsPage() {
         </div>
 
 
-
         {/* TOTALSUM */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
