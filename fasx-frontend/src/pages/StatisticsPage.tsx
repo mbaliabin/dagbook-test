@@ -471,18 +471,23 @@ export default function StatsPage() {
                   });
                   return data;
                 })}
-                barSize={35}
+                barCategoryGap={0} // убираем промежутки между категориями
               >
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#888", fontSize: 12 }}
+                />
                 <Tooltip
                   content={({ active, payload }: any) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-sm text-white">
                           {payload.map((p: any) => (
-                            <div key={p.dataKey}>
+                            <div key={p.dataKey} className="flex items-center gap-2">
                               <span
-                                className="inline-block w-3 h-3 mr-1 rounded-full"
+                                className="inline-block w-3 h-3 rounded-full"
                                 style={{ backgroundColor: p.fill }}
                               ></span>
                               {p.dataKey}: {p.value} мин
@@ -506,6 +511,7 @@ export default function StatsPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
 
         {/* Таблицы */}
         <TableSection
