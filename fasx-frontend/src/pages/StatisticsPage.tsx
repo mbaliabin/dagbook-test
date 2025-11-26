@@ -291,14 +291,16 @@ export default function StatsPage() {
                       className="p-3 text-center flex-none"
                       style={{ width: colWidth }}
                     >
-                      {/* для таблицы дистанций — числа (км), для остальных — formatTimeSafe */}
-                      {table.title === "Параметры дня"
-                        ? row.months[k]
-                        : table.title === "Дистанция по видам тренировок"
-                        ? row.months[k]
-                        : formatTimeSafe(row.months[k])}
+                      {(() => {
+                        const value = row.months[k];
+                        if (value === 0) return ""; // не отображаем нули
+                        if (table.title === "Параметры дня") return value;
+                        if (table.title === "Дистанция по видам тренировок") return value;
+                        return formatTimeSafe(value);
+                      })()}
                     </div>
                   ))}
+
 
                   <div
                     className="p-3 text-center bg-[#1f1f1f] flex-none"
@@ -318,26 +320,28 @@ export default function StatsPage() {
                     Итого
                   </div>
 
-                  {filteredMonths.map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 text-center flex-none"
-                      style={{ width: colWidth }}
-                    >
-                      {table.title === "Параметры дня"
-                        ? "—"
-                        : table.title === "Дистанция по видам тренировок"
-                        ? (() => {
-                            // сумма по колонке для дистанций
-                            const sum = filteredDistanceTypes.reduce(
-                              (acc, r) => acc + (r.months[idx] || 0),
-                              0
-                            );
-                            return sum;
-                          })()
-                        : sumColumn(table.data, idx)}
-                    </div>
-                  ))}
+                 {filteredMonths.map((_, idx) => (
+                   <div
+                     key={idx}
+                     className="p-3 text-center flex-none"
+                     style={{ width: colWidth }}
+                   >
+                     {(() => {
+                       let sum;
+                       if (table.title === "Параметры дня") return "—";
+                       if (table.title === "Дистанция по видам тренировок") {
+                         sum = filteredDistanceTypes.reduce(
+                           (acc, r) => acc + (r.months[idx] || 0),
+                           0
+                         );
+                         return sum === 0 ? "" : sum;
+                       }
+                       sum = parseInt(sumColumn(table.data, idx)) || 0;
+                       return sum === 0 ? "" : sumColumn(table.data, idx);
+                     })()}
+                   </div>
+                 ))}
+
 
                   <div
                     className="p-3 text-center flex-none"
