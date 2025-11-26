@@ -470,7 +470,7 @@ export default function StatsPage() {
             <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
             <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
             <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-            <div><p className="text-gray-400">Общее расстояние</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
+            <div><p className="text-gray-400">Общее расстояние км</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
           </div>
         </div>
 
