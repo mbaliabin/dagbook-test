@@ -131,6 +131,26 @@ export default function StatsPage() {
 
   const filteredMonths = computeColumns();
 
+  // ---------- NEW: корректная фильтрация зон и форм под выбранный период ----------
+  const filteredEnduranceZones = enduranceZones.map((zone) => {
+    const sliceLength = Math.min(zone.months.length, filteredMonths.length);
+    return {
+      ...zone,
+      months: zone.months.slice(0, sliceLength),
+      total: zone.months.slice(0, sliceLength).reduce((a, b) => a + b, 0),
+    };
+  });
+
+  const filteredMovementTypes = movementTypes.map((m) => {
+    const sliceLength = Math.min(m.months.length, filteredMonths.length);
+    return {
+      ...m,
+      months: m.months.slice(0, sliceLength),
+      total: m.months.slice(0, sliceLength).reduce((a, b) => a + b, 0),
+    };
+  });
+  // ------------------------------------------------------------------------------
+
   const sumColumn = (rows: any[], colIndex: number) => {
     let sum = 0;
     rows.forEach((row) => {
@@ -177,9 +197,7 @@ export default function StatsPage() {
 
     const computedMinWidth = Math.max(
       900,
-      filteredMonths.length * colWidth +
-        leftColWidth +
-        totalColWidth
+      filteredMonths.length * colWidth + leftColWidth + totalColWidth
     );
 
     return (
@@ -322,7 +340,8 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full max-w-[1400px] mx-auto space-y-8">
+      {/* Ограничиваем ширину контейнера и центрируем */}
+      <div className="w-full max-w-[1200px] mx-auto space-y-8">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -458,32 +477,40 @@ export default function StatsPage() {
           </div>
         </div>
 
-{/* Диаграмма */}
+        {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredMonths.map((month, i) => {
-                const data: any = { month };
-                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
-                return data;
-              })} barSize={35}>
+              <BarChart
+                data={filteredMonths.map((month, i) => {
+                  const data: any = { month };
+                  // используем filteredEnduranceZones (обрезанные под filteredMonths)
+                  filteredEnduranceZones.forEach((zone) => {
+                    data[zone.zone] = zone.months[i] ?? 0;
+                  });
+                  return data;
+                })}
+                barSize={35}
+              >
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
-                          <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTime(p.value)}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}/>
+                <Tooltip
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
+                          {payload.map((p: any) => (
+                            <p key={p.dataKey} className="mt-1">
+                              <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
+                              {p.dataKey}: {p.value}
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
                 {filteredEnduranceZones.map((zone) => (
                   <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
                 ))}
@@ -492,90 +519,52 @@ export default function StatsPage() {
           </div>
         </div>
 
-
         {/* TOTALSUM */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
-            TOTALSUM
-          </h1>
-
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div>
-              <p className="text-gray-400">Тренировочные дни</p>
-              <p className="text-xl text-gray-100">{totals.trainingDays}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-400">Сессий</p>
-              <p className="text-xl text-gray-100">{totals.sessions}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-400">Время</p>
-              <p className="text-xl text-gray-100">{totals.time}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-400">Расстояние (км)</p>
-              <p className="text-xl text-gray-100">{totals.distance}</p>
-            </div>
+            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
+            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
+            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
+            <div><p className="text-gray-400">Расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
           </div>
         </div>
 
-        {/* TABLES */}
+        {/* Таблицы */}
         {[
           {
             title: "Параметры дня",
             data: [
-              {
-                param: "Травма",
-                months: [1, 0, 0, 2, 0, 1, 0],
-                total: 4,
-              },
-              {
-                param: "Болезнь",
-                months: [0, 1, 0, 0, 1, 0, 0],
-                total: 2,
-              },
-              {
-                param: "В пути",
-                months: [2, 1, 3, 1, 0, 2, 1],
-                total: 10,
-              },
-              {
-                param: "Выходной",
-                months: [4, 4, 5, 4, 3, 4, 5],
-                total: 29,
-              },
-              {
-                param: "Соревнования",
-                months: [0, 0, 2, 1, 0, 0, 1],
-                total: 4,
-              },
+              { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
+              { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
+              { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
+              { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
+              { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
             ],
           },
 
           {
             title: "Выносливость",
-            data: enduranceZones.map((z) => ({
+            data: filteredEnduranceZones.map(z => ({
               param: z.zone,
-              months: z.months.map((m) => formatTime(m)),
-              total: formatTime(z.months.reduce((a, b) => a + b, 0)),
+              months: z.months,
+              total: z.total,
               color: z.color,
             })),
           },
 
           {
             title: "Формы активности",
-            data: movementTypes.map((m) => ({
+            data: filteredMovementTypes.map(m => ({
               param: m.type,
-              months: m.months.map((mv) => formatTime(mv)),
-              total: formatTime(m.months.reduce((a, b) => a + b, 0)),
+              months: m.months,
+              total: m.total,
             })),
           },
         ].map((table, i) => (
           <TableSection key={i} table={table} index={i} />
         ))}
+
       </div>
     </div>
   );
