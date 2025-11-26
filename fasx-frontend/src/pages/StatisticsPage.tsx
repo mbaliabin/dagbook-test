@@ -654,7 +654,7 @@ export default function StatsPage() {
                         stackId="distance"
                         fill={distanceColors[type] || "#888"}
                         isAnimationActive={true}
-                        animationDuration={1500} // 1.5 секунды
+                        animationDuration={500} // 1.5 секунды
                         maxBarSize={Math.floor(1000 / Math.max(1, filteredMonths.length))}
                       />
                     ))}
