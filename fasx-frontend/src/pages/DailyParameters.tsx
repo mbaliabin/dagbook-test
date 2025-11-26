@@ -200,7 +200,7 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-[1600px] mx-auto space-y-6 px-4">
         {/* Верхний блок с аватаром и кнопками */}
         <div className="space-y-4">
           {/* Аватар, имя, выбор даты и кнопки */}
