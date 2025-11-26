@@ -1,148 +1,84 @@
-// Обновлённый полный компонент страницы тренировок (вариант A)
-// Чистый React, без мутаций данных, с корректной фильтрацией активных зон
-
 import React, { useMemo } from "react";
 import {
+  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
-  ResponsiveContainer,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 
-// distance colors
-const distanceColors: any = {
-  swim: "#3b82f6",
-  bike: "#fbbf24",
-  run: "#ef4444",
-  strength: "#10b981",
-  functional: "#8b5cf6",
-  other: "#6b7280",
+// Цвета дистанций
+const distanceColors: Record<string, string> = {
+  run: "#4ade80",
+  bike: "#60a5fa",
+  swim: "#f472b6",
+  walk: "#facc15",
 };
 
-// endurance zones colors
-const enduranceZones: any[] = [
-  { zone: "Z1", color: "#4ade80" },
-  { zone: "Z2", color: "#22c55e" },
-  { zone: "Z3", color: "#eab308" },
-  { zone: "Z4", color: "#f97316" },
-  { zone: "Z5", color: "#ef4444" },
-];
+// Цвета зон выносливости
+const enduranceColors: Record<string, string> = {
+  Z1: "#4ade80",
+  Z2: "#60a5fa",
+  Z3: "#facc15",
+  Z4: "#fb923c",
+  Z5: "#ef4444",
+};
 
-const TrainingPage = ({ months, trainings }: any) => {
-  const filteredMonths = months;
-
-  // ----------------------
-  // DISTANCE TYPES MONTHLY
-  // ----------------------
-
-  const filteredDistanceTypes = useMemo(() => {
-    const types = Object.keys(distanceColors);
-
-    return types.map((type) => {
-      const monthsData = filteredMonths.map((month: string) => {
-        const items = trainings.filter((t: any) => t.month === month && t.type === type);
-        return items.reduce((sum: number, t: any) => sum + (t.distance || 0), 0);
-      });
-      return { type, months: monthsData };
-    });
-  }, [filteredMonths, trainings]);
-
-  // активные distance типы (есть хотя бы один месяц с данными)
-  const activeDistanceTypes = filteredDistanceTypes
-    .filter((t) => t.months.some((v) => Number(v) > 0))
-    .map((t) => t.type);
-
-  // ----------------------------
-  // ENDURANCE ZONES MONTHLY
-  // ----------------------------
-
-  const filteredEnduranceZones = useMemo(() => {
-    return enduranceZones.map((zone) => {
-      const monthsData = filteredMonths.map((month: string) => {
-        const items = trainings.filter(
-          (t: any) => t.month === month && t.zone === zone.zone
-        );
-        return items.reduce((sum: number, t: any) => sum + (t.distance || 0), 0);
-      });
-      return { zone: zone.zone, color: zone.color, months: monthsData };
-    });
-  }, [filteredMonths, trainings]);
-
-  // фильтр только зон, где реально есть данные
-  const activeEnduranceZones = filteredEnduranceZones.filter((z) =>
-    z.months.some((v) => Number(v) > 0)
+export default function TrainingPage({
+  filteredMonths,
+  filteredDistanceTypes,
+  filteredEnduranceZones,
+}) {
+  // Фильтруем дистанции (оставляем только типы, где есть хотя бы одно значение > 0)
+  const activeDistanceTypes = useMemo(
+    () =>
+      filteredDistanceTypes.filter((t) =>
+        t.months.some((v) => Number(v) > 0)
+      ),
+    [filteredDistanceTypes]
   );
 
+  // Фильтруем зоны выносливости
+  const activeEnduranceZones = useMemo(
+    () =>
+      filteredEnduranceZones.filter((z) =>
+        z.months.some((v) => Number(v) > 0)
+      ),
+    [filteredEnduranceZones]
+  );
+
+  // Данные для дистанций
+  const distanceChartData = useMemo(() => {
+    return filteredMonths.map((month, i) => {
+      const data: any = { month };
+
+      activeDistanceTypes.forEach((t) => {
+        const value = Number(t.months[i]) || 0;
+        if (value > 0) data[t.type] = value;
+      });
+
+      return data;
+    });
+  }, [filteredMonths, activeDistanceTypes]);
+
+  // Данные для выносливости
+  const enduranceChartData = useMemo(() => {
+    return filteredMonths.map((month, i) => {
+      const data: any = { month };
+
+      activeEnduranceZones.forEach((z) => {
+        const value = Number(z.months[i]) || 0;
+        if (value > 0) data[z.zone] = value;
+      });
+
+      return data;
+    });
+  }, [filteredMonths, activeEnduranceZones]);
+
   return (
-    <div className="space-y-8">
-      {/* --- Диаграмма зон выносливости --- */}
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-        <h2 className="text-lg font-semibold mb-4 text-gray-100">
-          Дистанция по зонам выносливости
-        </h2>
+    <div className="flex flex-col gap-10 text-white p-5">
+      {/* ДИАГРАММА ДИСТАНЦИЙ */}
 
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={filteredMonths.map((month: string, i: number) => {
-                const data: any = { month };
-                activeEnduranceZones.forEach((zone) => {
-                  const value = zone.months[i] ?? 0;
-                  if (value > 0) data[zone.zone] = value;
-                });
-                return data;
-              })}
-              barGap={0}
-              barCategoryGap="0%"
-            >
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#888", fontSize: 12 }}
-              />
-
-              <Tooltip
-                content={({ active, payload }: any) => {
-                  if (active && payload && payload.some((p: any) => p.value > 0)) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
-                        {payload
-                          .filter((p: any) => p.value > 0)
-                          .map((p: any) => (
-                            <div key={p.dataKey}>
-                              <span
-                                className="inline-block w-3 h-3 mr-1 rounded-full"
-                                style={{ backgroundColor: p.fill }}
-                              ></span>
-                              {p.dataKey}: {p.value} км
-                            </div>
-                          ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-
-              {activeEnduranceZones.map((zone) => (
-                <Bar
-                  key={zone.zone}
-                  dataKey={zone.zone}
-                  stackId="a"
-                  fill={zone.color}
-                />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* --- Диаграмма дистанций по типам --- */}
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
         <h2 className="text-lg font-semibold mb-4 text-gray-100">
           Общая дистанция по видам тренировок
@@ -150,18 +86,7 @@ const TrainingPage = ({ months, trainings }: any) => {
 
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={filteredMonths.map((month: string, i: number) => {
-                const data: any = { month };
-                filteredDistanceTypes.forEach((t) => {
-                  const value = t.months[i] ?? 0;
-                  if (value > 0) data[t.type] = value;
-                });
-                return data;
-              })}
-              barGap={0}
-              barCategoryGap="0%"
-            >
+            <BarChart data={distanceChartData} barGap={0} barCategoryGap="0%">
               <XAxis
                 dataKey="month"
                 axisLine={false}
@@ -192,12 +117,69 @@ const TrainingPage = ({ months, trainings }: any) => {
                 }}
               />
 
-              {activeDistanceTypes.map((type) => (
+              {activeDistanceTypes.map((t) => (
                 <Bar
-                  key={type}
-                  dataKey={type}
+                  key={t.type}
+                  dataKey={t.type}
                   stackId="a"
-                  fill={distanceColors[type] || "#888"}
+                  fill={distanceColors[t.type] || "#888"}
+                  minPointSize={1}
+                  maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* ДИАГРАММА ВЫНОСЛИВОСТИ */}
+
+      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+        <h2 className="text-lg font-semibold mb-4 text-gray-100">
+          Объём по зонам выносливости
+        </h2>
+
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={enduranceChartData} barGap={0} barCategoryGap="0%">
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#888", fontSize: 12 }}
+              />
+
+              <Tooltip
+                content={({ active, payload }: any) => {
+                  if (active && payload && payload.some((p: any) => p.value > 0)) {
+                    return (
+                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                        {payload
+                          .filter((p: any) => p.value > 0)
+                          .map((p: any) => (
+                            <div key={p.dataKey}>
+                              <span
+                                className="inline-block w-3 h-3 mr-1 rounded-full"
+                                style={{ backgroundColor: p.fill }}
+                              ></span>
+                              {p.dataKey}: {p.value}
+                            </div>
+                          ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+
+              {activeEnduranceZones.map((z) => (
+                <Bar
+                  key={z.zone}
+                  dataKey={z.zone}
+                  stackId="a"
+                  fill={enduranceColors[z.zone]}
+                  minPointSize={1}
+                  maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
                 />
               ))}
             </BarChart>
@@ -206,6 +188,4 @@ const TrainingPage = ({ months, trainings }: any) => {
       </div>
     </div>
   );
-};
-
-export default TrainingPage;
+}
