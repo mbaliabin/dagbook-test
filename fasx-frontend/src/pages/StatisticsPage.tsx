@@ -1,5 +1,3 @@
-// 👉 Полный рабочий код StatsPage с добавленной диаграммой перед TOTALSUM
-
 import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
@@ -126,19 +124,18 @@ export default function StatsPage() {
     };
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const sumColumn = (rows: any[], colIndex: number) => {
+    let sum = 0;
+    rows.forEach((row) => {
+      const val = row.months[colIndex];
+      if (typeof val === "number") sum += val;
+      else if (typeof val === "string") {
+        const [h, m] = val.split(":").map(Number);
+        sum += h * 60 + m;
+      }
+    });
+    return formatTime(sum);
   };
-
-  const applyDateRange = () => setShowDateRangePicker(false);
-
-  const menuItems = [
-    { label: "Главная", icon: Home, path: "/daily" },
-    { label: "Тренировки", icon: BarChart3, path: "/profile" },
-    { label: "Планирование", icon: ClipboardList, path: "/planning" },
-    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
 
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
@@ -210,7 +207,8 @@ export default function StatsPage() {
   // ====== JSX RETURN ======
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="w-full space-y-8">
+      {/* Изменение: ограничиваем ширину контейнера и центрируем — чтобы не растягивалось на весь экран */}
+      <div className="w-full max-w-[1200px] mx-auto space-y-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
@@ -365,4 +363,3 @@ export default function StatsPage() {
     </div>
   );
 }
-
