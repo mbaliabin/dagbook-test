@@ -653,7 +653,8 @@ export default function StatsPage() {
                         dataKey={type}
                         stackId="distance"
                         fill={distanceColors[type] || "#888"}
-                        isAnimationActive={false}
+                        isAnimationActive={true}
+                        animationDuration={1500} // 1.5 секунды
                         maxBarSize={Math.floor(1000 / Math.max(1, filteredMonths.length))}
                       />
                     ))}
