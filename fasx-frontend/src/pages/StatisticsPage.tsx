@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
-import weekOfYear from "dayjs/plugin/weekOfYear";
 import {
   Home,
   BarChart3,
@@ -24,6 +23,7 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -45,8 +45,6 @@ export default function StatsPage() {
   });
   const [showDateRangePicker, setShowDateRangePicker] =
     React.useState(false);
-
-  dayjs.extend(weekOfYear);
 
   const totals = {
     trainingDays: 83,
@@ -120,6 +118,7 @@ export default function StatsPage() {
       const end = dayjs(dateRange.endDate);
       const result: string[] = [];
       let current = start.startOf("day");
+
       while (current.isBefore(end) || current.isSame(end, "day")) {
         result.push(current.format("DD MMM"));
         current = current.add(1, "day");
@@ -171,7 +170,8 @@ export default function StatsPage() {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     scrollRefs.forEach((ref, i) => {
-      if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft;
+      if (i !== index && ref.current)
+        ref.current.scrollLeft = scrollLeft;
     });
   };
 
@@ -179,23 +179,39 @@ export default function StatsPage() {
     table,
     index,
   }) => {
-    const colWidth = Math.max(80, Math.floor(900 / filteredMonths.length));
+    const weekColWidth = 80;
+    const monthColWidth = 100;
+    const yearColWidth = 80;
     const leftColWidth = 160;
     const totalColWidth = 80;
-    const computedMinWidth =
-      filteredMonths.length * colWidth + leftColWidth + totalColWidth;
+
+    const colWidth =
+      periodType === "week"
+        ? weekColWidth
+        : periodType === "month"
+        ? monthColWidth
+        : yearColWidth;
+
+    const computedMinWidth = Math.max(
+      900,
+      filteredMonths.length * colWidth + leftColWidth + totalColWidth
+    );
 
     return (
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">
           {table.title}
         </h2>
+
         <div
           ref={scrollRefs[index]}
           className="overflow-x-auto"
           onScroll={(e) => handleScroll(e, index)}
         >
-          <div style={{ minWidth: computedMinWidth }}>
+          <div
+            style={{ minWidth: computedMinWidth }}
+            className="transition-all duration-300"
+          >
             {/* HEADER */}
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div
@@ -208,6 +224,7 @@ export default function StatsPage() {
                   ? "Зона"
                   : "Тип активности"}
               </div>
+
               {filteredMonths.map((m, idx) => (
                 <div
                   key={m + "-h-" + idx}
@@ -217,6 +234,7 @@ export default function StatsPage() {
                   {m}
                 </div>
               ))}
+
               <div
                 className="p-3 text-center font-medium bg-[#1f1f1f] flex-none"
                 style={{ width: totalColWidth }}
@@ -242,8 +260,9 @@ export default function StatsPage() {
                         style={{ backgroundColor: row.color }}
                       ></span>
                     )}
-                    <div className="truncate">{row.param || row.type}</div>
+                    <div className="truncate">{row.param}</div>
                   </div>
+
                   {filteredMonths.map((val: number | string, k: number) => (
                     <div
                       key={k}
@@ -255,6 +274,7 @@ export default function StatsPage() {
                         : formatTimeSafe(row.months[k])}
                     </div>
                   ))}
+
                   <div
                     className="p-3 text-center bg-[#1f1f1f] flex-none"
                     style={{ width: totalColWidth }}
@@ -263,6 +283,35 @@ export default function StatsPage() {
                   </div>
                 </div>
               ))}
+
+              {/* FOOTER — скрываем для Параметров дня */}
+              {table.title !== "Параметры дня" && (
+                <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
+                  <div
+                    className="p-3 sticky left-0 bg-[#222] z-10"
+                    style={{ width: leftColWidth }}
+                  >
+                    Итого
+                  </div>
+
+                  {filteredMonths.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 text-center flex-none"
+                      style={{ width: colWidth }}
+                    >
+                      {sumColumn(table.data, idx)}
+                    </div>
+                  ))}
+
+                  <div
+                    className="p-3 text-center flex-none"
+                    style={{ width: totalColWidth }}
+                  >
+                    —
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -274,6 +323,8 @@ export default function StatsPage() {
     localStorage.removeItem("token");
     navigate("/login");
   };
+
+  const applyDateRange = () => setShowDateRangePicker(false);
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
@@ -302,6 +353,7 @@ export default function StatsPage() {
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
+
             <button
               onClick={handleLogout}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
@@ -333,7 +385,7 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* PERIOD */}
+        {/* REPORT/PERIOD */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select
             className="bg-[#1f1f22] text-white px-3 py-1 rounded"
@@ -404,8 +456,9 @@ export default function StatsPage() {
                   >
                     Отмена
                   </button>
+
                   <button
-                    onClick={() => setShowDateRangePicker(false)}
+                    onClick={applyDateRange}
                     className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Применить
@@ -418,9 +471,7 @@ export default function StatsPage() {
 
         {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-gray-100">
-            Зоны выносливости
-          </h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -442,70 +493,4 @@ export default function StatsPage() {
                 />
                 <Tooltip
                   content={({ active, payload }: any) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-[#222] text-white p-2 rounded">
-                          {payload.map((p: any) => (
-                            <div key={p.dataKey}>
-                              {p.dataKey}: {p.value}
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                {filteredEnduranceZones.map((zone) => (
-                  <Bar
-                    key={zone.zone}
-                    dataKey={zone.zone}
-                    stackId="a"
-                    fill={zone.color}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Таблицы */}
-        <div className="space-y-6">
-          <TableSection
-            index={0}
-            table={{
-              title: "Параметры дня",
-              data: [
-                { param: "Вес", months: [70, 71, 70, 69, 70, 71, 70], total: 0 },
-                { param: "ЧСС покоя", months: [60, 61, 62, 63, 60, 61, 60], total: 0 },
-              ],
-            }}
-          />
-          <TableSection
-            index={1}
-            table={{
-              title: "Выносливость",
-              data: filteredEnduranceZones.map((zone) => ({
-                param: zone.zone,
-                color: zone.color,
-                months: zone.months,
-                total: formatTime(zone.total),
-              })),
-            }}
-          />
-          <TableSection
-            index={2}
-            table={{
-              title: "Тип активности",
-              data: filteredMovementTypes.map((m) => ({
-                type: m.type,
-                months: m.months,
-                total: formatTime(m.total),
-              })),
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+                    if (active && payload &&
