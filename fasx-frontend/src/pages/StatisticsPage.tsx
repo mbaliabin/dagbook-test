@@ -1,3 +1,5 @@
+// 👉 Полный рабочий код StatsPage с добавленной диаграммой перед TOTALSUM
+
 import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
@@ -111,7 +113,7 @@ export default function StatsPage() {
     return {
       ...zone,
       months: zone.months.slice(0, sliceLength),
-      total: zone.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: zone.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
@@ -120,7 +122,7 @@ export default function StatsPage() {
     return {
       ...m,
       months: m.months.slice(0, sliceLength),
-      total: m.months.slice(0, sliceLength).reduce((a,b) => a+b,0),
+      total: m.months.slice(0, sliceLength).reduce((a,b)=>a+b,0),
     };
   });
 
@@ -147,7 +149,7 @@ export default function StatsPage() {
     });
   };
 
-  // --- Таблица в отдельном компоненте для выравнивания ---
+  // Табличный компонент
   const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
     const weekColWidth = 80;
     const monthColWidth = 100;
@@ -161,50 +163,63 @@ export default function StatsPage() {
     return (
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
+
         <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={(e)=>handleScroll(e,index)}>
-          <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
-            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 box-border z-10">
+          <div style={{ minWidth: computedMinWidth }}>
+
+            {/* Заголовок */}
+            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
                 {table.title==="Параметры дня"?"Параметр":table.title==="Выносливость"?"Зона":"Тип активности"}
               </div>
+
               {filteredMonths.map((m, idx)=>(
-                <div key={m+"-h-"+idx} className="p-3 text-center box-border font-medium flex-none" style={{ width: colWidth }}>{m}</div>
+                <div key={m+"-h-"+idx} className="p-3 text-center" style={{ width: colWidth }}>{m}</div>
               ))}
-              <div className="p-3 text-center font-medium bg-[#1f1f1f] box-border flex-none" style={{ width: totalColWidth }}>Всего</div>
+
+              <div className="p-3 text-center font-medium bg-[#1f1f1f]" style={{ width: totalColWidth }}>Всего</div>
             </div>
+
+            {/* Строки */}
             <div>
               {table.data.map((row:any,j:number)=>(
-                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60">
                   <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{ width: leftColWidth }}>
-                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
-                    <div className="truncate">{row.param}</div>
+                    {row.color && <span className="w-3 h-3 rounded-full" style={{backgroundColor: row.color}}></span>}
+                    <div>{row.param}</div>
                   </div>
-                  {filteredMonths.map((val:number,k:number)=>(
-                    <div key={k} className="p-3 text-center box-border flex-none" style={{ width: colWidth }}>{row.months[k] ?? 0}</div>
+
+                  {filteredMonths.map((_,k)=>(
+                    <div key={k} className="p-3 text-center" style={{ width: colWidth }}>{row.months[k] ?? 0}</div>
                   ))}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total ?? (row.months ? row.months.reduce((a:number,b:number)=>a+b,0) : 0)}</div>
+
+                  <div className="p-3 text-center bg-[#1f1f1f]" style={{ width: totalColWidth }}>
+                    {row.total ?? row.months.reduce((a:number,b:number)=>a+b,0)}
+                  </div>
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </div>
     );
   };
 
+
+  // ====== JSX RETURN ======
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="w-full space-y-8">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
-            <div>
-              <h1 className="text-2xl font-bold text-white">{name}</h1>
-            </div>
+            <img src="/profile.jpg" className="w-16 h-16 rounded-full object-cover" />
+            <h1 className="text-2xl font-bold">{name}</h1>
           </div>
-          <div className="flex items-center space-x-2 flex-wrap">
+
+          <div className="flex items-center space-x-2">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
               <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
             </button>
@@ -214,14 +229,15 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Верхнее меню */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        {/* NAV */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
+              <button key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center text-sm ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
@@ -230,97 +246,118 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* Выбор отчета и периода */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4">
+          <select className="bg-[#1f1f22] px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option>Общий отчет</option>
           </select>
-          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
-          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
-          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+
+          <button onClick={() => setPeriodType("week")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={() => setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={() => setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d]">Год</button>
+
           <div className="relative">
-            <button onClick={() => setShowDateRangePicker(prev => !prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+            <button onClick={() => setShowDateRangePicker(prev => !prev)}
+              className="px-3 py-1 rounded bg-[#1f1f22] hover:bg-[#2a2a2d] flex items-center">
               <Calendar className="w-4 h-4 mr-1" /> Произвольный период <ChevronDown className="w-4 h-4 ml-1" />
             </button>
+
             {showDateRangePicker && (
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
                   onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
-                  showSelectionPreview
-                  moveRangeOnFirstSelection={false}
                   months={1}
                   ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
                   direction="horizontal"
-                  rangeColors={['#3b82f6']}
-                  className="text-white"
                   locale={ru}
                   weekStartsOn={1}
                 />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
-                  <button onClick={applyDateRange} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+
+                <div className="flex justify-end mt-2">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600">Отмена</button>
+                  <button onClick={applyDateRange} className="px-3 py-1 ml-2 rounded bg-blue-600">Применить</button>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* TOTALSUM */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
-          <div className="flex flex-wrap gap-10 text-sm mt-3">
-            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
-            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
-            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-          </div>
-        </div>
-
-        {/* Диаграмма */}
+        {/* === ВСТАВЛЕННАЯ ДИАГРАММА (ПЕРЕД TOTALSUM) === */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={filteredMonths.map((month, i) => {
                 const data: any = { month };
                 filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
                 return data;
-              })} barSize={35}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                <Tooltip content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
-                        {payload.map((p: any) => (
-                          <p key={p.dataKey} className="mt-1">
-                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
-                            {p.dataKey}: {formatTime(p.value)}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}/>
+              })}>
+                <XAxis dataKey="month" tick={{ fill: "#888" }} axisLine={false} tickLine={false} />
+
+                <Tooltip content={({ active, payload }: any) =>
+                  active && payload ? (
+                    <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs">
+                      {payload.map((p: any) => (
+                        <p key={p.dataKey}>
+                          <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
+                          {p.dataKey}: {p.value}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null
+                } />
+
                 {filteredEnduranceZones.map((zone) => (
-                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
+                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
+        {/* TOTALSUM */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
+          <div className="flex flex-wrap gap-10 mt-3 text-sm">
+            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl">{totals.trainingDays}</p></div>
+            <div><p className="text-gray-400">Сессий</p><p className="text-xl">{totals.sessions}</p></div>
+            <div><p className="text-gray-400">Время</p><p className="text-xl">{totals.time}</p></div>
+          </div>
+        </div>
+
         {/* Таблицы */}
         {[
-          { title: "Параметры дня", data: [
-            { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
-            { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
-            { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
-            { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
-            { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
-          ] },
-          { title: "Выносливость", data: filteredEnduranceZones.map(z=>({ param: z.zone, months: z.months, total: z.total, color: z.color })) },
-          { title: "Формы активности", data: filteredMovementTypes.map(m=>({ param: m.type, months: m.months, total: m.total })) }
-        ].map((table,i)=>(
+          {
+            title: "Параметры дня",
+            data: [
+              { param: "Травма", months: [0,1,0,0,0,0,0,0,0,0,1,0] },
+              { param: "Болезнь", months: [1,0,0,0,0,0,0,0,0,1,0,0] },
+              { param: "Выходной", months: [2,3,1,2,1,1,3,2,1,2,1,1] },
+              { param: "Соревнования", months: [0,1,0,2,1,1,2,1,1,0,0,0] },
+              { param: "В пути", months: [1,0,1,0,1,2,1,1,0,1,1,0] },
+            ],
+          },
+
+          {
+            title: "Выносливость",
+            data: filteredEnduranceZones.map(z => ({
+              param: z.zone,
+              months: z.months,
+              total: z.total,
+              color: z.color,
+            })),
+          },
+
+          {
+            title: "Формы активности",
+            data: filteredMovementTypes.map(m => ({
+              param: m.type,
+              months: m.months,
+              total: m.total,
+            })),
+          },
+        ].map((table, i) => (
           <TableSection key={i} table={table} index={i} />
         ))}
 
@@ -328,3 +365,4 @@ export default function StatsPage() {
     </div>
   );
 }
+
