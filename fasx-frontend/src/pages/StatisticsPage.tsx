@@ -18,6 +18,7 @@ import {
   XAxis,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
@@ -373,11 +374,35 @@ export default function StatsPage() {
   );
   // -----------------------------------------------------------------------
 
+  // ------- STACKED BAR: prepare colors and data -------
+  const distanceColors: Record<string, string> = {
+    "Лыжи, к. ст.": "#4ade80",
+    "Лыжи, кл. ст.": "#22d3ee",
+    "Лыжероллеры, к. ст": "#facc15",
+    "Лыжероллеры, кл. ст.": "#fb923c",
+    "Бег": "#ef4444",
+    "Велосипед": "#3b82f6",
+    "Другое": "#a855f7",
+    "Силовая": "#a78bfa",
+  };
+
+  const stackedDistanceData = filteredMonths.map((label, idx) => {
+    const row: any = { month: label };
+    filteredDistanceTypes.forEach((t) => {
+      row[t.type] = t.months[idx] || 0;
+    });
+    return row;
+  });
+
+  const activeDistanceTypes = filteredDistanceTypes
+    .filter((t) => (t.months || []).some((v) => Number(v) > 0))
+    .map((t) => t.type);
+  // ----------------------------------------------------
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       {/* Главный контейнер — шире */}
-      <div className="max-w-7xl w-full mx-auto space-y-6 px-4">
-
+      <div className="max-w-5xl mx-auto space-y-6 px-4">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -609,18 +634,29 @@ export default function StatsPage() {
 
         {reportType === "Общая дистанция" && (
           <>
-            {/* Диаграмма общей дистанции по месяцам */}
+            {/* STACKED BAR: дистанция по видам тренировок */}
             <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">Общая дистанция по месяцам (км)</h2>
-              <div className="h-64">
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">Общая дистанция по видам тренировок</h2>
+
+              <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={filteredMonths.map((m, i) => ({ month: m, distance: totalDistanceByMonth[i] || 0 }))}
-                    margin={{ left: 0, right: 0 }}
-                  >
+                  <BarChart data={stackedDistanceData} margin={{ left: 0, right: 0 }}>
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="distance" maxBarSize={Math.floor(1000 / Math.max(1, filteredMonths.length))} />
+                    <Tooltip
+                      formatter={(value: any, name: any) => [`${value} км`, name]}
+                      wrapperStyle={{ backgroundColor: "#1f1f1f", border: "1px solid #333" }}
+                    />
+                    <Legend wrapperStyle={{ color: "#ddd" }} />
+                    {activeDistanceTypes.map((type) => (
+                      <Bar
+                        key={type}
+                        dataKey={type}
+                        stackId="distance"
+                        fill={distanceColors[type] || "#888"}
+                        isAnimationActive={false}
+                        maxBarSize={Math.floor(1000 / Math.max(1, filteredMonths.length))}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
