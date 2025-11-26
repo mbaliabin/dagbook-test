@@ -458,6 +458,41 @@ export default function StatsPage() {
           </div>
         </div>
 
+{/* Диаграмма */}
+        <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+          <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={filteredMonths.map((month, i) => {
+                const data: any = { month };
+                filteredEnduranceZones.forEach((zone) => data[zone.zone] = zone.months[i] ?? 0);
+                return data;
+              })} barSize={35}>
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
+                <Tooltip content={({ active, payload }: any) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded-xl text-xs text-gray-300 shadow-md">
+                        {payload.map((p: any) => (
+                          <p key={p.dataKey} className="mt-1">
+                            <span className="inline-block w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: p.fill }}></span>
+                            {p.dataKey}: {formatTime(p.value)}
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}/>
+                {filteredEnduranceZones.map((zone) => (
+                  <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} radius={[4,4,0,0]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+
         {/* TOTALSUM */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">
