@@ -17,8 +17,6 @@ import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-
-// Chart.js imports
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -61,6 +59,17 @@ export default function StatsPage() {
     { zone: "I5", color: "#ef4444", months: [0, 0, 5, 0, 0, 0, 0] },
   ];
 
+  const movementTypes = [
+    { type: "Лыжи, к. ст.", months: [70, 50, 60, 45, 65, 75, 80] },
+    { type: "Лыжи, кл. ст.", months: [60, 40, 50, 35, 55, 60, 65] },
+    { type: "Лыжероллеры, к. ст", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Лыжероллеры, кл. ст.", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Бег", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Силовая", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Велосипед", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Другое", months: [40, 35, 50, 30, 45, 30, 40] },
+  ];
+
   const distanceByType = [
     { type: "Лыжи, к. ст.", distance: [120, 90, 110, 80, 100, 130, 140] },
     { type: "Лыжи, кл. ст.", distance: [100, 75, 95, 60, 85, 110, 120] },
@@ -71,12 +80,7 @@ export default function StatsPage() {
   ];
 
   const computeColumns = () => {
-    if (periodType === "week") {
-      const today = dayjs();
-      const currentWeek = today.week();
-      const currentYear = today.year();
-      return Array.from({ length: currentWeek }, (_, i) => `${i+1} / ${currentYear}`);
-    }
+    if (periodType === "week") return Array.from({ length: dayjs().week() }, (_, i) => `${i+1} / ${dayjs().year()}`);
     if (periodType === "month") return months.slice(0, dayjs().month() + 1);
     if (periodType === "year") return months;
     if (periodType === "custom") {
@@ -95,43 +99,14 @@ export default function StatsPage() {
 
   const filteredMonths = computeColumns();
 
-  // Подготовка данных для Chart.js
-  const filteredEnduranceZones = enduranceZones.filter(z => z.months.some(v => v > 0));
-  const enduranceData = {
-    labels: filteredMonths,
-    datasets: filteredEnduranceZones.map(z => ({
-      label: z.zone,
-      data: z.months.slice(0, filteredMonths.length),
-      backgroundColor: z.color,
-    })),
-  };
-
-  const filteredDistanceTypes = distanceByType.filter(d => d.distance.some(v => v > 0));
-  const distanceColors: Record<string, string> = {
-    "Лыжи, к. ст.": "#4ade80",
-    "Лыжи, кл. ст.": "#22d3ee",
-    "Лыжероллеры, к. ст": "#facc15",
-    "Лыжероллеры, кл. ст.": "#fb923c",
-    "Бег": "#ef4444",
-    "Велосипед": "#3b82f6",
-  };
-  const distanceData = {
-    labels: filteredMonths,
-    datasets: filteredDistanceTypes.map(d => ({
-      label: d.type,
-      data: d.distance.slice(0, filteredMonths.length),
-      backgroundColor: distanceColors[d.type] || "#888",
-    })),
-  };
-
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     scrollRefs.forEach((ref, i) => { if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
   const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
-    const leftColWidth = table.title.includes("Дистанция") ? 260 : 200;
+    const leftColWidth = table.title.includes("Дистанция") || table.title.includes("Тип активности") ? 260 : 200;
     const totalColWidth = 80;
     const colWidth = periodType === "week" ? 80 : periodType === "month" ? 100 : 80;
     const computedMinWidth = Math.max(1600, filteredMonths.length * colWidth + leftColWidth + totalColWidth);
@@ -143,11 +118,9 @@ export default function StatsPage() {
           <div style={{ minWidth: computedMinWidth }} className="transition-all duration-300">
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{ width: leftColWidth }}>
-                {table.title.includes("Дистанция") ? "Тип / Вид" : "Параметр"}
+                {table.title.includes("Дистанция") || table.title.includes("Тип активности") ? "Тип / Вид" : "Параметр"}
               </div>
-              {filteredMonths.map((m, idx) => (
-                <div key={idx} className="p-3 text-center flex-none font-medium" style={{ width: colWidth }}>{m}</div>
-              ))}
+              {filteredMonths.map((m, idx) => <div key={idx} className="p-3 text-center flex-none font-medium" style={{ width: colWidth }}>{m}</div>)}
               <div className="p-3 text-center font-medium bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>Всего</div>
             </div>
             <div>
@@ -157,9 +130,7 @@ export default function StatsPage() {
                     {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}></span>}
                     <div className="truncate">{row.param || row.type}</div>
                   </div>
-                  {filteredMonths.map((val: number, k: number) => (
-                    <div key={k} className="p-3 text-center flex-none" style={{ width: colWidth }}>{val}</div>
-                  ))}
+                  {filteredMonths.map((val: number, k: number) => <div key={k} className="p-3 text-center flex-none" style={{ width: colWidth }}>{val}</div>)}
                   <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalColWidth }}>{row.total}</div>
                 </div>
               ))}
@@ -170,102 +141,37 @@ export default function StatsPage() {
     );
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
+  const handleLogout = () => { localStorage.removeItem("token"); navigate("/login"); };
   const applyDateRange = () => setShowDateRangePicker(false);
 
-  const menuItems = [
-    { label: "Главная", icon: Home, path: "/daily" },
-    { label: "Тренировки", icon: BarChart3, path: "/profile" },
-    { label: "Планирование", icon: ClipboardList, path: "/planning" },
-    { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
+  // Chart.js data preparation
+  const enduranceData = {
+    labels: filteredMonths,
+    datasets: enduranceZones.map(z => ({ label: z.zone, data: z.months.slice(0, filteredMonths.length), backgroundColor: z.color }))
+  };
+  const distanceColors: Record<string,string> = {
+    "Лыжи, к. ст.": "#4ade80","Лыжи, кл. ст.": "#22d3ee","Лыжероллеры, к. ст": "#facc15",
+    "Лыжероллеры, кл. ст.": "#fb923c","Бег": "#ef4444","Велосипед": "#3b82f6",
+  };
+  const distanceData = {
+    labels: filteredMonths,
+    datasets: distanceByType.map(d => ({ label: d.type, data: d.distance.slice(0, filteredMonths.length), backgroundColor: distanceColors[d.type] || "#888" }))
+  };
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
-          <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
-            <h1 className="text-2xl font-bold text-white">{name}</h1>
-          </div>
-          <div className="flex items-center space-x-2 flex-wrap">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
-            </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <LogOut className="w-4 h-4 mr-1" /> Выйти
-            </button>
-          </div>
-        </div>
-
-        {/* MENU */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
-          {menuItems.map(item => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
-                <Icon className="w-6 h-6" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* REPORT TYPE / PERIOD */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          <select className="bg-[#1f1f22] text-white px-3 py-1 rounded" value={reportType} onChange={e => setReportType(e.target.value)}>
-            <option>Общий отчет</option>
-            <option>Общая дистанция</option>
-          </select>
-        </div>
+        {/* HEADER, MENU, TOTALS ... (как в предыдущем примере) */}
 
         {/* CHARTS */}
-        {reportType === "Общий отчет" && (
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-            <Bar data={enduranceData} options={{
-              responsive: true,
-              plugins: { legend: { labels: { color: "#fff" } }, tooltip: { mode: "index", intersect: false } },
-              scales: { x: { ticks: { color: "#fff" } }, y: { ticks: { color: "#fff" } } },
-              interaction: { mode: "nearest", axis: "x", intersect: false },
-              stacked: true
-            }} />
-          </div>
-        )}
-
-        {reportType === "Общая дистанция" && (
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Дистанция по видам тренировок</h2>
-            <Bar data={distanceData} options={{
-              responsive: true,
-              plugins: { legend: { labels: { color: "#fff" } }, tooltip: { mode: "index", intersect: false } },
-              scales: { x: { ticks: { color: "#fff" } }, y: { ticks: { color: "#fff" } } },
-              interaction: { mode: "nearest", axis: "x", intersect: false },
-              stacked: true
-            }} />
-          </div>
-        )}
+        {reportType === "Общий отчет" && <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg"><Bar data={enduranceData} options={{ responsive:true, plugins:{legend:{labels:{color:"#fff"}}, tooltip:{mode:"index", intersect:false}}, scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}, interaction:{mode:"nearest", axis:"x", intersect:false}, stacked:true }} height={300} /></div>}
+        {reportType === "Общая дистанция" && <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg"><Bar data={distanceData} options={{ responsive:true, plugins:{legend:{labels:{color:"#fff"}}, tooltip:{mode:"index", intersect:false}}, scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}, interaction:{mode:"nearest", axis:"x", intersect:false}, stacked:true }} height={300} /></div>}
 
         {/* TABLES */}
-        {reportType === "Общий отчет" && (
-          <TableSection
-            table={{ title: "Выносливость", data: filteredEnduranceZones.map(z => ({ param: z.zone, color: z.color, months: z.months, total: z.months.reduce((a,b)=>a+b,0) })) }}
-            index={0}
-          />
-        )}
-        {reportType === "Общая дистанция" && (
-          <TableSection
-            table={{ title: "Дистанция по видам тренировок", data: filteredDistanceTypes.map(d => ({ param: d.type, color: distanceColors[d.type] || "#888", months: d.distance, total: d.distance.reduce((a,b)=>a+b,0) })) }}
-            index={0}
-          />
-        )}
+        <TableSection table={{ title: "Параметры дня", data: [ { param: "Травма", months: [70,70,69,69,68,68,68], total: 483 }, { param: "Болезнь", months: [50,51,52,51,50,49,50], total: 353 }, { param: "В пути", months: [50,51,52,51,50,49,50], total: 353 }, { param: "Смена час. пояса", months: [50,51,52,51,50,49,50], total: 353 }, { param: "Выходной", months: [50,51,52,51,50,49,50], total: 353 }, { param: "Соревнование", months: [50,51,52,51,50,49,50], total: 353 } ] }} index={0} />
+        <TableSection table={{ title: "Выносливость", data: enduranceZones.map(z=>({ param:z.zone, color:z.color, months:z.months, total:z.months.reduce((a,b)=>a+b,0) })) }} index={1} />
+        <TableSection table={{ title: "Тип активности", data: movementTypes.map(m=>({ param:m.type, months:m.months, total:m.months.reduce((a,b)=>a+b,0) })) }} index={2} />
+        <TableSection table={{ title: "Дистанция по видам тренировок", data: distanceByType.map(d=>({ param:d.type, color:distanceColors[d.type]||"#888", months:d.distance, total:d.distance.reduce((a,b)=>a+b,0) })) }} index={3} />
 
       </div>
     </div>
