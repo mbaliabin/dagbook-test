@@ -72,8 +72,7 @@ export default function StatsPage() {
     { type: "Лыжероллеры, к. ст", months: [40, 35, 50, 30, 45, 30, 40] },
     { type: "Лыжероллеры, кл. ст.", months: [40, 35, 50, 30, 45, 30, 40] },
     { type: "Бег", months: [40, 35, 50, 30, 45, 30, 40] },
-    { type: "Кросспоход", months: [40, 35, 50, 30, 45, 30, 40] },
-    { type: "Силовая, кроссфит", months: [40, 35, 50, 30, 45, 30, 40] },
+    { type: "Силовая", months: [40, 35, 50, 30, 45, 30, 40] },
     { type: "Велосипед", months: [40, 35, 50, 30, 45, 30, 40] },
     { type: "Другое", months: [40, 35, 50, 30, 45, 30, 40] },
   ];
@@ -461,6 +460,16 @@ export default function StatsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+{/* TOTALSUM */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">TOTALSUM</h1>
+          <div className="flex flex-wrap gap-10 text-sm mt-3">
+            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
+            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
+            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
           </div>
         </div>
 
