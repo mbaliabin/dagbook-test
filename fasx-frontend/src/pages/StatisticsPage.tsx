@@ -18,6 +18,7 @@ import {
   XAxis,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
@@ -39,10 +40,12 @@ export default function StatsPage() {
   const [dateRange, setDateRange] = React.useState<{
     startDate: Date;
     endDate: Date;
-  }>({
-    startDate: dayjs("2025-01-01").toDate(),
-    endDate: dayjs("2025-12-31").toDate(),
-  });
+  }>(
+    {
+      startDate: dayjs("2025-01-01").toDate(),
+      endDate: dayjs("2025-12-31").toDate(),
+    }
+  );
   const [showDateRangePicker, setShowDateRangePicker] =
     React.useState(false);
 
@@ -77,6 +80,7 @@ export default function StatsPage() {
     { type: "Другое", months: [40, 35, 50, 30, 45, 30, 40] },
   ];
 
+  // --- NEW: данные по дистанции (примерные) ---
   const distanceByType = [
     { type: "Лыжи, к. ст.", distance: [120, 90, 110, 80, 100, 130, 140] },
     { type: "Лыжи, кл. ст.", distance: [100, 75, 95, 60, 85, 110, 120] },
@@ -85,6 +89,7 @@ export default function StatsPage() {
     { type: "Бег", distance: [80, 70, 90, 60, 75, 85, 95] },
     { type: "Велосипед", distance: [150, 130, 160, 120, 140, 170, 180] },
   ];
+  // -----------------------------------------------
 
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -150,6 +155,7 @@ export default function StatsPage() {
     };
   });
 
+  // --- NEW: фильтруем дистанции под выбранный период ----
   const filteredDistanceTypes = distanceByType.map((d) => {
     const sliceLength = Math.min(d.distance.length, filteredMonths.length);
     const monthsArr = d.distance.slice(0, sliceLength);
@@ -159,6 +165,7 @@ export default function StatsPage() {
       total: monthsArr.reduce((a, b) => a + b, 0),
     };
   });
+  // -------------------------------------------------------
 
   const sumColumn = (rows: any[], colIndex: number) => {
     let sum = 0;
@@ -193,17 +200,20 @@ export default function StatsPage() {
     const weekColWidth = 80;
     const monthColWidth = 100;
     const yearColWidth = 80;
+    // увеличиваем ширину левой колонки для длинных названий / дистанций
     const leftColWidth =
       table.title === "Тип активности" || table.title === "Дистанция по видам тренировок"
         ? 260
         : 200;
     const totalColWidth = 80;
+
     const colWidth =
       periodType === "week"
         ? weekColWidth
         : periodType === "month"
         ? monthColWidth
         : yearColWidth;
+
     const computedMinWidth = Math.max(
       1600,
       filteredMonths.length * colWidth + leftColWidth + totalColWidth
@@ -281,13 +291,12 @@ export default function StatsPage() {
                       className="p-3 text-center flex-none"
                       style={{ width: colWidth }}
                     >
-                      {(() => {
-                        const value = row.months[k];
-                        if (value === 0) return "";
-                        if (table.title === "Параметры дня") return value;
-                        if (table.title === "Дистанция по видам тренировок") return value;
-                        return formatTimeSafe(value);
-                      })()}
+                      {/* для таблицы дистанций — числа (км), для остальных — formatTimeSafe */}
+                      {table.title === "Параметры дня"
+                        ? row.months[k]
+                        : table.title === "Дистанция по видам тренировок"
+                        ? row.months[k]
+                        : formatTimeSafe(row.months[k])}
                     </div>
                   ))}
 
@@ -295,7 +304,7 @@ export default function StatsPage() {
                     className="p-3 text-center bg-[#1f1f1f] flex-none"
                     style={{ width: totalColWidth }}
                   >
-                    {row.total}
+                    {table.totalKey === "distance" ? row.total : row.total}
                   </div>
                 </div>
               ))}
@@ -315,19 +324,18 @@ export default function StatsPage() {
                       className="p-3 text-center flex-none"
                       style={{ width: colWidth }}
                     >
-                      {(() => {
-                        let sum;
-                        if (table.title === "Параметры дня") return "—";
-                        if (table.title === "Дистанция по видам тренировок") {
-                          sum = filteredDistanceTypes.reduce(
-                            (acc, r) => acc + (r.months[idx] || 0),
-                            0
-                          );
-                          return sum === 0 ? "" : sum;
-                        }
-                        sum = parseInt(sumColumn(table.data, idx)) || 0;
-                        return sum === 0 ? "" : sumColumn(table.data, idx);
-                      })()}
+                      {table.title === "Параметры дня"
+                        ? "—"
+                        : table.title === "Дистанция по видам тренировок"
+                        ? (() => {
+                            // сумма по колонке для дистанций
+                            const sum = filteredDistanceTypes.reduce(
+                              (acc, r) => acc + (r.months[idx] || 0),
+                              0
+                            );
+                            return sum;
+                          })()
+                        : sumColumn(table.data, idx)}
                     </div>
                   ))}
 
@@ -360,6 +368,13 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
+  // -------------- Helper: total distance by month for chart --------------
+  const totalDistanceByMonth = filteredMonths.map((m, i) =>
+    distanceByType.reduce((acc, t) => acc + (t.distance[i] || 0), 0)
+  );
+  // -----------------------------------------------------------------------
+
+  // ------- STACKED BAR: prepare colors and data -------
   const distanceColors: Record<string, string> = {
     "Лыжи, к. ст.": "#4ade80",
     "Лыжи, кл. ст.": "#22d3ee",
@@ -371,12 +386,22 @@ export default function StatsPage() {
     "Силовая": "#a78bfa",
   };
 
+  const stackedDistanceData = filteredMonths.map((label, idx) => {
+    const row: any = { month: label };
+    filteredDistanceTypes.forEach((t) => {
+      row[t.type] = t.months[idx] || 0;
+    });
+    return row;
+  });
+
   const activeDistanceTypes = filteredDistanceTypes
     .filter((t) => (t.months || []).some((v) => Number(v) > 0))
     .map((t) => t.type);
+  // ----------------------------------------------------
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
+      {/* Главный контейнер — шире */}
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
@@ -433,7 +458,7 @@ export default function StatsPage() {
             onChange={(e) => setReportType(e.target.value)}
           >
             <option>Общий отчет</option>
-            <option>Общая дистанция</option>
+            <option>Общая дистанция</option> {/* NEW OPTION */}
           </select>
 
           <button
@@ -523,43 +548,66 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* ---------- REPORTS ---------- */}
+        {/* ------------ РЕНДЕР ОТЧЕТОВ ------------ */}
+
         {reportType === "Общий отчет" && (
           <>
+            {/* Диаграмма зон выносливости */}
             <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">
-                Общая дистанция по видам тренировок
-              </h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={filteredMonths.map((month, i) => {
                       const data: any = { month };
-                      filteredEnduranceZones.forEach((z) => {
-                        if ((z.months[i] ?? 0) > 0) data[z.zone] = z.months[i];
+                      filteredEnduranceZones.forEach((zone) => {
+                        const value = zone.months[i] ?? 0;
+                        if (value > 0) data[zone.zone] = value; // добавляем только ненулевые
                       });
                       return data;
                     })}
                     barGap={0}
                     barCategoryGap="0%"
                   >
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#888", fontSize: 12 }}
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
+                    <Tooltip
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload.some((p: any) => p.value > 0)) {
+                          return (
+                            <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                              {payload
+                                .filter((p: any) => p.value > 0)
+                                .map((p: any) => (
+                                  <div key={p.dataKey}>
+                                    <span
+                                      className="inline-block w-3 h-3 mr-1 rounded-full"
+                                      style={{ backgroundColor: p.fill }}
+                                    ></span>
+                                    {p.dataKey}: {p.value} мин
+                                  </div>
+                                ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
-                    <Tooltip />
-                    {filteredEnduranceZones.map((zone) =>
-                      zone.months.some((v) => v > 0) ? (
-                        <Bar key={zone.zone} dataKey={zone.zone} stackId="a" fill={zone.color} />
-                      ) : null
-                    )}
+                    {filteredEnduranceZones.map((zone) => (
+                      <Bar
+                        key={zone.zone}
+                        dataKey={zone.zone}
+                        stackId="a"
+                        fill={zone.color}
+                        minPointSize={1}
+                        maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
+            {/* Таблицы */}
             <TableSection
               table={{
                 title: "Параметры дня",
@@ -576,103 +624,88 @@ export default function StatsPage() {
             />
 
             <TableSection
-              table={{
-                title: "Выносливость",
-                data: filteredEnduranceZones.map((z) => ({
-                  param: z.zone,
-                  color: z.color,
-                  months: z.months,
-                  total: formatTime(z.total),
-                })),
-              }}
+              table={{ title: "Выносливость", data: filteredEnduranceZones.map((z) => ({ param: z.zone, color: z.color, months: z.months, total: formatTime(z.total) })) }}
               index={1}
             />
 
             <TableSection
-              table={{
-                title: "Тип активности",
-                data: filteredMovementTypes.map((m) => ({
-                  param: m.type,
-                  months: m.months,
-                  total: formatTime(m.total),
-                })),
-              }}
+              table={{ title: "Тип активности", data: filteredMovementTypes.map((m) => ({ param: m.type, months: m.months, total: formatTime(m.total) })) }}
               index={2}
             />
           </>
         )}
 
-        {reportType === "Общая дистанция" && (
-          <>
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">
-                Общая дистанция по видам тренировок
-              </h2>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={filteredMonths.map((month, i) => {
-                      const data: any = { month };
-                      filteredDistanceTypes.forEach((t) => {
-                        if ((t.months[i] ?? 0) > 0) data[t.type] = t.months[i];
-                      });
-                      return data;
-                    })}
-                    barGap={0}
-                    barCategoryGap="0%"
-                  >
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#888", fontSize: 12 }}
-                    />
-                    <Tooltip
-                      content={({ active, payload }: any) => {
-                        if (active && payload && payload.some((p: any) => p.value > 0)) {
-                          return (
-                            <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
-                              {payload
-                                .filter((p: any) => p.value > 0)
-                                .map((p: any) => (
-                                  <div key={p.dataKey}>
-                                    <span
-                                      className="inline-block w-3 h-3 mr-1 rounded-full"
-                                      style={{ backgroundColor: p.fill }}
-                                    ></span>
-                                    {p.dataKey}: {p.value} км
-                                  </div>
-                                ))}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    {activeDistanceTypes.map((type) => (
-                      <Bar
-                        key={type}
-                        dataKey={type}
-                        stackId="a"
-                        fill={distanceColors[type] || "#888"}
-                        maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+      {reportType === "Общая дистанция" && (
+        <>
+          {/* Диаграмма дистанции по видам тренировок в стиле зон выносливости */}
+          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-semibold mb-4 text-gray-100">
+              Общая дистанция по видам тренировок
+            </h2>
 
-            <TableSection
-              table={{
-                title: "Дистанция по видам тренировок",
-                data: filteredDistanceTypes,
-                totalKey: "distance",
-              }}
-              index={0}
-            />
-          </>
-        )}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={filteredMonths.map((month, i) => {
+                    const data: any = { month };
+                    filteredDistanceTypes.forEach((t) => {
+                      const value = t.months[i] ?? 0;
+                      if (value > 0) data[t.type] = value; // добавляем только ненулевые
+                    });
+                    return data;
+                  })}
+                  barGap={0}
+                  barCategoryGap="0%"
+                >
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
+                  <Tooltip
+                    content={({ active, payload }: any) => {
+                      if (active && payload && payload.some((p: any) => p.value > 0)) {
+                        return (
+                          <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                            {payload
+                              .filter((p: any) => p.value > 0)
+                              .map((p: any) => (
+                                <div key={p.dataKey}>
+                                  <span
+                                    className="inline-block w-3 h-3 mr-1 rounded-full"
+                                    style={{ backgroundColor: p.fill }}
+                                  ></span>
+                                  {p.dataKey}: {p.value} км
+                                </div>
+                              ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  {activeDistanceTypes.map((type) => (
+                    <Bar
+                      key={type}
+                      dataKey={type}
+                      stackId="a"
+                      fill={distanceColors[type] || "#888"}
+                      minPointSize={1}
+                      maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Таблица дистанций по видам */}
+          <TableSection
+            table={{
+              title: "Дистанция по видам тренировок",
+              data: filteredDistanceTypes,
+              totalKey: "distance",
+            }}
+            index={0}
+          />
+        </>
+      )}
       </div>
     </div>
   );
