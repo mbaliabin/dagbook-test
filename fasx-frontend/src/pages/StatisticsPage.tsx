@@ -176,7 +176,7 @@ export default function StatsPage() {
     const weekColWidth = 80;
     const monthColWidth = 100;
     const yearColWidth = 80;
-    const leftColWidth = 250;
+    const leftColWidth = 200;
     const totalColWidth = 80;
 
     const colWidth =
