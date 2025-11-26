@@ -561,7 +561,8 @@ export default function StatsPage() {
                     data={filteredMonths.map((month, i) => {
                       const data: any = { month };
                       filteredEnduranceZones.forEach((zone) => {
-                        data[zone.zone] = zone.months[i] ?? 0;
+                        const value = zone.months[i] ?? 0;
+                        if (value > 0) data[zone.zone] = value; // добавляем только ненулевые
                       });
                       return data;
                     })}
@@ -571,18 +572,20 @@ export default function StatsPage() {
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
                     <Tooltip
                       content={({ active, payload }: any) => {
-                        if (active && payload && payload.length) {
+                        if (active && payload && payload.some((p: any) => p.value > 0)) {
                           return (
                             <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
-                              {payload.map((p: any) => (
-                                <div key={p.dataKey}>
-                                  <span
-                                    className="inline-block w-3 h-3 mr-1 rounded-full"
-                                    style={{ backgroundColor: p.fill }}
-                                  ></span>
-                                  {p.dataKey}: {p.value} мин
-                                </div>
-                              ))}
+                              {payload
+                                .filter((p: any) => p.value > 0)
+                                .map((p: any) => (
+                                  <div key={p.dataKey}>
+                                    <span
+                                      className="inline-block w-3 h-3 mr-1 rounded-full"
+                                      style={{ backgroundColor: p.fill }}
+                                    ></span>
+                                    {p.dataKey}: {p.value} мин
+                                  </div>
+                                ))}
                             </div>
                           );
                         }
@@ -646,33 +649,31 @@ export default function StatsPage() {
                   data={filteredMonths.map((month, i) => {
                     const data: any = { month };
                     filteredDistanceTypes.forEach((t) => {
-                      data[t.type] = t.months[i] ?? 0;
+                      const value = t.months[i] ?? 0;
+                      if (value > 0) data[t.type] = value; // добавляем только ненулевые
                     });
                     return data;
                   })}
                   barGap={0}
                   barCategoryGap="0%"
                 >
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#888", fontSize: 12 }}
-                  />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
                   <Tooltip
                     content={({ active, payload }: any) => {
-                      if (active && payload && payload.length) {
+                      if (active && payload && payload.some((p: any) => p.value > 0)) {
                         return (
                           <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
-                            {payload.map((p: any) => (
-                              <div key={p.dataKey}>
-                                <span
-                                  className="inline-block w-3 h-3 mr-1 rounded-full"
-                                  style={{ backgroundColor: p.fill }}
-                                ></span>
-                                {p.dataKey}: {p.value} км
-                              </div>
-                            ))}
+                            {payload
+                              .filter((p: any) => p.value > 0)
+                              .map((p: any) => (
+                                <div key={p.dataKey}>
+                                  <span
+                                    className="inline-block w-3 h-3 mr-1 rounded-full"
+                                    style={{ backgroundColor: p.fill }}
+                                  ></span>
+                                  {p.dataKey}: {p.value} км
+                                </div>
+                              ))}
                           </div>
                         );
                       }
