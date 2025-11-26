@@ -632,47 +632,80 @@ export default function StatsPage() {
           </>
         )}
 
-        {reportType === "Общая дистанция" && (
-          <>
-            {/* STACKED BAR: дистанция по видам тренировок */}
-            <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">Общая дистанция по видам тренировок</h2>
+      {reportType === "Общая дистанция" && (
+        <>
+          {/* Диаграмма дистанции по видам тренировок в стиле зон выносливости */}
+          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-semibold mb-4 text-gray-100">
+              Общая дистанция по видам тренировок
+            </h2>
 
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stackedDistanceData} margin={{ left: 0, right: 0 }}>
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                    <Tooltip
-                      formatter={(value: any, name: any) => [`${value} км`, name]}
-                      wrapperStyle={{ backgroundColor: "#1f1f1f", border: "1px solid #333" }}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={filteredMonths.map((month, i) => {
+                    const data: any = { month };
+                    filteredDistanceTypes.forEach((t) => {
+                      data[t.type] = t.months[i] ?? 0;
+                    });
+                    return data;
+                  })}
+                  barGap={0}
+                  barCategoryGap="0%"
+                >
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#888", fontSize: 12 }}
+                  />
+                  <Tooltip
+                    content={({ active, payload }: any) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                            {payload.map((p: any) => (
+                              <div key={p.dataKey}>
+                                <span
+                                  className="inline-block w-3 h-3 mr-1 rounded-full"
+                                  style={{ backgroundColor: p.fill }}
+                                ></span>
+                                {p.dataKey}: {p.value} км
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  {activeDistanceTypes.map((type) => (
+                    <Bar
+                      key={type}
+                      dataKey={type}
+                      stackId="a"
+                      fill={distanceColors[type] || "#888"}
+                      minPointSize={1}
+                      maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
                     />
-                    <Legend wrapperStyle={{ color: "#ddd" }} />
-                    {activeDistanceTypes.map((type) => (
-                      <Bar
-                        key={type}
-                        dataKey={type}
-                        stackId="distance"
-                        fill={distanceColors[type] || "#888"}
-                        isAnimationActive={false}
-                        maxBarSize={Math.floor(1000 / Math.max(1, filteredMonths.length))}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          </div>
 
-            {/* Таблица дистанций по видам (одна таблица) */}
-            <TableSection
-              table={{
-                title: "Дистанция по видам тренировок",
-                data: filteredDistanceTypes,
-                totalKey: "distance",
-              }}
-              index={0}
-            />
-          </>
-        )}
+          {/* Таблица дистанций по видам */}
+          <TableSection
+            table={{
+              title: "Дистанция по видам тренировок",
+              data: filteredDistanceTypes,
+              totalKey: "distance",
+            }}
+            index={0}
+          />
+        </>
+      )}
+
 
       </div>
     </div>
