@@ -646,14 +646,16 @@ export default function StatsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={filteredMonths.map((month, i) => {
-                    const data: any = { month };
-                    filteredDistanceTypes.forEach((t) => {
-                      const value = t.months[i] ?? 0;
-                      if (value > 0) data[t.type] = value; // добавляем только ненулевые
-                    });
-                    return data;
-                  })}
+                 data={filteredMonths.map((month, i) => {
+                   const data: any = { month };
+                   filteredDistanceTypes.forEach((t) => {
+                     const val = t.months[i];
+                     if (val && val > 0) {    // <-- только если значение реально > 0
+                       data[t.type] = val;
+                     }
+                   });
+                   return data;
+                 })}
                   barGap={0}
                   barCategoryGap="0%"
                 >
