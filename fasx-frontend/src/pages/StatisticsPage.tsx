@@ -394,9 +394,9 @@ export default function StatsPage() {
     return row;
   });
 
- const activeDistanceTypes = filteredDistanceTypes
-   .filter((t) => t.months.some((v) => v && v > 0))
-   .map((t) => t.type);
+  const activeDistanceTypes = filteredDistanceTypes
+    .filter((t) => (t.months || []).some((v) => Number(v) > 0))
+    .map((t) => t.type);
   // ----------------------------------------------------
 
   return (
@@ -558,16 +558,14 @@ export default function StatsPage() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                   data={filteredMonths.map((month, i) => {
-                     const row: any = { month };
-                     activeDistanceTypes.forEach((type) => {
-                       const d = filteredDistanceTypes.find(t => t.type === type);
-                       if (d && d.months[i] && d.months[i] > 0) {
-                         row[type] = d.months[i];
-                       }
-                     });
-                     return row;
-                   })}
+                    data={filteredMonths.map((month, i) => {
+                      const data: any = { month };
+                      filteredEnduranceZones.forEach((zone) => {
+                        const value = zone.months[i] ?? 0;
+                        if (value > 0) data[zone.zone] = value; // добавляем только ненулевые
+                      });
+                      return data;
+                    })}
                     barGap={0}
                     barCategoryGap="0%"
                   >
@@ -648,16 +646,14 @@ export default function StatsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                data={filteredMonths.map((month, i) => {
-                  const row: any = { month };
-                  activeDistanceTypes.forEach((type) => {
-                    const d = filteredDistanceTypes.find(t => t.type === type);
-                    if (d && d.months[i] && d.months[i] > 0) {
-                      row[type] = d.months[i];
-                    }
-                  });
-                  return row;
-                })}
+                  data={filteredMonths.map((month, i) => {
+                    const data: any = { month };
+                    filteredDistanceTypes.forEach((t) => {
+                      const value = t.months[i] ?? 0;
+                      if (value > 0) data[t.type] = value; // добавляем только ненулевые
+                    });
+                    return data;
+                  })}
                   barGap={0}
                   barCategoryGap="0%"
                 >
