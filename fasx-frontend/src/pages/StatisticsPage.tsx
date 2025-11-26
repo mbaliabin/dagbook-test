@@ -54,18 +54,8 @@ export default function StatsPage() {
   };
 
   const months = [
-    "Янв",
-    "Фев",
-    "Мар",
-    "Апр",
-    "Май",
-    "Июн",
-    "Июл",
-    "Авг",
-    "Сен",
-    "Окт",
-    "Ноя",
-    "Дек",
+    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
+    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек",
   ];
 
   const enduranceZones = [
@@ -118,7 +108,6 @@ export default function StatsPage() {
       const end = dayjs(dateRange.endDate);
       const result: string[] = [];
       let current = start.startOf("day");
-
       while (current.isBefore(end) || current.isSame(end, "day")) {
         result.push(current.format("DD MMM"));
         current = current.add(1, "day");
@@ -170,8 +159,7 @@ export default function StatsPage() {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     scrollRefs.forEach((ref, i) => {
-      if (i !== index && ref.current)
-        ref.current.scrollLeft = scrollLeft;
+      if (i !== index && ref.current) ref.current.scrollLeft = scrollLeft;
     });
   };
 
@@ -212,7 +200,6 @@ export default function StatsPage() {
             style={{ minWidth: computedMinWidth }}
             className="transition-all duration-300"
           >
-            {/* HEADER */}
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div
                 className="p-3 font-medium sticky left-0 bg-[#222] z-20"
@@ -228,7 +215,7 @@ export default function StatsPage() {
               {filteredMonths.map((m, idx) => (
                 <div
                   key={m + "-h-" + idx}
-                  className="p-3 text-center font-medium flex-none"
+                  className="p-3 text-center flex-none font-medium"
                   style={{ width: colWidth }}
                 >
                   {m}
@@ -243,7 +230,6 @@ export default function StatsPage() {
               </div>
             </div>
 
-            {/* ROWS */}
             <div>
               {table.data.map((row: any, j: number) => (
                 <div
@@ -284,7 +270,6 @@ export default function StatsPage() {
                 </div>
               ))}
 
-              {/* FOOTER — скрываем для Параметров дня */}
               {table.title !== "Параметры дня" && (
                 <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
                   <div
@@ -335,7 +320,9 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
-      <div className="max-w-5xl mx-auto space-y-6 px-4">
+      {/* Главный контейнер — шире */}
+      <div className="max-w-7xl w-full mx-auto space-y-6 px-4">
+
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -401,12 +388,14 @@ export default function StatsPage() {
           >
             Неделя
           </button>
+
           <button
             onClick={() => setPeriodType("month")}
             className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
           >
             Месяц
           </button>
+
           <button
             onClick={() => setPeriodType("year")}
             className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
@@ -472,7 +461,7 @@ export default function StatsPage() {
         {/* Диаграмма зон выносливости */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-          <div className="h-64 w-full">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={filteredMonths.map((month, i) => {
@@ -482,15 +471,65 @@ export default function StatsPage() {
                   });
                   return data;
                 })}
-                barGap={0}
-                barCategoryGap="0%"
+                barSize={35}
               >
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#888", fontSize: 12 }}
-                />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
                 <Tooltip
                   content={({ active, payload }: any) => {
-                    if (active && payload &&
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
+                          {payload.map((p: any) => (
+                            <div key={p.dataKey}>
+                              <span
+                                className="inline-block w-3 h-3 mr-1 rounded-full"
+                                style={{ backgroundColor: p.fill }}
+                              ></span>
+                              {p.dataKey}: {p.value} мин
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {filteredEnduranceZones.map((zone) => (
+                  <Bar
+                    key={zone.zone}
+                    dataKey={zone.zone}
+                    stackId="a"
+                    fill={zone.color}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Таблицы */}
+        <TableSection
+          table={{
+            title: "Параметры дня",
+            data: [
+              { param: "Вес", months: [70, 70, 69, 69, 68, 68, 68] },
+              { param: "ЧСС покоя", months: [50, 51, 52, 51, 50, 49, 50] },
+            ],
+          }}
+          index={0}
+        />
+
+        <TableSection
+          table={{ title: "Выносливость", data: filteredEnduranceZones.map((z) => ({ param: z.zone, color: z.color, months: z.months, total: formatTime(z.total) })) }}
+          index={1}
+        />
+
+        <TableSection
+          table={{ title: "Тип активности", data: filteredMovementTypes.map((m) => ({ param: m.type, months: m.months, total: formatTime(m.total) })) }}
+          index={2}
+        />
+
+      </div>
+    </div>
+  );
+}
