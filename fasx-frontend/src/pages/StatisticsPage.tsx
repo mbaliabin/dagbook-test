@@ -558,15 +558,29 @@ export default function StatsPage() {
           <>
             {/* Диаграмма зон выносливости */}
             <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">
+                Общая дистанция по видам тренировок
+              </h2>
+
               <div className="h-64">
+
+                {/* 🎯 ВОТ СЮДА вставляем */}
+                {/*
+                  Фильтруем зоны выносливости, чтобы не рисовать пустые бары.
+                */}
+                {(() => {
+                  filteredEnduranceZones = filteredEnduranceZones.filter(
+                    (z) => z.months.some((v) => Number(v) > 0)
+                  );
+                })()}
+
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={filteredMonths.map((month, i) => {
-                      const data: any = { month };
-                      filteredEnduranceZones.forEach((zone) => {
-                        const value = zone.months[i] ?? 0;
-                        if (value > 0) data[zone.zone] = value; // добавляем только ненулевые
+                      const data = { month };
+                      filteredEnduranceZones.forEach((z) => {
+                        const value = z.months[i] ?? 0;
+                        if (value > 0) data[z.zone] = value;
                       });
                       return data;
                     })}
@@ -574,38 +588,18 @@ export default function StatsPage() {
                     barCategoryGap="0%"
                   >
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#888", fontSize: 12 }} />
-                    <Tooltip
-                      content={({ active, payload }: any) => {
-                        if (active && payload && payload.some((p: any) => p.value > 0)) {
-                          return (
-                            <div className="bg-[#1e1e1e] border border-[#333] px-3 py-2 rounded text-sm text-white">
-                              {payload
-                                .filter((p: any) => p.value > 0)
-                                .map((p: any) => (
-                                  <div key={p.dataKey}>
-                                    <span
-                                      className="inline-block w-3 h-3 mr-1 rounded-full"
-                                      style={{ backgroundColor: p.fill }}
-                                    ></span>
-                                    {p.dataKey}: {p.value} мин
-                                  </div>
-                                ))}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
+                    <Tooltip ... />
+
+                    {/* Используем уже отфильтрованные зоны */}
                     {filteredEnduranceZones.map((zone) => (
                       <Bar
                         key={zone.zone}
                         dataKey={zone.zone}
                         stackId="a"
                         fill={zone.color}
-                        minPointSize={1}
-                        maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
                       />
                     ))}
+
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -690,7 +684,7 @@ export default function StatsPage() {
                       dataKey={type}
                       stackId="a"
                       fill={distanceColors[type] || "#888"}
-                      minPointSize={1}
+                    //  minPointSize={1}
                       maxBarSize={Math.floor(800 / Math.max(1, filteredMonths.length))}
                     />
                   ))}
