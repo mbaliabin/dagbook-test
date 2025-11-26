@@ -402,7 +402,7 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       {/* Главный контейнер — шире */}
-      <div className="max-w-7xl mx-auto space-y-6 px-4">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
