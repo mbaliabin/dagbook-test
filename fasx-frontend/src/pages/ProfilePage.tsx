@@ -171,7 +171,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-6 pb-24">
+      <div className="max-w-7xl mx-auto space-y-6 px-4">
 
         {/* Header: фото профиля + имя + кнопки + выбор периода */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
