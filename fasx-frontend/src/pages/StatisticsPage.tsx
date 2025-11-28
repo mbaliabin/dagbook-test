@@ -402,26 +402,27 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
         {/* REPORTS */}
         {reportType==="Общий отчет" && <>
 
-          {/* Зоны выносливости */}
-          <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
-                    filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
-                    return data;
-                  })}
-                  barGap={0} barCategoryGap="0%"
-                >
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip formatHours={true} />} />
-                  {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+         {/* Зоны выносливости */}
+         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+           <div className="h-64">
+             <ResponsiveContainer width="100%" height="100%">
+               <BarChart
+                 data={filteredMonths.map((month,i)=>{
+                   const data:any={month};
+                   filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
+                   return data;
+                 })}
+                 barGap={0} barCategoryGap="0%"
+               >
+                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
+                 <Tooltip content={<CustomTooltip formatHours={true} />} />
+                 {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
+               </BarChart>
+             </ResponsiveContainer>
+           </div>
+         </div>
+
 
 
           {/* Новая таблица основных параметров */}
