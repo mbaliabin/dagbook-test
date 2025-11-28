@@ -32,8 +32,20 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+//Толтип //
+
+const CustomTooltip = ({ active, payload, label, formatHours }: any) => {
   if (!active || !payload || !payload.length) return null;
+
+  // Сумма значений (км или минуты)
+  const total = payload.reduce((acc: number, item: any) => acc + item.value, 0);
+
+  // Функция форматирования времени в чч:мм
+  const formatTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}`;
+  };
 
   return (
     <div className="bg-[#1f1f1f] border border-[#333] px-3 py-2 rounded-xl shadow-lg">
@@ -46,14 +58,23 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             className="text-sm font-semibold"
             style={{ color: item.color }}
           >
-            {item.value}
+            {formatHours ? formatTime(item.value) : item.value}
           </span>
         </div>
       ))}
+
+      {/* Общий итог */}
+      <div className="border-t border-[#333] mt-2 pt-2 flex justify-between">
+        <span className="text-gray-300 text-sm font-semibold">Итого:</span>
+        <span className="text-gray-100 text-sm font-bold">
+          {formatHours ? formatTime(total) : total}
+        </span>
+      </div>
     </div>
   );
 };
 
+// Толтип //
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
@@ -315,7 +336,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                   barGap={0} barCategoryGap="0%"
                 >
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip formatHours={true} />} />
                   {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
                 </BarChart>
               </ResponsiveContainer>
@@ -356,7 +377,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                   barGap={0} barCategoryGap="0%"
                 >
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip />} />
+                  Tooltip content={<CustomTooltip formatHours={false} />} />
                   {activeDistanceTypes.map(type=><Bar key={type} dataKey={type} stackId="a" fill={distanceColors[type]} radius={[4,4,0,0]}/>)}
                 </BarChart>
               </ResponsiveContainer>
