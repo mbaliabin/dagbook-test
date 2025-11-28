@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
-import test from "../components/StatisticsPage/test";
+import TestTable from "../components/StatisticsPage/TestTable";
 import "dayjs/locale/ru";
 import {
   Home,
@@ -405,7 +405,7 @@ export default function StatsPage() {
 
         <div className="mt-6">
           <h1 className="text-2xl font-semibold text-gray-100 mb-4">Таблица недель</h1>
-          <test />
+          <TestTable />
         </div>
 
         {/* REPORTS */}
