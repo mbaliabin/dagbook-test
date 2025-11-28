@@ -32,6 +32,29 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+
+  return (
+    <div className="bg-[#1f1f1f] border border-[#333] px-3 py-2 rounded-xl shadow-lg">
+      <p className="text-gray-300 text-sm mb-1">{label}</p>
+
+      {payload.map((item: any, index: number) => (
+        <div key={index} className="flex items-center justify-between gap-3">
+          <span className="text-gray-400 text-sm">{item.name}:</span>
+          <span
+            className="text-sm font-semibold"
+            style={{ color: item.color }}
+          >
+            {item.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
   const [periodType, setPeriodType] = React.useState<
@@ -292,7 +315,7 @@ export default function StatsPage() {
                   barGap={0} barCategoryGap="0%"
                 >
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip/>
+                  <Tooltip content={<CustomTooltip />} />
                   {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
                 </BarChart>
               </ResponsiveContainer>
@@ -333,7 +356,7 @@ export default function StatsPage() {
                   barGap={0} barCategoryGap="0%"
                 >
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip/>
+                  <Tooltip content={<CustomTooltip />} />
                   {activeDistanceTypes.map(type=><Bar key={type} dataKey={type} stackId="a" fill={distanceColors[type]} radius={[4,4,0,0]}/>)}
                 </BarChart>
               </ResponsiveContainer>
