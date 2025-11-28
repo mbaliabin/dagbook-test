@@ -48,34 +48,33 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   };
 
   return (
-    <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-40 backdrop-blur-sm">
-      <p className="font-semibold mb-1 text-[13px]">{label}</p>
+    <div className="bg-[#111] border border-[#333] p-3 rounded-xl shadow-xl text-gray-200 text-sm w-48">
+      <p className="font-semibold mb-2">{label}</p>
 
-      <div className="space-y-0.5">
-        {payload.map((p: any, i: number) => (
-          <div key={i} className="flex justify-between">
-            <span className="text-gray-400 truncate">{p.name}</span>
-            <span
-              className="font-mono text-right min-w-[42px]"
-              style={{ color: p.fill }}
-            >
-              {formatValue(p.value)}
-            </span>
-          </div>
-        ))}
-      </div>
+      {payload.map((p: any, i: number) => (
+        <div key={i} className="flex justify-between gap-2">
+          <span className="text-gray-400">{p.name}</span>
+          <span
+            className="font-mono text-right min-w-[50px]"
+            style={{ color: p.fill }}
+          >
+            {formatValue(p.value)}
+          </span>
+        </div>
+      ))}
 
-      <div className="h-px bg-[#2a2a2a] my-1.5"></div>
+      <div className="h-px bg-[#333] my-2"></div>
 
-      <div className="flex justify-between font-semibold text-[13px]">
-        <span className="text-gray-300">Итого</span>
-        <span className="font-mono text-blue-400 min-w-[42px] text-right">
+      <div className="flex justify-between font-semibold">
+        <span className="text-gray-300">Итого:</span>
+        <span className="font-mono text-right min-w-[50px] text-blue-400">
           {formatValue(total)}
         </span>
       </div>
     </div>
   );
 };
+
 
 
 
