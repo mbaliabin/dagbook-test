@@ -197,7 +197,7 @@ export default function StatsPage() {
 
   const computeMonthColumns = () => months;
   const computeCustomColumns = () => {
-    const maxRange = periodType === "week" ? 12 * 7 : 90;
+    const maxRange = 90; // максимум 3 месяца
     const start = dayjs(dateRange.startDate);
     const end = dayjs(dateRange.endDate).isAfter(start.add(maxRange, "day")) ? start.add(maxRange, "day") : dayjs(dateRange.endDate);
     const result: string[] = [];
@@ -261,17 +261,8 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-
-        {/* HEADER, MENU, FILTERS */}
-        {/* TOTALS */}
-        <div className="flex flex-wrap gap-10 text-sm mt-3 mb-6">
-          <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
-          <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
-          <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-          <div><p className="text-gray-400">Общее расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
-        </div>
-
-        {/* ГРАФИК */}
+        {/* Тут будут фильтры, меню, графики и таблицы */}
+        {/* График */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
           <div className="h-64">
@@ -292,7 +283,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* ТАБЛИЦЫ */}
+        {/* Таблицы */}
         <TableSection table={{title:"Параметры дня", data:[
           { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
           { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
