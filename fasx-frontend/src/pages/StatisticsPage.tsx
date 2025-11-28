@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
-import test from "../components/StatisticsPage/test;
+import test from "../components/StatisticsPage/test";
 import "dayjs/locale/ru";
 import {
   Home,
