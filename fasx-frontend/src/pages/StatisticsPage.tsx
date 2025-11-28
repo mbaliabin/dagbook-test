@@ -174,19 +174,36 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   const filteredMonths = computeColumns();
 
   const filteredEnduranceZones = enduranceZones.map((z) => {
-    const slice = z.months.slice(0, filteredMonths.length);
-    return { ...z, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+    const monthsData = z.months.slice(0, filteredMonths.length);
+    const totalMinutes = monthsData.reduce((sum, val) => sum + val, 0);
+    return {
+      param: z.zone,
+      color: z.color,
+      months: monthsData,
+      total: formatTime(totalMinutes) // форматируем время
+    };
   });
 
   const filteredMovementTypes = movementTypes.map((m) => {
-    const slice = m.months.slice(0, filteredMonths.length);
-    return { ...m, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+    const monthsData = m.months.slice(0, filteredMonths.length);
+    const totalMinutes = monthsData.reduce((sum, val) => sum + val, 0);
+    return {
+      param: m.type,
+      months: monthsData,
+      total: formatTime(totalMinutes) // форматируем время
+    };
   });
 
   const filteredDistanceTypes = distanceByType.map((d) => {
-    const slice = d.distance.slice(0, filteredMonths.length);
-    return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+    const monthsData = d.distance.slice(0, filteredMonths.length);
+    const totalDistance = monthsData.reduce((sum, val) => sum + val, 0);
+    return {
+      type: d.type,
+      months: monthsData,
+      total: totalDistance // километры, без форматирования
+    };
   });
+
 
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
