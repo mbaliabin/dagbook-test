@@ -311,6 +311,22 @@ export default function StatsPage() {
             </div>
           </div>
 
+
+          {/* Новая таблица основных параметров */}
+                    <TableSection table={{
+                      title:"Параметры дня",
+                      data:[
+                        { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
+                        { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
+                        { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
+                        { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
+                        { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
+                        { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
+                      ]
+                    }} index={0}/>
+
+
+
           <TableSection table={{title:"Выносливость", data: filteredEnduranceZones.map(z=>({param:z.zone,color:z.color,months:z.months,total:formatTime(z.total)}))}} index={1}/>
           <TableSection table={{title:"Тип активности", data: filteredMovementTypes.map(m=>({param:m.type,months:m.months,total:formatTime(m.total)}))}} index={2}/>
         </>}
