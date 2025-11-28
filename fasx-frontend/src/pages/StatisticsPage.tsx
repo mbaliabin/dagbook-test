@@ -34,45 +34,47 @@ export default function StatsPage() {
 
 //Толтип //
 
-const CustomTooltip = ({ active, payload, label, formatHours }: any) => {
-  if (!active || !payload || !payload.length) return null;
+const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
+  if (!active || !payload || payload.length === 0) return null;
 
-  // Сумма значений (км или минуты)
-  const total = payload.reduce((acc: number, item: any) => acc + item.value, 0);
+  const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
 
-  // Функция форматирования времени в чч:мм
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}`;
+  const formatValue = (v: number) => {
+    if (!formatHours) return v;
+
+    const h = Math.floor(v / 60);
+    const m = v % 60;
+    return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className="bg-[#1f1f1f] border border-[#333] px-3 py-2 rounded-xl shadow-lg">
-      <p className="text-gray-300 text-sm mb-1">{label}</p>
+    <div className="bg-[#111] border border-[#333] p-3 rounded-xl shadow-xl text-gray-200 text-sm w-48">
+      <p className="font-semibold mb-2">{label}</p>
 
-      {payload.map((item: any, index: number) => (
-        <div key={index} className="flex items-center justify-between gap-3">
-          <span className="text-gray-400 text-sm">{item.name}:</span>
+      {payload.map((p: any, i: number) => (
+        <div key={i} className="flex justify-between gap-2">
+          <span className="text-gray-400">{p.name}</span>
           <span
-            className="text-sm font-semibold"
-            style={{ color: item.color }}
+            className="font-mono text-right min-w-[50px]"
+            style={{ color: p.fill }}
           >
-            {formatHours ? formatTime(item.value) : item.value}
+            {formatValue(p.value)}
           </span>
         </div>
       ))}
 
-      {/* Общий итог */}
-      <div className="border-t border-[#333] mt-2 pt-2 flex justify-between">
-        <span className="text-gray-300 text-sm font-semibold">Итого:</span>
-        <span className="text-gray-100 text-sm font-bold">
-          {formatHours ? formatTime(total) : total}
+      <div className="h-px bg-[#333] my-2"></div>
+
+      <div className="flex justify-between font-semibold">
+        <span className="text-gray-300">Итого:</span>
+        <span className="font-mono text-right min-w-[50px] text-blue-400">
+          {formatValue(total)}
         </span>
       </div>
     </div>
   );
 };
+
 
 // Толтип //
 
