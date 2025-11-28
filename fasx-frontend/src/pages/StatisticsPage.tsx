@@ -276,8 +276,8 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
                     style={{ width: colWidth }}
                   >
                     {table.title === "Выносливость" || table.title === "Тип активности"
-                      ? val > 0 ? formatTime(val) : ""
-                      : val > 0 ? val : ""}
+                      ? formatTime(val)
+                      : val}
                   </div>
                 ))}
 
@@ -285,51 +285,17 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
                   className="p-3 text-center bg-[#1f1f1f] flex-none"
                   style={{ width: totalWidth }}
                 >
-                  {row.total || ""}
+                  {row.total}
                 </div>
               </div>
             ))}
           </div>
-
-          {/* TOTAL ROW ПО МЕСЯЦАМ */}
-          {table.title !== "Параметры дня" && (
-            <div className="flex border-t border-[#2a2a2a] bg-gradient-to-r from-[#1f1f1f] to-[#2a2a2a] font-semibold">
-              <div
-                className="p-3 sticky left-0 bg-[#222] z-10"
-                style={{ width: leftWidth }}
-              >
-                Всего
-              </div>
-
-              {filteredMonths.map((_, k) => {
-                const monthSum = table.data.reduce((sum, row: any) => sum + (row.months[k] || 0), 0);
-                return (
-                  <div
-                    key={k}
-                    className="p-3 text-center flex-none bg-[#1a1a1a] hover:bg-[#3b3b3b] transition-colors"
-                    style={{ width: colWidth }}
-                  >
-                    {(table.title === "Выносливость" || table.title === "Тип активности")
-                      ? monthSum > 0 ? formatTime(monthSum) : ""
-                      : monthSum > 0 ? monthSum : ""}
-                  </div>
-                );
-              })}
-
-              <div
-                className="p-3 text-center bg-[#1f1f1f] flex-none hover:bg-[#3b3b3b] transition-colors"
-                style={{ width: totalWidth }}
-              >
-                {table.data.reduce((sum, row: any) => sum + (row.total || 0), 0) || ""}
-              </div>
-            </div>
-          )}
-
         </div>
       </div>
     </div>
   );
 };
+
 
 
   const handleLogout = () => {
