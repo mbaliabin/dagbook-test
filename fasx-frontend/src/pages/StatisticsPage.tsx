@@ -28,70 +28,69 @@ import "react-date-range/dist/theme/default.css";
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
 
-// ================== Custom Tooltip ==================
-const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
-  if (!active || !payload || payload.length === 0) return null;
-
-  const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
-
-  const formatValue = (v: number) => {
-    if (!formatHours) return `${v} км`;
-    const h = Math.floor(v / 60);
-    const m = v % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
-  };
-
-  // Показываем диапазон дат для недели, если label формата W{week} {year}
-  let weekRange = "";
-  const match = label.match(/W(\d+)\s(\d+)/);
-  if (match) {
-    const weekNumber = Number(match[1]);
-    const year = Number(match[2]);
-    const start = dayjs().year(year).week(weekNumber).startOf("week");
-    const end = start.add(6, "day");
-    weekRange = `${start.format("DD MMM")} – ${end.format("DD MMM")}`;
-  }
-
-  return (
-    <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
-      <p className="font-semibold mb-1 text-[13px]">{label}</p>
-      {weekRange && <p className="text-gray-400 text-[11px]">{weekRange}</p>}
-      <div className="space-y-0.5">
-        {payload.map((p: any, i: number) => (
-          <div key={i} className="flex justify-between gap-2 items-start">
-            <span className="text-gray-400 break-words leading-tight max-w-[120px]">
-              {p.name}
-            </span>
-            <span
-              className="font-mono text-right min-w-[55px]"
-              style={{ color: p.fill }}
-            >
-              {formatValue(p.value)}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="h-px bg-[#2a2a2a] my-1.5"></div>
-
-      <div className="flex justify-between font-semibold text-[13px]">
-        <span className="text-gray-300">Итого</span>
-        <span className="font-mono text-blue-400 min-w-[55px] text-right">
-          {formatValue(total)}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// ================== Main Component ==================
 export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Custom Tooltip
+  const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
+    if (!active || !payload || payload.length === 0) return null;
+
+    const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+
+    const formatValue = (v: number) => {
+      if (!formatHours) return `${v} км`;
+      const h = Math.floor(v / 60);
+      const m = v % 60;
+      return `${h}:${m.toString().padStart(2, "0")}`;
+    };
+
+    // Для недель показываем даты в тултипе
+    let weekRange = "";
+    const match = label.match(/W(\d+)\s(\d+)/);
+    if (match) {
+      const weekNumber = Number(match[1]);
+      const year = Number(match[2]);
+      const start = dayjs().year(year).week(weekNumber).startOf("week");
+      const end = start.add(6, "day");
+      weekRange = `${start.format("DD MMM")} – ${end.format("DD MMM")}`;
+    }
+
+    return (
+      <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
+        <p className="font-semibold mb-1 text-[13px]">{label}</p>
+        {weekRange && <p className="text-gray-400 text-[11px]">{weekRange}</p>}
+        <div className="space-y-0.5">
+          {payload.map((p: any, i: number) => (
+            <div key={i} className="flex justify-between gap-2 items-start">
+              <span className="text-gray-400 break-words leading-tight max-w-[120px]">
+                {p.name}
+              </span>
+              <span
+                className="font-mono text-right min-w-[55px]"
+                style={{ color: p.fill }}
+              >
+                {formatValue(p.value)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="h-px bg-[#2a2a2a] my-1.5"></div>
+        <div className="flex justify-between font-semibold text-[13px]">
+          <span className="text-gray-300">Итого</span>
+          <span className="font-mono text-blue-400 min-w-[55px] text-right">
+            {formatValue(total)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
+  const [periodType, setPeriodType] = React.useState<
+    "week" | "month" | "year" | "custom"
+  >("year");
   const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
     startDate: dayjs("2025-01-01").toDate(),
     endDate: dayjs("2025-12-31").toDate(),
@@ -137,40 +136,35 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  // Колонки
+  const computeWeekColumns = () => {
+    const today = dayjs();
+    const start = today.subtract(11, "week").startOf("week"); // последние 12 недель
+    const end = today.endOf("week");
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
-  };
-
-  // ================== Колонки ==================
-  const computeWeekColumns = (startDate?: Date, endDate?: Date) => {
-    const end = endDate ? dayjs(endDate) : dayjs().endOf("week");
-    const start = startDate ? dayjs(startDate) : end.subtract(11, "week"); // последние 12 недель
     const weeks: string[] = [];
-    let current = start.startOf("week");
-    let count = 0;
-
-    while (current.isBefore(end) && count < 12) {
+    let current = start;
+    while (current.isBefore(end) || current.isSame(end,"day")) {
       weeks.push(`W${current.week()} ${current.year()}`);
-      current = current.add(1, "week");
-      count++;
+      current = current.add(1,"week");
     }
-
     return weeks;
   };
 
   const computeMonthColumns = () => months;
 
   const computeCustomColumns = () => {
-    const start = dayjs(dateRange.startDate);
+    let start = dayjs(dateRange.startDate);
     let end = dayjs(dateRange.endDate);
-    // ограничение 3 месяца
-    if (end.diff(start, "month") > 3) end = start.add(3, "month");
+
+    // Ограничение: максимум 3 месяца
+    if (end.diff(start, "month") > 3) {
+      end = start.add(3, "month");
+    }
+
     const result: string[] = [];
     let current = start.startOf("day");
-    while (current.isBefore(end) || current.isSame(end, "day")) {
+    while (current.isBefore(end) || current.isSame(end,"day")) {
       result.push(current.format("DD MMM"));
       current = current.add(1, "day");
     }
@@ -185,7 +179,7 @@ export default function StatsPage() {
     return months;
   };
 
-  const filteredMonths = computeColumns();
+  const filteredMonths = React.useMemo(() => computeColumns(), [periodType, dateRange]);
 
   const filteredEnduranceZones = enduranceZones.map((z) => {
     const slice = z.months.slice(0, filteredMonths.length);
@@ -202,29 +196,13 @@ export default function StatsPage() {
     return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
-  const menuItems = [
-    { label:"Главная", icon:Home, path:"/daily" },
-    { label:"Тренировки", icon:BarChart3, path:"/profile" },
-    { label:"Планирование", icon:ClipboardList, path:"/planning" },
-    { label:"Статистика", icon:CalendarDays, path:"/statistics" },
-  ];
-
-  const distanceColors: Record<string,string> = {
-    "Лыжи / скейтинг":"#4ade80",
-    "Лыжи, классика":"#22d3ee",
-    "Роллеры, классика":"#facc15",
-    "Роллеры, скейтинг":"#fb923c",
-    "Велосипед":"#3b82f6",
-  };
-
-  const activeDistanceTypes = filteredDistanceTypes.filter(t=>t.months.some(v=>v>0)).map(t=>t.type);
-
-  // ================== Table Section ==================
   const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
     const colWidth = 103;
     const leftWidth = 200;
@@ -324,6 +302,28 @@ export default function StatsPage() {
     );
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  const menuItems = [
+    { label:"Главная", icon:Home, path:"/daily" },
+    { label:"Тренировки", icon:BarChart3, path:"/profile" },
+    { label:"Планирование", icon:ClipboardList, path:"/planning" },
+    { label:"Статистика", icon:CalendarDays, path:"/statistics" },
+  ];
+
+  const distanceColors: Record<string,string> = {
+    "Лыжи / скейтинг":"#4ade80",
+    "Лыжи, классика":"#22d3ee",
+    "Роллеры, классика":"#facc15",
+    "Роллеры, скейтинг":"#fb923c",
+    "Велосипед":"#3b82f6",
+  };
+
+  const activeDistanceTypes = filteredDistanceTypes.filter(t=>t.months.some(v=>v>0)).map(t=>t.type);
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
@@ -355,7 +355,7 @@ export default function StatsPage() {
         </div>
 
         {/* FILTERS */}
-        <div className="flex flex-wrap gap-4 mb-4 items-center">
+        <div className="flex flex-wrap gap-4 mb-4">
           <select value={reportType} onChange={e=>setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
@@ -365,16 +365,11 @@ export default function StatsPage() {
           <button onClick={()=>setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
 
           {/* Calendar + Display range */}
-          <div className="relative flex items-center space-x-2">
+          <div className="relative">
             <button onClick={()=>setShowDateRangePicker(prev=>!prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
               <Calendar className="w-4 h-4 mr-1"/> Произвольный период
               <ChevronDown className="w-4 h-4 ml-1"/>
             </button>
-            <span className="text-gray-300 text-sm">
-              {periodType === "week" && `${filteredMonths[0]} – ${filteredMonths[filteredMonths.length-1]}`}
-              {periodType === "custom" && `${dayjs(dateRange.startDate).format("DD MMM yyyy")} – ${dayjs(dateRange.endDate).format("DD MMM yyyy")}`}
-              {(periodType === "month" || periodType === "year") && `${filteredMonths[0]} – ${filteredMonths[filteredMonths.length-1]}`}
-            </span>
             {showDateRangePicker &&
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
@@ -389,6 +384,16 @@ export default function StatsPage() {
               </div>
             }
           </div>
+
+          {/* Отображаем выбранный диапазон */}
+          <span className="text-gray-300 text-sm flex items-center">
+            {periodType === "week" && (() => {
+              const start = dayjs().subtract(11,"week").startOf("week");
+              const end = dayjs().endOf("week");
+              return `${start.format("DD MMM yyyy")} – ${end.format("DD MMM yyyy")}`;
+            })()}
+            {periodType === "custom" && `${dayjs(dateRange.startDate).format("DD MMM yyyy")} – ${dayjs(dateRange.endDate).format("DD MMM yyyy")}`}
+          </span>
         </div>
 
         {/* TOTALS */}
@@ -404,7 +409,7 @@ export default function StatsPage() {
 
         {/* REPORTS */}
         {reportType==="Общий отчет" && <>
-          {/* Диаграмма выносливости */}
+          {/* Зоны выносливости */}
           <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
             <div className="h-64">
@@ -425,7 +430,6 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {/* Таблицы */}
           <TableSection table={{
             title:"Параметры дня",
             data:[
@@ -443,7 +447,6 @@ export default function StatsPage() {
         </>}
 
         {reportType==="Общая дистанция" && <>
-          {/* Диаграмма дистанции */}
           <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-100">Общая дистанция по видам тренировок</h2>
             <div className="h-64">
@@ -463,9 +466,7 @@ export default function StatsPage() {
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Таблица дистанций */}
-          <TableSection table={{title:"Дистанция по видам тренировок", data:filteredDistanceTypes}} index={0}/>
+          <TableSection table={{title:"Дистанция по видам тренировок", data:filteredDistanceTypes,totalKey:"distance"}} index={0}/>
         </>}
       </div>
     </div>
