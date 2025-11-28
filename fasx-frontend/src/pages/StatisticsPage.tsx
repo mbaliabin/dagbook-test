@@ -349,7 +349,6 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
     </div>
   );
 };
-};
 
 
   const handleLogout = () => {
