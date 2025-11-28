@@ -34,7 +34,9 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
+  const [periodType, setPeriodType] = React.useState<
+    "week" | "month" | "year" | "custom"
+  >("year");
   const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
     startDate: dayjs("2025-01-01").toDate(),
     endDate: dayjs("2025-12-31").toDate(),
@@ -48,7 +50,9 @@ export default function StatsPage() {
     distance: 1240,
   };
 
-  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const months = [
+    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"
+  ];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -131,7 +135,7 @@ export default function StatsPage() {
     return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
   });
 
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
     const scrollLeft = e.currentTarget.scrollLeft;
@@ -151,7 +155,7 @@ export default function StatsPage() {
           <div style={{minWidth}} className="transition-all">
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{width:leftWidth}}>
-                {table.title==="Выносливость"?"Зона":table.title==="Тип активности"?"Тип активности":"Вид"}
+                {table.title==="Выносливость"?"Зона":table.title==="Тип активности"?"Тип активности":"Параметр"}
               </div>
               {filteredMonths.map((m,idx)=><div key={idx} className="p-3 text-center flex-none font-medium" style={{width:colWidth}}>{m}</div>)}
               <div className="p-3 text-center font-medium bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>Всего</div>
@@ -273,6 +277,20 @@ export default function StatsPage() {
 
         {/* REPORTS */}
         {reportType==="Общий отчет" && <>
+          {/* Новая таблица основных параметров */}
+          <TableSection table={{
+            title:"Параметры дня",
+            data:[
+              { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
+              { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
+              { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
+              { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
+              { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
+              { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
+            ]
+          }} index={0}/>
+
+          {/* Зоны выносливости */}
           <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
             <div className="h-64">
@@ -293,8 +311,8 @@ export default function StatsPage() {
             </div>
           </div>
 
-          <TableSection table={{title:"Выносливость", data: filteredEnduranceZones.map(z=>({param:z.zone,color:z.color,months:z.months,total:formatTime(z.total)}))}} index={0}/>
-          <TableSection table={{title:"Тип активности", data: filteredMovementTypes.map(m=>({param:m.type,months:m.months,total:formatTime(m.total)}))}} index={1}/>
+          <TableSection table={{title:"Выносливость", data: filteredEnduranceZones.map(z=>({param:z.zone,color:z.color,months:z.months,total:formatTime(z.total)}))}} index={1}/>
+          <TableSection table={{title:"Тип активности", data: filteredMovementTypes.map(m=>({param:m.type,months:m.months,total:formatTime(m.total)}))}} index={2}/>
         </>}
 
         {reportType==="Общая дистанция" && <>
