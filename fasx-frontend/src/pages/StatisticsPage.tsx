@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
@@ -32,7 +32,7 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Custom Tooltip
+  // ----------------- TOOLTIP -----------------
   const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
     if (!active || !payload || payload.length === 0) return null;
 
@@ -45,21 +45,10 @@ export default function StatsPage() {
       return `${h}:${m.toString().padStart(2, "0")}`;
     };
 
-    // Для недель показываем даты в тултипе
-    let weekRange = "";
-    const match = label.match(/W(\d+)\s(\d+)/);
-    if (match) {
-      const weekNumber = Number(match[1]);
-      const year = Number(match[2]);
-      const start = dayjs().year(year).week(weekNumber).startOf("week");
-      const end = start.add(6, "day");
-      weekRange = `${start.format("DD MMM")} – ${end.format("DD MMM")}`;
-    }
-
     return (
       <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
         <p className="font-semibold mb-1 text-[13px]">{label}</p>
-        {weekRange && <p className="text-gray-400 text-[11px]">{weekRange}</p>}
+
         <div className="space-y-0.5">
           {payload.map((p: any, i: number) => (
             <div key={i} className="flex justify-between gap-2 items-start">
@@ -75,7 +64,9 @@ export default function StatsPage() {
             </div>
           ))}
         </div>
+
         <div className="h-px bg-[#2a2a2a] my-1.5"></div>
+
         <div className="flex justify-between font-semibold text-[13px]">
           <span className="text-gray-300">Итого</span>
           <span className="font-mono text-blue-400 min-w-[55px] text-right">
@@ -86,16 +77,15 @@ export default function StatsPage() {
     );
   };
 
-  const [name] = React.useState("Пользователь");
-  const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<
-    "week" | "month" | "year" | "custom"
-  >("year");
-  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
-    startDate: dayjs("2025-01-01").toDate(),
-    endDate: dayjs("2025-12-31").toDate(),
+  // ----------------- STATE -----------------
+  const [name] = useState("Пользователь");
+  const [reportType, setReportType] = useState("Общий отчет");
+  const [periodType, setPeriodType] = useState<"week" | "month" | "year" | "custom">("year");
+  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date }>({
+    startDate: dayjs().startOf("year").toDate(),
+    endDate: dayjs().endOf("year").toDate(),
   });
-  const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
 
   const totals = {
     trainingDays: 83,
@@ -130,71 +120,15 @@ export default function StatsPage() {
     { type: "Велосипед", distance: [100,80,120,70,90,80,100,0,0,0,0,0] },
   ];
 
-  const formatTime = (minutes: number) => {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}:${m.toString().padStart(2,"0")}`;
+  const distanceColors: Record<string,string> = {
+    "Лыжи / скейтинг":"#4ade80",
+    "Лыжи, классика":"#22d3ee",
+    "Роллеры, классика":"#facc15",
+    "Роллеры, скейтинг":"#fb923c",
+    "Велосипед":"#3b82f6",
   };
 
-  // Колонки
-  const computeWeekColumns = () => {
-    const today = dayjs();
-    const start = today.subtract(11, "week").startOf("week"); // последние 12 недель
-    const end = today.endOf("week");
-
-    const weeks: string[] = [];
-    let current = start;
-    while (current.isBefore(end) || current.isSame(end,"day")) {
-      weeks.push(`W${current.week()} ${current.year()}`);
-      current = current.add(1,"week");
-    }
-    return weeks;
-  };
-
-  const computeMonthColumns = () => months;
-
-  const computeCustomColumns = () => {
-    let start = dayjs(dateRange.startDate);
-    let end = dayjs(dateRange.endDate);
-
-    // Ограничение: максимум 3 месяца
-    if (end.diff(start, "month") > 3) {
-      end = start.add(3, "month");
-    }
-
-    const result: string[] = [];
-    let current = start.startOf("day");
-    while (current.isBefore(end) || current.isSame(end,"day")) {
-      result.push(current.format("DD MMM"));
-      current = current.add(1, "day");
-    }
-    return result;
-  };
-
-  const computeColumns = () => {
-    if (periodType === "week") return computeWeekColumns();
-    if (periodType === "month") return computeMonthColumns();
-    if (periodType === "year") return computeMonthColumns();
-    if (periodType === "custom") return computeCustomColumns();
-    return months;
-  };
-
-  const filteredMonths = React.useMemo(() => computeColumns(), [periodType, dateRange]);
-
-  const filteredEnduranceZones = enduranceZones.map((z) => {
-    const slice = z.months.slice(0, filteredMonths.length);
-    return { ...z, months: slice, total: slice.reduce((a,b)=>a+b,0) };
-  });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const slice = m.months.slice(0, filteredMonths.length);
-    return { ...m, months: slice, total: slice.reduce((a,b)=>a+b,0) };
-  });
-
-  const filteredDistanceTypes = distanceByType.map((d) => {
-    const slice = d.distance.slice(0, filteredMonths.length);
-    return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
-  });
+  const activeDistanceTypes = distanceByType.filter(t=>t.distance.some(v=>v>0)).map(t=>t.type);
 
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
@@ -203,13 +137,85 @@ export default function StatsPage() {
     scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
+  const formatTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}:${m.toString().padStart(2,"0")}`;
+  };
+
+  // ----------------- COMPUTE COLUMNS -----------------
+  const computeWeekColumns = () => {
+    let start: dayjs.Dayjs;
+    let end: dayjs.Dayjs;
+    if (periodType === "week") {
+      // последние 12 недель
+      end = dayjs().endOf("week");
+      start = end.subtract(11, "week").startOf("week");
+    } else {
+      start = dayjs(dateRange.startDate).startOf("week");
+      end = dayjs(dateRange.endDate).endOf("week");
+    }
+
+    const weeks: { label: string, start: dayjs.Dayjs, end: dayjs.Dayjs }[] = [];
+    let current = start;
+    while (current.isBefore(end) || current.isSame(end, "day")) {
+      weeks.push({
+        label: `W${current.week()} ${current.year()}`,
+        start: current.startOf("week"),
+        end: current.endOf("week")
+      });
+      current = current.add(1,"week");
+    }
+    return weeks;
+  };
+
+  const computeMonthColumns = () => months.map((m,i)=>({ label: m }));
+
+  const computeCustomColumns = () => {
+    const start = dayjs(dateRange.startDate);
+    const end = dayjs(dateRange.endDate);
+    const result: {label:string, date: dayjs.Dayjs}[] = [];
+    let current = start.startOf("day");
+    while (current.isBefore(end) || current.isSame(end,"day")) {
+      result.push({ label: current.format("DD MMM"), date: current });
+      current = current.add(1,"day");
+    }
+    return result;
+  };
+
+  const computeColumns = () => {
+    if(periodType==="week") return computeWeekColumns();
+    if(periodType==="month") return computeMonthColumns();
+    if(periodType==="year") return computeMonthColumns();
+    if(periodType==="custom") return computeCustomColumns();
+    return months.map(m=>({label:m}));
+  };
+
+  const filteredColumns = computeColumns();
+
+  // ----------------- FILTERED DATA -----------------
+  const filteredEnduranceZones = enduranceZones.map(z=>{
+    const slice = z.months.slice(0, filteredColumns.length);
+    return { ...z, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  });
+
+  const filteredMovementTypes = movementTypes.map(m=>{
+    const slice = m.months.slice(0, filteredColumns.length);
+    return { ...m, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  });
+
+  const filteredDistanceTypes = distanceByType.map(d=>{
+    const slice = d.distance.slice(0, filteredColumns.length);
+    return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  });
+
+  // ----------------- TABLE COMPONENT -----------------
   const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
     const colWidth = 103;
     const leftWidth = 200;
     const totalWidth = 80;
-
     const containerRef = useRef<HTMLDivElement>(null);
-    const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
+    const calculatedWidth = filteredColumns.length * colWidth + leftWidth + totalWidth;
 
     return (
       <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg w-full">
@@ -237,13 +243,9 @@ export default function StatsPage() {
                   : "Параметр"}
               </div>
 
-              {filteredMonths.map((m, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 text-center flex-none font-medium"
-                  style={{ width: colWidth }}
-                >
-                  {m}
+              {filteredColumns.map((col:any, idx:number)=>(
+                <div key={idx} className="p-3 text-center flex-none font-medium" style={{ width: colWidth }}>
+                  {col.label}
                 </div>
               ))}
 
@@ -281,7 +283,7 @@ export default function StatsPage() {
                       className="p-3 text-center flex-none"
                       style={{ width: colWidth }}
                     >
-                      {table.title === "Выносливость" || table.title === "Тип активности"
+                      {(table.title === "Выносливость" || table.title === "Тип активности")
                         ? formatTime(val)
                         : val}
                     </div>
@@ -314,20 +316,10 @@ export default function StatsPage() {
     { label:"Статистика", icon:CalendarDays, path:"/statistics" },
   ];
 
-  const distanceColors: Record<string,string> = {
-    "Лыжи / скейтинг":"#4ade80",
-    "Лыжи, классика":"#22d3ee",
-    "Роллеры, классика":"#facc15",
-    "Роллеры, скейтинг":"#fb923c",
-    "Велосипед":"#3b82f6",
-  };
-
-  const activeDistanceTypes = filteredDistanceTypes.filter(t=>t.months.some(v=>v>0)).map(t=>t.type);
-
+  // ----------------- RENDER -----------------
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
@@ -355,7 +347,7 @@ export default function StatsPage() {
         </div>
 
         {/* FILTERS */}
-        <div className="flex flex-wrap gap-4 mb-4">
+        <div className="flex flex-wrap gap-4 mb-4 items-center">
           <select value={reportType} onChange={e=>setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
@@ -364,7 +356,7 @@ export default function StatsPage() {
           <button onClick={()=>setPeriodType("month")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
           <button onClick={()=>setPeriodType("year")} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
 
-          {/* Calendar + Display range */}
+          {/* Календарь */}
           <div className="relative">
             <button onClick={()=>setShowDateRangePicker(prev=>!prev)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
               <Calendar className="w-4 h-4 mr-1"/> Произвольный период
@@ -374,26 +366,27 @@ export default function StatsPage() {
               <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
                 <DateRange
                   ranges={[{startDate: dateRange.startDate, endDate: dateRange.endDate, key:"selection"}]}
-                  onChange={item=>setDateRange({startDate:item.selection.startDate,endDate:item.selection.endDate})}
+                  onChange={item=>{
+                    const start = dayjs(item.selection.startDate);
+                    const end = dayjs(item.selection.endDate);
+                    if(end.diff(start,'month')>3){
+                      alert("Максимальный диапазон: 3 месяца");
+                      return;
+                    }
+                    setDateRange({startDate:item.selection.startDate,endDate:item.selection.endDate});
+                  }}
                   months={1} direction="horizontal" locale={ru} weekStartsOn={1} moveRangeOnFirstSelection={false} rangeColors={["#3b82f6"]}
                 />
                 <div className="flex justify-end mt-2 space-x-2">
                   <button onClick={()=>setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
                   <button onClick={()=>setShowDateRangePicker(false)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
                 </div>
+                <div className="mt-2 text-gray-300 text-sm">
+                  {`Выбран период: ${dayjs(dateRange.startDate).format("DD MMM YYYY")} — ${dayjs(dateRange.endDate).format("DD MMM YYYY")}`}
+                </div>
               </div>
             }
           </div>
-
-          {/* Отображаем выбранный диапазон */}
-          <span className="text-gray-300 text-sm flex items-center">
-            {periodType === "week" && (() => {
-              const start = dayjs().subtract(11,"week").startOf("week");
-              const end = dayjs().endOf("week");
-              return `${start.format("DD MMM yyyy")} – ${end.format("DD MMM yyyy")}`;
-            })()}
-            {periodType === "custom" && `${dayjs(dateRange.startDate).format("DD MMM yyyy")} – ${dayjs(dateRange.endDate).format("DD MMM yyyy")}`}
-          </span>
         </div>
 
         {/* TOTALS */}
@@ -415,8 +408,8 @@ export default function StatsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
+                  data={filteredColumns.map((col:any,i:number)=>{
+                    const data:any = { month: periodType==="week" ? `${col.start.format("DD/MM")} — ${col.end.format("DD/MM")}` : col.label };
                     filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
                     return data;
                   })}
@@ -430,18 +423,14 @@ export default function StatsPage() {
             </div>
           </div>
 
-          <TableSection table={{
-            title:"Параметры дня",
-            data:[
-              { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
-              { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
-            ]
-          }} index={0}/>
-
+          <TableSection table={{title:"Параметры дня",data:[
+            { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
+            { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
+            { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
+            { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
+            { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
+            { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
+          ]}} index={0}/>
           <TableSection table={{title:"Выносливость", data: filteredEnduranceZones.map(z=>({param:z.zone,color:z.color,months:z.months,total:formatTime(z.total)}))}} index={1}/>
           <TableSection table={{title:"Тип активности", data: filteredMovementTypes.map(m=>({param:m.type,months:m.months,total:formatTime(m.total)}))}} index={2}/>
         </>}
@@ -452,8 +441,8 @@ export default function StatsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
+                  data={filteredColumns.map((col:any,i:number)=>{
+                    const data:any = { month: periodType==="week" ? `${col.start.format("DD/MM")} — ${col.end.format("DD/MM")}` : col.label };
                     filteredDistanceTypes.forEach(t=>data[t.type]=t.months[i]);
                     return data;
                   })}
@@ -466,7 +455,7 @@ export default function StatsPage() {
               </ResponsiveContainer>
             </div>
           </div>
-          <TableSection table={{title:"Дистанция по видам тренировок", data:filteredDistanceTypes,totalKey:"distance"}} index={0}/>
+          <TableSection table={{title:"Дистанция по видам тренировок", data:filteredDistanceTypes}} index={0}/>
         </>}
       </div>
     </div>
