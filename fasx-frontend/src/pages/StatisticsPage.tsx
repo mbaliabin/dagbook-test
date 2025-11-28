@@ -39,8 +39,9 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
 
   const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
 
+  // Формат времени
   const formatValue = (v: number) => {
-    if (!formatHours) return v;
+    if (!formatHours) return `${v} км`; // <-- ДОБАВИЛОСЬ
 
     const h = Math.floor(v / 60);
     const m = v % 60;
@@ -48,26 +49,30 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   };
 
   return (
-    <div className="bg-[#111] border border-[#333] p-3 rounded-xl shadow-xl text-gray-200 text-sm w-48">
-      <p className="font-semibold mb-2">{label}</p>
+    <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
+      <p className="font-semibold mb-1 text-[13px]">{label}</p>
 
-      {payload.map((p: any, i: number) => (
-        <div key={i} className="flex justify-between gap-2">
-          <span className="text-gray-400">{p.name}</span>
-          <span
-            className="font-mono text-right min-w-[50px]"
-            style={{ color: p.fill }}
-          >
-            {formatValue(p.value)}
-          </span>
-        </div>
-      ))}
+      <div className="space-y-0.5">
+        {payload.map((p: any, i: number) => (
+          <div key={i} className="flex justify-between gap-2 items-start">
+            <span className="text-gray-400 break-words leading-tight max-w-[120px]">
+              {p.name}
+            </span>
+            <span
+              className="font-mono text-right min-w-[55px]"
+              style={{ color: p.fill }}
+            >
+              {formatValue(p.value)}
+            </span>
+          </div>
+        ))}
+      </div>
 
-      <div className="h-px bg-[#333] my-2"></div>
+      <div className="h-px bg-[#2a2a2a] my-1.5"></div>
 
-      <div className="flex justify-between font-semibold">
-        <span className="text-gray-300">Итого:</span>
-        <span className="font-mono text-right min-w-[50px] text-blue-400">
+      <div className="flex justify-between font-semibold text-[13px]">
+        <span className="text-gray-300">Итого</span>
+        <span className="font-mono text-blue-400 min-w-[55px] text-right">
           {formatValue(total)}
         </span>
       </div>
