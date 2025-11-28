@@ -200,13 +200,35 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
   const leftWidth = 200;
   const totalWidth = 80;
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // вычисляем ширину таблицы
+  const calculatedWidth =
+    filteredMonths.length * colWidth + leftWidth + totalWidth;
 
-  // Вычисляем ширину таблицы: минимальная ширина = сумма колонок + левая + total
-  const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
+  // ================================
+  //       Расчёт итоговой строки
+  // ================================
+  const totalsRow = React.useMemo(() => {
+    // Суммы по месяцам / неделям / дням
+    const monthSums = new Array(filteredMonths.length).fill(0);
+
+    table.data.forEach((row: any) => {
+      row.months.forEach((value: number, i: number) => {
+        monthSums[i] += value;
+      });
+    });
+
+    // Итог в правой колонке
+    const totalSum = monthSums.reduce((a, b) => a + b, 0);
+
+    return {
+      param: "Итого",
+      months: monthSums,
+      total: totalSum,
+    };
+  }, [table.data, filteredMonths.length]);
 
   return (
-    <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg w-full">
+    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg w-full">
       <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
 
       <div
@@ -214,10 +236,7 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
         className="overflow-x-auto"
         onScroll={(e) => handleScroll(e, index)}
       >
-        <div
-          className="transition-all flex-shrink-0"
-          style={{ minWidth: calculatedWidth }}
-        >
+        <div className="transition-all flex-shrink-0" style={{ minWidth: calculatedWidth }}>
           {/* HEADER */}
           <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
             <div
@@ -275,7 +294,8 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
                     className="p-3 text-center flex-none"
                     style={{ width: colWidth }}
                   >
-                    {table.title === "Выносливость" || table.title === "Тип активности"
+                    {table.title === "Выносливость" ||
+                    table.title === "Тип активности"
                       ? formatTime(val)
                       : val}
                   </div>
@@ -285,10 +305,50 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
                   className="p-3 text-center bg-[#1f1f1f] flex-none"
                   style={{ width: totalWidth }}
                 >
-                  {row.total}
+                  {table.title === "Выносливость" ||
+                  table.title === "Тип активности"
+                    ? formatTime(row.total)
+                    : row.total}
                 </div>
               </div>
             ))}
+
+            {/* ================================
+                 ИТОГОВАЯ СТРОКА
+               ================================ */}
+            {table.title !== "Параметры дня" && (
+              <div className="flex border-t border-[#2a2a2a] bg-[#2a2a2a]/30 font-semibold text-gray-100">
+                <div
+                  className="p-3 sticky left-0 bg-[#1a1a1a] z-10"
+                  style={{ width: leftWidth }}
+                >
+                  {totalsRow.param}
+                </div>
+
+                {totalsRow.months.map((val, i) => (
+                  <div
+                    key={i}
+                    className="p-3 text-center"
+                    style={{ width: colWidth }}
+                  >
+                    {table.title === "Выносливость" ||
+                    table.title === "Тип активности"
+                      ? formatTime(val)
+                      : val}
+                  </div>
+                ))}
+
+                <div
+                  className="p-3 text-center bg-[#1f1f1f]"
+                  style={{ width: totalWidth }}
+                >
+                  {table.title === "Выносливость" ||
+                  table.title === "Тип активности"
+                    ? formatTime(totalsRow.total)
+                    : totalsRow.total}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
