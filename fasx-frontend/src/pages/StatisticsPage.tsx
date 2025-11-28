@@ -200,8 +200,10 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
   const leftWidth = 200;
   const totalWidth = 80;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const renderValue = (val: number) => {
-    if (val === 0) return "";
+    if (!val) return "";
     if (table.title === "Выносливость" || table.title === "Тип активности") {
       return formatTime(val);
     }
@@ -212,20 +214,14 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
   const totalsRow = React.useMemo(() => {
     if (table.title === "Параметры дня") return null;
 
-    const monthSums = new Array(filteredMonths.length).fill(0);
-    table.data.forEach((row: any) => {
-      row.months.forEach((value: number, i: number) => {
-        monthSums[i] += value;
-      });
-    });
+    const monthSums = filteredMonths.map((_, idx) =>
+      table.data.reduce((sum: number, row: any) => sum + (row.months[idx] || 0), 0)
+    );
+
     const totalSum = monthSums.reduce((a, b) => a + b, 0);
 
-    return {
-      param: "Итого",
-      months: monthSums,
-      total: totalSum,
-    };
-  }, [table.data]);
+    return { param: "Итого", months: monthSums, total: totalSum };
+  }, [table.data, filteredMonths, table.title]);
 
   const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
 
@@ -246,18 +242,27 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
               className="p-3 font-medium sticky left-0 bg-[#222] z-20"
               style={{ width: leftWidth }}
             >
-              {table.title === "Выносливость" ? "Зона" :
-               table.title === "Тип активности" ? "Тип активности" :
-               "Параметр"}
+              {table.title === "Выносливость"
+                ? "Зона"
+                : table.title === "Тип активности"
+                ? "Тип активности"
+                : "Параметр"}
             </div>
 
             {filteredMonths.map((m, idx) => (
-              <div key={idx} className="p-3 text-center flex-none font-medium" style={{ width: colWidth }}>
+              <div
+                key={idx}
+                className="p-3 text-center flex-none font-medium"
+                style={{ width: colWidth }}
+              >
                 {m}
               </div>
             ))}
 
-            <div className="p-3 text-center font-medium bg-[#1f1f1f] flex-none" style={{ width: totalWidth }}>
+            <div
+              className="p-3 text-center font-medium bg-[#1f1f1f] flex-none"
+              style={{ width: totalWidth }}
+            >
               Всего
             </div>
           </div>
@@ -268,50 +273,82 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
               const rowTotal = row.months.reduce((a: number, b: number) => a + b, 0);
 
               return (
-                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                <div
+                  key={j}
+                  className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
+                >
                   {/* Левый столбец */}
-                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{ width: leftWidth }}>
-                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: row.color }}/>}
+                  <div
+                    className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2"
+                    style={{ width: leftWidth }}
+                  >
+                    {row.color && (
+                      <span
+                        className="inline-block w-3 h-3 rounded-full"
+                        style={{ backgroundColor: row.color }}
+                      />
+                    )}
                     <div className="truncate">{row.param || row.type}</div>
                   </div>
 
-                  {/* Значения по месяцам / неделям */}
+                  {/* Значения по колонкам */}
                   {row.months.map((val: number, k: number) => (
-                    <div key={k} className="p-3 text-center flex-none" style={{ width: colWidth }}>
+                    <div
+                      key={k}
+                      className="p-3 text-center flex-none"
+                      style={{ width: colWidth }}
+                    >
                       {renderValue(val)}
                     </div>
                   ))}
 
-                  {/* Всего (сумма всей строки) */}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{ width: totalWidth }}>
+                  {/* Всего по строке */}
+                  <div
+                    className="p-3 text-center bg-[#1f1f1f] flex-none"
+                    style={{ width: totalWidth }}
+                  >
                     {renderValue(rowTotal)}
                   </div>
                 </div>
               );
             })}
 
-            {/* ИТОГОВАЯ СТРОКА ПО КОЛОНКАМ */}
+            {/* ИТОГОВАЯ СТРОКА */}
             {totalsRow && (
               <div className="flex border-t border-[#2a2a2a] bg-[#2a2a2a]/30 font-semibold text-gray-100">
-                <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10" style={{ width: leftWidth }}>
+                <div
+                  className="p-3 sticky left-0 bg-[#1a1a1a] z-10"
+                  style={{ width: leftWidth }}
+                >
                   {totalsRow.param}
                 </div>
+
+                {/* Итоги по колонкам */}
                 {totalsRow.months.map((val, i) => (
-                  <div key={i} className="p-3 text-center" style={{ width: colWidth }}>
+                  <div
+                    key={i}
+                    className="p-3 text-center"
+                    style={{ width: colWidth }}
+                  >
                     {renderValue(val)}
                   </div>
                 ))}
-                <div className="p-3 text-center bg-[#1f1f1f]" style={{ width: totalWidth }}>
+
+                {/* Итог всей таблицы */}
+                <div
+                  className="p-3 text-center bg-[#1f1f1f]"
+                  style={{ width: totalWidth }}
+                >
                   {renderValue(totalsRow.total)}
                 </div>
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>
   );
+};
 };
 
 
