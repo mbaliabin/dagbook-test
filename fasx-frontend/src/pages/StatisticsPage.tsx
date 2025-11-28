@@ -377,7 +377,7 @@ const CustomTooltip = ({ active, payload, label, formatHours }: any) => {
                   barGap={0} barCategoryGap="0%"
                 >
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  Tooltip content={<CustomTooltip formatHours={false} />} />
+                  <Tooltip content={<CustomTooltip formatHours={false} />} />
                   {activeDistanceTypes.map(type=><Bar key={type} dataKey={type} stackId="a" fill={distanceColors[type]} radius={[4,4,0,0]}/>)}
                 </BarChart>
               </ResponsiveContainer>
