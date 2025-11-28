@@ -289,13 +289,46 @@ const TableSection: React.FC<{ table: any; index: number }> = ({ table, index })
                 </div>
               </div>
             ))}
+
+            {/* TOTAL ROW ПО МЕСЯЦАМ */}
+            {table.title !== "Параметры дня" && (
+              <div className="flex border-t border-[#2a2a2a] bg-[#222] font-semibold">
+                <div
+                  className="p-3 sticky left-0 bg-[#222] z-10"
+                  style={{ width: leftWidth }}
+                >
+                  Всего
+                </div>
+
+                {filteredMonths.map((_, k) => {
+                  const monthSum = table.data.reduce((sum, row: any) => sum + (row.months[k] || 0), 0);
+                  return (
+                    <div
+                      key={k}
+                      className="p-3 text-center flex-none"
+                      style={{ width: colWidth }}
+                    >
+                      {table.title === "Выносливость" || table.title === "Тип активности"
+                        ? formatTime(monthSum)
+                        : monthSum}
+                    </div>
+                  );
+                })}
+
+                <div
+                  className="p-3 text-center bg-[#1f1f1f] flex-none"
+                  style={{ width: totalWidth }}
+                >
+                  {table.data.reduce((sum, row: any) => sum + (row.total || 0), 0)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 
   const handleLogout = () => {
