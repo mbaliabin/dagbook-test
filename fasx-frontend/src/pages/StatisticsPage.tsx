@@ -277,18 +277,6 @@ export default function StatsPage() {
 
         {/* REPORTS */}
         {reportType==="Общий отчет" && <>
-          {/* Новая таблица основных параметров */}
-          <TableSection table={{
-            title:"Параметры дня",
-            data:[
-              { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
-              { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
-              { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
-            ]
-          }} index={0}/>
 
           {/* Зоны выносливости */}
           <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
