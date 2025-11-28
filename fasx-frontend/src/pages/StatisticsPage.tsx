@@ -195,115 +195,107 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
     scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
- const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
-   const colWidth = 80;
-   const leftWidth = 200;
-   const totalWidth = 80;
+const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
+  const colWidth = 80;
+  const leftWidth = 200;
+  const totalWidth = 80;
 
-   // <<< ДОБАВИЛ ЭТО ТУТ
-   const containerRef = useRef<HTMLDivElement>(null);
-   // <<<--------------
+  const containerRef = useRef<HTMLDivElement>(null);
 
-   const calculatedWidth =
-     filteredMonths.length * colWidth + leftWidth + totalWidth;
+  // Вычисляем ширину таблицы: минимальная ширина = сумма колонок + левая + total
+  const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
 
-   const minWidth =
-     containerRef.current
-       ? Math.max(calculatedWidth, containerRef.current.offsetWidth)
-       : calculatedWidth;
+  return (
+    <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg w-full">
+      <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
 
-   return (
-     <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-       <h2 className="text-lg font-semibold text-gray-100 mb-4">
-         {table.title}
-       </h2>
+      <div
+        ref={scrollRefs[index]}
+        className="overflow-x-auto"
+        onScroll={(e) => handleScroll(e, index)}
+      >
+        <div
+          className="transition-all flex-shrink-0"
+          style={{ minWidth: calculatedWidth }}
+        >
+          {/* HEADER */}
+          <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
+            <div
+              className="p-3 font-medium sticky left-0 bg-[#222] z-20"
+              style={{ width: leftWidth }}
+            >
+              {table.title === "Выносливость"
+                ? "Зона"
+                : table.title === "Тип активности"
+                ? "Тип активности"
+                : "Параметр"}
+            </div>
 
-       <div
-         ref={scrollRefs[index]}
-         className="overflow-x-auto"
-         onScroll={(e) => handleScroll(e, index)}
-       >
-         <div style={{ minWidth }} className="transition-all">
-           {/* HEADER */}
-           <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
-             <div
-               className="p-3 font-medium sticky left-0 bg-[#222] z-20"
-               style={{ width: leftWidth }}
-             >
-               {table.title === "Выносливость"
-                 ? "Зона"
-                 : table.title === "Тип активности"
-                 ? "Тип активности"
-                 : "Параметр"}
-             </div>
+            {filteredMonths.map((m, idx) => (
+              <div
+                key={idx}
+                className="p-3 text-center flex-none font-medium"
+                style={{ width: colWidth }}
+              >
+                {m}
+              </div>
+            ))}
 
-             {filteredMonths.map((m, idx) => (
-               <div
-                 key={idx}
-                 className="p-3 text-center flex-none font-medium"
-                 style={{ width: colWidth }}
-               >
-                 {m}
-               </div>
-             ))}
+            <div
+              className="p-3 text-center font-medium bg-[#1f1f1f] flex-none"
+              style={{ width: totalWidth }}
+            >
+              Всего
+            </div>
+          </div>
 
-             <div
-               className="p-3 text-center font-medium bg-[#1f1f1f] flex-none"
-               style={{ width: totalWidth }}
-             >
-               Всего
-             </div>
-           </div>
+          {/* ROWS */}
+          <div>
+            {table.data.map((row: any, j: number) => (
+              <div
+                key={j}
+                className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
+              >
+                <div
+                  className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2"
+                  style={{ width: leftWidth }}
+                >
+                  {row.color && (
+                    <span
+                      className="inline-block w-3 h-3 rounded-full"
+                      style={{ backgroundColor: row.color }}
+                    />
+                  )}
+                  <div className="truncate">{row.param || row.type}</div>
+                </div>
 
-           {/* ROWS */}
-           <div>
-             {table.data.map((row: any, j: number) => (
-               <div
-                 key={j}
-                 className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
-               >
-                 <div
-                   className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2"
-                   style={{ width: leftWidth }}
-                 >
-                   {row.color && (
-                     <span
-                       className="inline-block w-3 h-3 rounded-full"
-                       style={{ backgroundColor: row.color }}
-                     />
-                   )}
-                   <div className="truncate">{row.param || row.type}</div>
-                 </div>
+                {row.months.map((val: number, k: number) => (
+                  <div
+                    key={k}
+                    className="p-3 text-center flex-none"
+                    style={{ width: colWidth }}
+                  >
+                    {table.title === "Выносливость" || table.title === "Тип активности"
+                      ? formatTime(val)
+                      : val}
+                  </div>
+                ))}
 
-                 {row.months.map((val: number, k: number) => (
-                   <div
-                     key={k}
-                     className="p-3 text-center flex-none"
-                     style={{ width: colWidth }}
-                   >
-                     {table.title === "Выносливость"
-                       ? formatTime(val)
-                       : table.title === "Тип активности"
-                       ? formatTime(val)
-                       : val}
-                   </div>
-                 ))}
+                <div
+                  className="p-3 text-center bg-[#1f1f1f] flex-none"
+                  style={{ width: totalWidth }}
+                >
+                  {row.total}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-                 <div
-                   className="p-3 text-center bg-[#1f1f1f] flex-none"
-                   style={{ width: totalWidth }}
-                 >
-                   {row.total}
-                 </div>
-               </div>
-             ))}
-           </div>
-         </div>
-       </div>
-
-     </div>
-   );
- };
 
 
   const handleLogout = () => {
