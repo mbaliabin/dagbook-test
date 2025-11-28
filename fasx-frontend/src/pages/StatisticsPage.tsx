@@ -196,7 +196,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   };
 
 const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
-  const colWidth = 100;
+  const colWidth = 103;
   const leftWidth = 200;
   const totalWidth = 80;
 
