@@ -32,80 +32,53 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-//Толтип //
+  // ====== Tooltip ======
+  const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
+    if (!active || !payload || payload.length === 0) return null;
 
-const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) => {
-  if (!active || !payload || payload.length === 0) return null;
+    const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
+    const formatValue = (v: number) => {
+      if (!formatHours) return `${v} км`;
+      const h = Math.floor(v / 60);
+      const m = v % 60;
+      return `${h}:${m.toString().padStart(2, "0")}`;
+    };
 
-  const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
-
-  // Формат времени
-  const formatValue = (v: number) => {
-    if (!formatHours) return `${v} км`; // <-- ДОБАВИЛОСЬ
-
-    const h = Math.floor(v / 60);
-    const m = v % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
+    return (
+      <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
+        <p className="font-semibold mb-1 text-[13px]">{label}</p>
+        <div className="space-y-0.5">
+          {payload.map((p: any, i: number) => (
+            <div key={i} className="flex justify-between gap-2 items-start">
+              <span className="text-gray-400 break-words leading-tight max-w-[120px]">{p.name}</span>
+              <span className="font-mono text-right min-w-[55px]" style={{ color: p.fill }}>
+                {formatValue(p.value)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="h-px bg-[#2a2a2a] my-1.5"></div>
+        <div className="flex justify-between font-semibold text-[13px]">
+          <span className="text-gray-300">Итого</span>
+          <span className="font-mono text-blue-400 min-w-[55px] text-right">{formatValue(total)}</span>
+        </div>
+      </div>
+    );
   };
 
-  return (
-    <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
-      <p className="font-semibold mb-1 text-[13px]">{label}</p>
-
-      <div className="space-y-0.5">
-        {payload.map((p: any, i: number) => (
-          <div key={i} className="flex justify-between gap-2 items-start">
-            <span className="text-gray-400 break-words leading-tight max-w-[120px]">
-              {p.name}
-            </span>
-            <span
-              className="font-mono text-right min-w-[55px]"
-              style={{ color: p.fill }}
-            >
-              {formatValue(p.value)}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="h-px bg-[#2a2a2a] my-1.5"></div>
-
-      <div className="flex justify-between font-semibold text-[13px]">
-        <span className="text-gray-300">Итого</span>
-        <span className="font-mono text-blue-400 min-w-[55px] text-right">
-          {formatValue(total)}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-
-
-
-// Толтип //
-
+  // ====== States ======
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
-  const [periodType, setPeriodType] = React.useState<
-    "week" | "month" | "year" | "custom"
-  >("year");
+  const [periodType, setPeriodType] = React.useState<"week" | "month" | "year" | "custom">("year");
   const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
     startDate: dayjs("2025-01-01").toDate(),
     endDate: dayjs("2025-12-31").toDate(),
   });
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
-  const totals = {
-    trainingDays: 83,
-    sessions: 128,
-    time: "178:51",
-    distance: 1240,
-  };
+  const totals = { trainingDays: 83, sessions: 128, time: "178:51", distance: 1240 };
 
-  const months = [
-    "Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"
-  ];
+  const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
   const enduranceZones = [
     { zone: "I1", color: "#4ade80", months: [10,8,12,9,11,14,13,10,8,5,3,2] },
@@ -137,6 +110,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
+  // ====== Columns Computation ======
   const computeWeekColumns = () => {
     const start = dayjs().startOf("year");
     const end = dayjs().endOf("year");
@@ -148,64 +122,57 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
     }
     return weeks;
   };
-
   const computeMonthColumns = () => months;
-
   const computeCustomColumns = () => {
     const start = dayjs(dateRange.startDate);
     const end = dayjs(dateRange.endDate);
     const result: string[] = [];
     let current = start.startOf("day");
-    while (current.isBefore(end) || current.isSame(end, "day")) {
+    while (current.isBefore(end) || current.isSame(end,"day")) {
       result.push(current.format("DD MMM"));
-      current = current.add(1, "day");
+      current = current.add(1,"day");
     }
     return result;
   };
-
   const computeColumns = () => {
-    if (periodType === "week") return computeWeekColumns();
-    if (periodType === "month") return computeMonthColumns();
-    if (periodType === "year") return computeMonthColumns();
-    if (periodType === "custom") return computeCustomColumns();
+    if(periodType==="week") return computeWeekColumns();
+    if(periodType==="month") return computeMonthColumns();
+    if(periodType==="year") return computeMonthColumns();
+    if(periodType==="custom") return computeCustomColumns();
     return months;
   };
 
   const filteredMonths = computeColumns();
-
-  const filteredEnduranceZones = enduranceZones.map((z) => {
-    const slice = z.months.slice(0, filteredMonths.length);
-    return { ...z, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  const filteredEnduranceZones = enduranceZones.map(z=>{
+    const slice = z.months.slice(0,filteredMonths.length);
+    return {...z, months:slice, total:slice.reduce((a,b)=>a+b,0)};
   });
-
-  const filteredMovementTypes = movementTypes.map((m) => {
-    const slice = m.months.slice(0, filteredMonths.length);
-    return { ...m, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  const filteredMovementTypes = movementTypes.map(m=>{
+    const slice = m.months.slice(0,filteredMonths.length);
+    return {...m, months:slice, total:slice.reduce((a,b)=>a+b,0)};
   });
-
-  const filteredDistanceTypes = distanceByType.map((d) => {
-    const slice = d.distance.slice(0, filteredMonths.length);
-    return { type: d.type, months: slice, total: slice.reduce((a,b)=>a+b,0) };
+  const filteredDistanceTypes = distanceByType.map(d=>{
+    const slice = d.distance.slice(0,filteredMonths.length);
+    return {type:d.type, months:slice, total:slice.reduce((a,b)=>a+b,0)};
   });
 
   const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-
   const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
     const scrollLeft = e.currentTarget.scrollLeft;
     scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
-  const TableSection: React.FC<{ table:any; index:number }> = ({ table,index }) => {
-    const colWidth = 80;
-    const leftWidth = 200;
-    const totalWidth = 80;
-    const minWidth = Math.max(1000, filteredMonths.length*colWidth + leftWidth + totalWidth);
+  // ====== Table Component ======
+  const TableSection: React.FC<{table:any,index:number}> = ({table,index}) => {
+    const leftWidth=200; const totalWidth=80;
+    const containerWidth = Math.max(1000, filteredMonths.length*80 + leftWidth + totalWidth);
+    const colWidth = Math.max(80, (containerWidth-leftWidth-totalWidth)/filteredMonths.length);
 
     return (
       <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
         <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={e=>handleScroll(e,index)}>
-          <div style={{minWidth}} className="transition-all">
+          <div style={{minWidth:containerWidth}}>
             <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
               <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{width:leftWidth}}>
                 {table.title==="Выносливость"?"Зона":table.title==="Тип активности"?"Тип активности":"Параметр"}
@@ -213,33 +180,27 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
               {filteredMonths.map((m,idx)=><div key={idx} className="p-3 text-center flex-none font-medium" style={{width:colWidth}}>{m}</div>)}
               <div className="p-3 text-center font-medium bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>Всего</div>
             </div>
-            <div>
-              {table.data.map((row:any,j:number)=>(
-                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{width:leftWidth}}>
-                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}/>}
-                    <div className="truncate">{row.param || row.type}</div>
-                  </div>
-                  {row.months.map((val:number,k:number)=><div key={k} className="p-3 text-center flex-none" style={{width:colWidth}}>
-                    {table.title==="Выносливость"?formatTime(val):table.title==="Тип активности"?formatTime(val):val}
-                  </div>)}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>
-                    {row.total}
-                  </div>
+            {table.data.map((row:any,j:number)=>(
+              <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
+                <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{width:leftWidth}}>
+                  {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}} />}
+                  <div className="truncate">{row.param || row.type}</div>
                 </div>
-              ))}
-            </div>
+                {row.months.map((val:number,k:number)=><div key={k} className="p-3 text-center flex-none" style={{width:colWidth}}>
+                  {table.title==="Выносливость"?formatTime(val):table.title==="Тип активности"?formatTime(val):val}
+                </div>)}
+                <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>
+                  {row.total}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     );
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
+  const handleLogout = () => { localStorage.removeItem("token"); navigate("/login"); };
   const menuItems = [
     { label:"Главная", icon:Home, path:"/daily" },
     { label:"Тренировки", icon:BarChart3, path:"/profile" },
@@ -260,8 +221,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-
-        {/* HEADER */}
+        {/* === HEADER === */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
@@ -277,17 +237,21 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
           </div>
         </div>
 
-        {/* MENU */}
+        {/* === MENU === */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
-          {menuItems.map((item)=>{ const Icon=item.icon; const isActive=location.pathname===item.path;
-            return <button key={item.path} onClick={()=>navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive?"text-blue-500":"text-gray-400 hover:text-white"}`}>
-              <Icon className="w-6 h-6"/>
-              <span>{item.label}</span>
-            </button>;
+          {menuItems.map((item)=>{
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <button key={item.path} onClick={()=>navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive?"text-blue-500":"text-gray-400 hover:text-white"}`}>
+                <Icon className="w-6 h-6"/>
+                <span>{item.label}</span>
+              </button>
+            );
           })}
         </div>
 
-        {/* FILTERS */}
+        {/* === FILTERS === */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select value={reportType} onChange={e=>setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
@@ -317,83 +281,42 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
           </div>
         </div>
 
-        {/* TOTALS */}
+        {/* === TOTALS === */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
             <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
             <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-            <div><p className="text-gray-400">Общее расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
+            <div><p className="text-gray-400">Дистанция</p><p className="text-xl text-gray-100">{totals.distance} км</p></div>
           </div>
         </div>
 
-        {/* REPORTS */}
-        {reportType==="Общий отчет" && <>
+        {/* === TABLES === */}
+        <div className="space-y-6">
+          <TableSection table={{title:"Выносливость", data:filteredEnduranceZones}} index={0}/>
+          <TableSection table={{title:"Тип активности", data:filteredMovementTypes}} index={1}/>
+          <TableSection table={{title:"Дистанция", data:filteredDistanceTypes}} index={2}/>
+        </div>
 
-          {/* Зоны выносливости */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
-                    filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
-                    return data;
-                  })}
-                  barGap={0} barCategoryGap="0%"
-                >
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip formatHours={true} />} />
-                  {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-
-          {/* Новая таблица основных параметров */}
-                    <TableSection table={{
-                      title:"Параметры дня",
-                      data:[
-                        { param:"Травма", months:[1,0,0,0,0,0,0,0,0,0,0,0], total:1 },
-                        { param:"Болезнь", months:[0,1,0,0,0,0,0,0,0,0,0,0], total:1 },
-                        { param:"В пути", months:[0,0,1,0,0,0,0,0,0,0,0,0], total:1 },
-                        { param:"Смена час. пояса", months:[0,0,0,1,0,0,0,0,0,0,0,0], total:1 },
-                        { param:"Выходной", months:[0,0,0,0,1,0,0,0,0,0,0,0], total:1 },
-                        { param:"Соревнование", months:[0,0,0,0,0,1,0,0,0,0,0,0], total:1 },
-                      ]
-                    }} index={0}/>
-
-
-
-          <TableSection table={{title:"Выносливость", data: filteredEnduranceZones.map(z=>({param:z.zone,color:z.color,months:z.months,total:formatTime(z.total)}))}} index={1}/>
-          <TableSection table={{title:"Тип активности", data: filteredMovementTypes.map(m=>({param:m.type,months:m.months,total:formatTime(m.total)}))}} index={2}/>
-        </>}
-
-        {reportType==="Общая дистанция" && <>
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Общая дистанция по видам тренировок</h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
-                    filteredDistanceTypes.forEach(t=>data[t.type]=t.months[i]);
-                    return data;
-                  })}
-                  barGap={0} barCategoryGap="0%"
-                >
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip formatHours={false} />} />
-                  {activeDistanceTypes.map(type=><Bar key={type} dataKey={type} stackId="a" fill={distanceColors[type]} radius={[4,4,0,0]}/>)}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          <TableSection table={{title:"Дистанция по видам тренировок", data:filteredDistanceTypes,totalKey:"distance"}} index={0}/>
-        </>}
+        {/* === BAR CHARTS === */}
+        <div className="space-y-6 mt-6">
+          {activeDistanceTypes.map(type=>{
+            const data = filteredMonths.map((m,idx)=>({name:m, [type]: filteredDistanceTypes.find(d=>d.type===type)?.months[idx]||0}));
+            return (
+              <div key={type} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+                <h2 className="text-lg font-semibold text-gray-100 mb-4">{type}</h2>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={data}>
+                    <XAxis dataKey="name" tick={{fill:"#aaa"}}/>
+                    <Tooltip content={<CustomTooltip formatHours={false}/>}/>
+                    <Bar dataKey={type} fill={distanceColors[type]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            );
+          })}
+        </div>
 
       </div>
     </div>
