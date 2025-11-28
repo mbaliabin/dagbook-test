@@ -3,7 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import "dayjs/locale/ru";
-import { Home, BarChart3, ClipboardList, CalendarDays, Plus, LogOut, Calendar, ChevronDown } from "lucide-react";
+import {
+  Home,
+  BarChart3,
+  ClipboardList,
+  CalendarDays,
+  Plus,
+  LogOut,
+  Calendar,
+  ChevronDown,
+} from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
 import { DateRange } from "react-date-range";
 import { ru } from "date-fns/locale";
@@ -26,7 +35,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
 
   const total = payload.reduce((sum: number, p: any) => sum + (p.value || 0), 0);
 
-  const formatValue = (v: number) => formatHours ? formatTime(v) : `${v} км`;
+  const formatValue = (v: number) => (formatHours ? formatTime(v) : `${v} км`);
 
   return (
     <div className="bg-[#111]/90 border border-[#2a2a2a] px-2.5 py-2 rounded-lg shadow-lg text-gray-200 text-xs w-48 backdrop-blur-sm">
@@ -64,11 +73,10 @@ const StackedBarChart: React.FC<{
   formatValues?: (v: number) => string;
   stackId?: string;
 }> = ({ title, columns, series, formatValues, stackId = "a" }) => {
-
   const chartData = useMemo(() => {
     return columns.map((col, i) => {
       const dataPoint: Record<string, any> = { month: col };
-      series.forEach(s => dataPoint[s.name] = s.values[i] || 0);
+      series.forEach(s => (dataPoint[s.name] = s.values[i] || 0));
       return dataPoint;
     });
   }, [columns, series]);
@@ -100,7 +108,6 @@ const TableSection: React.FC<{
   leftWidth?: number;
   totalWidth?: number;
 }> = ({ table, index, scrollRefs, colWidth = 103, leftWidth = 200, totalWidth = 80 }) => {
-
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -171,7 +178,6 @@ export default function StatsPage() {
   });
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
 
-  // ---------------------- Данные ----------------------
   const totals = { trainingDays: 83, sessions: 128, time: "178:51", distance: 1240 };
   const months = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 
@@ -181,6 +187,14 @@ export default function StatsPage() {
     { zone: "I3", color: "#facc15", months: [2,1,1,1,2,1,1,1,0,1,0,1] },
     { zone: "I4", color: "#fb923c", months: [1,1,2,0,1,1,0,0,1,0,0,0] },
     { zone: "I5", color: "#ef4444", months: [0,0,1,0,0,0,0,0,1,0,1,0] },
+  ];
+
+  const movementTypes = [
+    { type: "Лыжи / скейтинг", months: [4,5,3,0,0,0,0,0,1,2,3,2] },
+    { type: "Лыжи, классика", months: [3,4,2,0,0,0,0,0,0,1,2,1] },
+    { type: "Роллеры, классика", months: [0,0,0,3,5,6,7,5,4,3,2,0] },
+    { type: "Роллеры, скейтинг", months: [0,0,0,2,6,7,8,6,5,3,2,0] },
+    { type: "Велосипед", months: [0,0,0,1,2,3,4,3,2,1,0,0] },
   ];
 
   const distanceByType = [
@@ -198,6 +212,8 @@ export default function StatsPage() {
     "Роллеры, скейтинг":"#fb923c",
     "Велосипед":"#3b82f6",
   };
+
+  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   // ---------------------- Колонки ----------------------
   const filteredMonths = useMemo(() => {
@@ -224,15 +240,18 @@ export default function StatsPage() {
     return months;
   }, [periodType, dateRange]);
 
-  // ---------------------- ScrollRefs ----------------------
-  const scrollRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-
   // ---------------------- Подготовка данных ----------------------
   const filteredEnduranceZones = useMemo(() =>
     enduranceZones.map(z => {
       const slice = z.months.slice(0, filteredMonths.length);
       return { ...z, months: slice, total: slice.reduce((a,b)=>a+b,0) };
     }), [enduranceZones, filteredMonths]);
+
+  const filteredMovementTypes = useMemo(() =>
+    movementTypes.map(m => {
+      const slice = m.months.slice(0, filteredMonths.length);
+      return { type: m.type, values: slice, total: slice.reduce((a,b)=>a+b,0) };
+    }), [movementTypes, filteredMonths]);
 
   const filteredDistanceTypes = useMemo(() =>
     distanceByType.map(d => {
@@ -248,11 +267,21 @@ export default function StatsPage() {
   const enduranceSeries = useMemo(() =>
     filteredEnduranceZones.map(z => ({ name: z.zone, color: z.color, values: z.months })), [filteredEnduranceZones]);
 
+  const movementSeries = useMemo(() =>
+    filteredMovementTypes.map(m => ({ name: m.type, color: "#888", values: m.values })), [filteredMovementTypes]);
+
   // ---------------------- Logout ----------------------
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
+
+  const menuItems = [
+    { label:"Главная", icon:Home, path:"/daily" },
+    { label:"Тренировки", icon:BarChart3, path:"/profile" },
+    { label:"Планирование", icon:ClipboardList, path:"/planning" },
+    { label:"Статистика", icon:CalendarDays, path:"/statistics" },
+  ];
 
   // ---------------------- Render ----------------------
   return (
@@ -274,25 +303,111 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* FILTERS, TABLES, CHARTS */}
-        <div className="space-y-6">
+        {/* MENU */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+          {menuItems.map((item)=>{ const Icon=item.icon; const isActive=location.pathname===item.path;
+            return <button key={item.path} onClick={()=>navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive?"text-blue-500":"text-gray-400 hover:text-white"}`}>
+              <Icon className="w-6 h-6"/>
+              <span>{item.label}</span>
+            </button>;
+          })}
+        </div>
 
-          {/* График выносливости */}
-          {reportType === "Общий отчет" && <StackedBarChart
+        {/* FILTERS */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <select value={periodType} onChange={e=>setPeriodType(e.target.value as any)} className="bg-[#1a1a1d] p-2 rounded">
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
+            <option value="year">Год</option>
+            <option value="custom">Произвольный</option>
+          </select>
+          {periodType==="custom" && <DateRange
+            locale={ru}
+            ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: 'selection' }]}
+            onChange={ranges => setDateRange({ startDate: ranges.selection.startDate, endDate: ranges.selection.endDate })}
+          />}
+        </div>
+
+        {/* TOTALS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl text-center">
+            <div className="text-sm text-gray-400">Тренировочные дни</div>
+            <div className="text-xl font-bold">{totals.trainingDays}</div>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl text-center">
+            <div className="text-sm text-gray-400">Сессии</div>
+            <div className="text-xl font-bold">{totals.sessions}</div>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl text-center">
+            <div className="text-sm text-gray-400">Время</div>
+            <div className="text-xl font-bold">{totals.time}</div>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-2xl text-center">
+            <div className="text-sm text-gray-400">Дистанция</div>
+            <div className="text-xl font-bold">{totals.distance} км</div>
+          </div>
+        </div>
+
+        {/* CHARTS */}
+        <div className="space-y-6">
+          <StackedBarChart
             title="Зоны выносливости"
             columns={filteredMonths}
             series={enduranceSeries}
             formatValues={formatTime}
-          />}
-
-          {/* График дистанции */}
-          {reportType === "Общая дистанция" && <StackedBarChart
+          />
+          <StackedBarChart
             title="Общая дистанция по видам тренировок"
             columns={filteredMonths}
             series={distanceSeries}
-          />}
+          />
+        </div>
 
-          {/* Таблицы можно вызвать так же */}
+        {/* TABLES */}
+        <div className="space-y-6">
+          <TableSection
+            table={{
+              title:"Параметры дня",
+              leftLabel:"Дата",
+              columns:filteredMonths,
+              data:filteredMovementTypes
+            }}
+            index={0}
+            scrollRefs={scrollRefs}
+          />
+          <TableSection
+            table={{
+              title:"Выносливость",
+              leftLabel:"Зона",
+              columns:filteredMonths,
+              data:filteredEnduranceZones,
+              formatValues: (v:number)=>v.toString()
+            }}
+            index={1}
+            scrollRefs={scrollRefs}
+          />
+          <TableSection
+            table={{
+              title:"Тип активности",
+              leftLabel:"Вид",
+              columns:filteredMonths,
+              data:filteredMovementTypes,
+              formatValues:(v:number)=>v.toString()
+            }}
+            index={2}
+            scrollRefs={scrollRefs}
+          />
+          <TableSection
+            table={{
+              title:"Дистанция по видам тренировок",
+              leftLabel:"Вид",
+              columns:filteredMonths,
+              data:filteredDistanceTypes,
+              formatValues:(v:number)=>`${v} км`
+            }}
+            index={3}
+            scrollRefs={scrollRefs}
+          />
         </div>
       </div>
     </div>
