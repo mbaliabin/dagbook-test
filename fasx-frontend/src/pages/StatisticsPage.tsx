@@ -258,10 +258,65 @@ export default function StatsPage() {
     navigate("/login");
   };
 
+  // ----------------- RENDER -----------------
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-        {/* Тут будут фильтры, меню, графики и таблицы */}
+
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
+          <div className="flex items-center space-x-4">
+            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
+            <h1 className="text-2xl font-bold text-white">{name}</h1>
+          </div>
+          <div className="flex items-center space-x-2 flex-wrap">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <Plus className="w-4 h-4 mr-1"/> Добавить тренировку
+            </button>
+            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <LogOut className="w-4 h-4 mr-1"/> Выйти
+            </button>
+          </div>
+        </div>
+
+        {/* MENU */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+          {menuItems.map((item)=>{ const Icon=item.icon; const isActive=location.pathname===item.path;
+            return <button key={item.path} onClick={()=>navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive?"text-blue-500":"text-gray-400 hover:text-white"}`}>
+              <Icon className="w-6 h-6"/>
+              <span>{item.label}</span>
+            </button>;
+          })}
+        </div>
+
+        {/* FILTERS */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <select value={reportType} onChange={e=>setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
+            <option>Общий отчет</option>
+            <option>Общая дистанция</option>
+          </select>
+          <button onClick={()=>setPeriodType("week")} className={`px-3 py-1 rounded ${periodType==="week"?"bg-blue-600":"bg-[#1f1f22]"} text-gray-200 hover:bg-[#2a2a2d]`}>Неделя</button>
+          <button onClick={()=>setPeriodType("month")} className={`px-3 py-1 rounded ${periodType==="month"?"bg-blue-600":"bg-[#1f1f22]"} text-gray-200 hover:bg-[#2a2a2d]`}>Месяц</button>
+          <button onClick={()=>setPeriodType("year")} className={`px-3 py-1 rounded ${periodType==="year"?"bg-blue-600":"bg-[#1f1f22]"} text-gray-200 hover:bg-[#2a2a2d]`}>Год</button>
+          <div className="relative">
+            <button onClick={()=>setShowDateRangePicker(prev=>!prev)} className={`px-3 py-1 rounded ${periodType==="custom"?"bg-blue-600":"bg-[#1f1f22]"} text-gray-200 hover:bg-[#2a2a2d] flex items-center`}>
+              <Calendar className="w-4 h-4 mr-1"/> Произвольный период
+              <ChevronDown className="w-4 h-4 ml-1"/>
+            </button>
+            {showDateRangePicker &&
+              <div className="absolute z-50 top-10 left-0">
+                <DateRange
+                  locale={ru}
+                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key:"selection"}]}
+                  onChange={ranges=>setDateRange({startDate:ranges.selection.startDate,endDate:ranges.selection.endDate})}
+                  maxDate={dayjs().toDate()}
+                  rangeColors={["#3b82f6"]}
+                />
+              </div>
+            }
+          </div>
+        </div>
+
         {/* График */}
         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
