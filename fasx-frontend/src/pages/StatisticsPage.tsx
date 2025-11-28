@@ -195,45 +195,108 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
     scrollRefs.forEach((ref,i)=>{ if(i!==index && ref.current) ref.current.scrollLeft = scrollLeft; });
   };
 
-  const TableSection: React.FC<{ table:any; index:number }> = ({ table,index }) => {
-    const colWidth = 80;
-    const leftWidth = 200;
-    const totalWidth = 80;
-    const minWidth = Math.max(1000, filteredMonths.length*colWidth + leftWidth + totalWidth);
+const TableSection: React.FC<{ table: any; index: number }> = ({ table, index }) => {
+  const colWidth = 103;
+  const leftWidth = 200;
+  const totalWidth = 80;
 
-    return (
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
-        <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={e=>handleScroll(e,index)}>
-          <div style={{minWidth}} className="transition-all">
-            <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
-              <div className="p-3 font-medium sticky left-0 bg-[#222] z-20" style={{width:leftWidth}}>
-                {table.title==="Выносливость"?"Зона":table.title==="Тип активности"?"Тип активности":"Параметр"}
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Вычисляем ширину таблицы: минимальная ширина = сумма колонок + левая + total
+  const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
+
+  return (
+    <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg w-full">
+      <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
+
+      <div
+        ref={scrollRefs[index]}
+        className="overflow-x-auto"
+        onScroll={(e) => handleScroll(e, index)}
+      >
+        <div
+          className="transition-all flex-shrink-0"
+          style={{ minWidth: calculatedWidth }}
+        >
+          {/* HEADER */}
+          <div className="flex bg-[#222] border-b border-[#2a2a2a] sticky top-0 z-10">
+            <div
+              className="p-3 font-medium sticky left-0 bg-[#222] z-20"
+              style={{ width: leftWidth }}
+            >
+              {table.title === "Выносливость"
+                ? "Зона"
+                : table.title === "Тип активности"
+                ? "Тип активности"
+                : "Параметр"}
+            </div>
+
+            {filteredMonths.map((m, idx) => (
+              <div
+                key={idx}
+                className="p-3 text-center flex-none font-medium"
+                style={{ width: colWidth }}
+              >
+                {m}
               </div>
-              {filteredMonths.map((m,idx)=><div key={idx} className="p-3 text-center flex-none font-medium" style={{width:colWidth}}>{m}</div>)}
-              <div className="p-3 text-center font-medium bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>Всего</div>
+            ))}
+
+            <div
+              className="p-3 text-center font-medium bg-[#1f1f1f] flex-none"
+              style={{ width: totalWidth }}
+            >
+              Всего
             </div>
-            <div>
-              {table.data.map((row:any,j:number)=>(
-                <div key={j} className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition">
-                  <div className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2" style={{width:leftWidth}}>
-                    {row.color && <span className="inline-block w-3 h-3 rounded-full" style={{backgroundColor: row.color}}/>}
-                    <div className="truncate">{row.param || row.type}</div>
-                  </div>
-                  {row.months.map((val:number,k:number)=><div key={k} className="p-3 text-center flex-none" style={{width:colWidth}}>
-                    {table.title==="Выносливость"?formatTime(val):table.title==="Тип активности"?formatTime(val):val}
-                  </div>)}
-                  <div className="p-3 text-center bg-[#1f1f1f] flex-none" style={{width:totalWidth}}>
-                    {row.total}
-                  </div>
+          </div>
+
+          {/* ROWS */}
+          <div>
+            {table.data.map((row: any, j: number) => (
+              <div
+                key={j}
+                className="flex border-t border-[#2a2a2a] hover:bg-[#252525]/60 transition"
+              >
+                <div
+                  className="p-3 sticky left-0 bg-[#1a1a1a] z-10 flex items-center gap-2"
+                  style={{ width: leftWidth }}
+                >
+                  {row.color && (
+                    <span
+                      className="inline-block w-3 h-3 rounded-full"
+                      style={{ backgroundColor: row.color }}
+                    />
+                  )}
+                  <div className="truncate">{row.param || row.type}</div>
                 </div>
-              ))}
-            </div>
+
+                {row.months.map((val: number, k: number) => (
+                  <div
+                    key={k}
+                    className="p-3 text-center flex-none"
+                    style={{ width: colWidth }}
+                  >
+                    {table.title === "Выносливость" || table.title === "Тип активности"
+                      ? formatTime(val)
+                      : val}
+                  </div>
+                ))}
+
+                <div
+                  className="p-3 text-center bg-[#1f1f1f] flex-none"
+                  style={{ width: totalWidth }}
+                >
+                  {row.total}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
+
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -331,26 +394,27 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
         {/* REPORTS */}
         {reportType==="Общий отчет" && <>
 
-          {/* Зоны выносливости */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={filteredMonths.map((month,i)=>{
-                    const data:any={month};
-                    filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
-                    return data;
-                  })}
-                  barGap={0} barCategoryGap="0%"
-                >
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
-                  <Tooltip content={<CustomTooltip formatHours={true} />} />
-                  {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+         {/* Зоны выносливости */}
+         <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+           <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
+           <div className="h-64">
+             <ResponsiveContainer width="100%" height="100%">
+               <BarChart
+                 data={filteredMonths.map((month,i)=>{
+                   const data:any={month};
+                   filteredEnduranceZones.forEach(z=>data[z.zone]=z.months[i]);
+                   return data;
+                 })}
+                 barGap={0} barCategoryGap="0%"
+               >
+                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill:"#888", fontSize:12}}/>
+                 <Tooltip content={<CustomTooltip formatHours={true} />} />
+                 {filteredEnduranceZones.map(z=><Bar key={z.zone} dataKey={z.zone} stackId="a" fill={z.color} radius={[4,4,0,0]}/>)}
+               </BarChart>
+             </ResponsiveContainer>
+           </div>
+         </div>
+
 
 
           {/* Новая таблица основных параметров */}
