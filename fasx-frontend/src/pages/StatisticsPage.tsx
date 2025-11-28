@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
+import test from "../components/StatisticsPage/test;
 import "dayjs/locale/ru";
 import {
   Home,
@@ -398,6 +399,13 @@ export default function StatsPage() {
             <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
             <div><p className="text-gray-400">Общее расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
           </div>
+        </div>
+
+        {/* test */}
+
+        <div className="mt-6">
+          <h1 className="text-2xl font-semibold text-gray-100 mb-4">Таблица недель</h1>
+          <test />
         </div>
 
         {/* REPORTS */}
