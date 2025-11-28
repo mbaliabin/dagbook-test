@@ -196,13 +196,24 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
   };
 
   const TableSection: React.FC<{ table:any; index:number }> = ({ table,index }) => {
-    const colWidth = 80;
-    const leftWidth = 200;
-    const totalWidth = 80;
-    const minWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
+
+      // ← добавляем сюда
+      const containerRef = useRef<HTMLDivElement>(null);
+
+      const colWidth = 80;
+      const leftWidth = 200;
+      const totalWidth = 80;
+
+    // РАСТЯГИВАЕМ СТОЛ
+    const calculatedWidth = filteredMonths.length * colWidth + leftWidth + totalWidth;
+
+    const minWidth =
+      containerRef.current
+        ? Math.max(calculatedWidth, containerRef.current.offsetWidth)
+        : calculatedWidth;
 
     return (
-      <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+      <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">{table.title}</h2>
         <div ref={scrollRefs[index]} className="overflow-x-auto" onScroll={e=>handleScroll(e,index)}>
           <div style={{minWidth}} className="transition-all">
@@ -332,7 +343,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label, formatHours }) =
         {reportType==="Общий отчет" && <>
 
           {/* Зоны выносливости */}
-          <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+          <div ref={containerRef} className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-100">Зоны выносливости</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
