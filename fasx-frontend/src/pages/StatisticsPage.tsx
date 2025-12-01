@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { ru from "date-fns/locale/ru";
+import ru from "date-fns/locale/ru";
 import { Home, BarChart3, ClipboardList, CalendarDays, Plus, LogOut, Calendar, ChevronDown } from "lucide-react";
 
 import { StatsHeader } from "./components/StatisticsPage/StatsHeader";
