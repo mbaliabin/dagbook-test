@@ -12,7 +12,7 @@ import { PeriodSelector } from "./components/StatisticsPage/PeriodSelector";
 import { StatsCards from "./components/StatisticsPage/StatsCards";
 import { StackedBarChart } from "./components/StatisticsPage/StackedBarChart";
 import { SyncedTable } from "./components/StatisticsPage/SyncedTable";
-import { useStatsData } from "./components/hooks/useStatsData";
+import useStatsData from "./components/hooks/useStatsData";
 
 const COLORS = {
   I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444",
