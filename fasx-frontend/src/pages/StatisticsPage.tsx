@@ -19,9 +19,9 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-import { EnduranceChart } from "./components/StatisticsPage/EnduranceChart";
-import { DistanceChart } from "./components/StatisticsPage/DistanceChart";
-import { SyncedTable } from "./components/StatisticsPage/SyncedTable";
+import EnduranceChart from "../components/StatisticsPage/EnduranceChart"
+import DistanceChart from "../components/StatisticsPage/DistanceChart"
+import SyncedTable from "../components/StatisticsPage/SyncedTable"
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
