@@ -14,15 +14,24 @@ interface Props {
   rows: Row[];
   columns: string[];
   index: number;
-  formatAsTime?: boolean; // true = чч:мм
+  formatAsTime?: boolean;
+  showBottomTotal?: boolean; // ← Показывать итоговую строку вниз
 }
 
-export const SyncedTable = ({ title, rows, columns, index, formatAsTime = false }: Props) => {
+export const SyncedTable = ({
+  title,
+  rows,
+  columns,
+  index,
+  formatAsTime = false,
+  showBottomTotal = false,
+}: Props) => {
+
   const colWidth = 103;
   const leftWidth = 220;
   const totalWidth = 90;
 
-  // 🔥 ВАЖНО: создаём refs внутри компонента
+  // ВАЖНО: refs должны быть внутри компонента
   const scrollRefs = [
     useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
@@ -46,6 +55,18 @@ export const SyncedTable = ({ title, rows, columns, index, formatAsTime = false 
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
+  // Итоги по месячным столбцам
+  const columnTotals = columns.map((_, colIndex) =>
+    rows.reduce(
+      (sum, row) =>
+        sum + (typeof row.months[colIndex] === "number" ? row.months[colIndex] : 0),
+      0
+    )
+  );
+
+  // Итоговый total справа
+  const grandTotal = columnTotals.reduce((s, v) => s + v, 0);
+
   return (
     <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mt-6">
       <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
@@ -68,11 +89,7 @@ export const SyncedTable = ({ title, rows, columns, index, formatAsTime = false 
             </div>
 
             {columns.map((c, i) => (
-              <div
-                key={i}
-                style={{ width: colWidth }}
-                className="px-2 text-center"
-              >
+              <div key={i} style={{ width: colWidth }} className="px-2 text-center">
                 {c}
               </div>
             ))}
@@ -115,10 +132,37 @@ export const SyncedTable = ({ title, rows, columns, index, formatAsTime = false 
                 style={{ width: totalWidth }}
                 className="px-2 text-center font-semibold text-gray-100"
               >
-                {row.total}
+                {formatValue(row.total)}
               </div>
             </div>
           ))}
+
+          {/* Итоговая строка – включается только когда нужно */}
+          {showBottomTotal && (
+            <div className="flex items-center border-t-2 border-gray-500 py-3 bg-[#222226] mt-2">
+              <div style={{ width: leftWidth }} className="px-2 font-bold text-gray-100">
+                Итого по месяцам
+              </div>
+
+              {columnTotals.map((v, i) => (
+                <div
+                  key={i}
+                  style={{ width: colWidth }}
+                  className="px-2 text-center font-semibold text-gray-200"
+                >
+                  {formatValue(v)}
+                </div>
+              ))}
+
+              <div
+                style={{ width: totalWidth }}
+                className="px-2 text-center font-bold text-gray-100"
+              >
+                {formatValue(grandTotal)}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
