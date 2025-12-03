@@ -28,7 +28,7 @@ export const SyncedTable = ({
   showBottomTotal = false,
   bottomRowName = "Итого",
 }: Props) => {
-  const colWidth = 103;
+  const colWidth = 102;
   const leftWidth = 220;
   const totalWidth = 90;
 
