@@ -248,7 +248,7 @@ export default function StatsPage() {
               ]}
               columns={filteredMonths}
               index={0}
-              showBottomTotal={true}
+              showBottomTotal={false}
             />
 
             <SyncedTable
