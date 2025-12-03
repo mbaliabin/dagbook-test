@@ -251,20 +251,23 @@ export default function StatsPage() {
               index={0}
             />
 
-            <SyncedTable
+            SyncedTable
               title="Зоны выносливости"
-              rows={filteredEnduranceZones.map(z=>({param:z.zone, color:z.color, months:z.months, total:formatTime(z.total)}))}
+              rows={filteredEnduranceZones.map(z=>({param:z.zone, color:z.color, months:z.months, total:z.total}))}
               columns={filteredMonths}
               formatAsTime
               index={1}
+              showBottomTotal={true}
             />
+
 
             <SyncedTable
               title="Тип активности"
-              rows={filteredMovementTypes.map(m=>({param:m.type, months:m.months, total:formatTime(m.total)}))}
+              rows={filteredMovementTypes.map(m=>({param:m.type, months:m.months, total:m.total}))}
               columns={filteredMonths}
               formatAsTime
               index={2}
+              showBottomTotal={true}
             />
           </>
         )}
@@ -275,14 +278,10 @@ export default function StatsPage() {
 
             <SyncedTable
               title="Дистанция по видам тренировок"
-              rows={filteredDistanceTypes.map(t=>({
-                param: t.type,
-                color: distanceColors[t.type],
-                months: t.months,
-                total: `${t.total} км`
-              }))}
+              rows={filteredDistanceTypes.map(t=>({param:t.type, color:distanceColors[t.type], months:t.months, total:t.total}))}
               columns={filteredMonths}
-              index={0}
+              index={3}
+              showBottomTotal={true}
             />
           </>
         )}
