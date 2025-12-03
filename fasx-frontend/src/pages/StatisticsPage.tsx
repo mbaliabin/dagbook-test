@@ -248,7 +248,7 @@ export default function StatsPage() {
               ]}
               columns={filteredMonths}
               index={0}
-              showBottomTotal={false}
+              showBottomTotal={false} // не показываем итог
             />
 
             <SyncedTable
@@ -263,6 +263,7 @@ export default function StatsPage() {
               formatAsTime
               index={1}
               showBottomTotal={true}
+              bottomRowName="Всего по зонам"
             />
 
             <SyncedTable
@@ -276,6 +277,7 @@ export default function StatsPage() {
               formatAsTime
               index={2}
               showBottomTotal={true}
+              bottomRowName="Общее время"
             />
           </>
         )}
@@ -295,11 +297,7 @@ export default function StatsPage() {
               columns={filteredMonths}
               index={0}
               showBottomTotal={true}
+              bottomRowName="Итого по дистанции"
             />
           </>
         )}
-
-      </div>
-    </div>
-  );
-}
