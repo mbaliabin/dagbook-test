@@ -1,15 +1,6 @@
 // src/pages/StatisticsPage/components/SyncedTable.tsx
 import { useRef } from "react";
 
-const scrollRefs = [useRef<HTMLDivElement>(null), useRef(null), useRef(null), useRef(null)];
-
-const handleScroll = (e: React.UIEvent<HTMLDivElement>, index: number) => {
-  const left = e.currentTarget.scrollLeft;
-  scrollRefs.forEach((ref, i) => {
-    if (i !== index && ref.current) ref.current.scrollLeft = left;
-  });
-};
-
 interface Row {
   param?: string;
   type?: string;
@@ -20,36 +11,114 @@ interface Row {
 
 interface Props {
   title: string;
-  data: Row[];
+  rows: Row[];
+  columns: string[];
   index: number;
-  isTime?: boolean; // true = формат чч:мм, false = просто число или км
+  formatAsTime?: boolean; // true = чч:мм
 }
 
-export const SyncedTable = ({ title, data, index, isTime = false }: Props) => {
+export const SyncedTable = ({ title, rows, columns, index, formatAsTime = false }: Props) => {
   const colWidth = 103;
   const leftWidth = 220;
   const totalWidth = 90;
 
-  const formatValue = (v: number) => {
-    if (isTime) {
-      const h = Math.floor(v / 60);
-      const m = v % 60;
-      return `${h}:${m.toString().padStart(2, "0")}`;
-    }
-    return v;
+  // 🔥 ВАЖНО: создаём refs внутри компонента
+  const scrollRefs = [
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+  ];
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>, i: number) => {
+    const left = e.currentTarget.scrollLeft;
+    scrollRefs.forEach((ref, idx) => {
+      if (idx !== i && ref.current) {
+        ref.current.scrollLeft = left;
+      }
+    });
+  };
+
+  const formatValue = (v: number | string) => {
+    if (!formatAsTime || typeof v !== "number") return v;
+    const h = Math.floor(v / 60);
+    const m = v % 60;
+    return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg">
+    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mt-6">
       <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
+
       <div
-        ref={el => scrollRefs[index].current = el}
+        ref={scrollRefs[index]}
         className="overflow-x-auto"
         onScroll={(e) => handleScroll(e, index)}
       >
-        <div style={{ minWidth: data[0].months.length * colWidth + leftWidth + totalWidth }}>
-          {/* Заголовок и строки — оставляем как было, только короче */}
-          {/* (полный код могу скинуть, если нужно) */}
+        <div
+          style={{
+            minWidth: columns.length * colWidth + leftWidth + totalWidth,
+          }}
+        >
+
+          {/* Заголовок */}
+          <div className="flex text-gray-300 font-semibold">
+            <div style={{ width: leftWidth }} className="px-2">
+              Параметр
+            </div>
+
+            {columns.map((c, i) => (
+              <div
+                key={i}
+                style={{ width: colWidth }}
+                className="px-2 text-center"
+              >
+                {c}
+              </div>
+            ))}
+
+            <div style={{ width: totalWidth }} className="px-2 text-center">
+              Итого
+            </div>
+          </div>
+
+          {/* Строки */}
+          {rows.map((row, rIndex) => (
+            <div
+              key={rIndex}
+              className="flex items-center border-t border-gray-700 py-2"
+            >
+              <div
+                style={{ width: leftWidth }}
+                className="px-2 text-gray-200 flex items-center"
+              >
+                {row.color && (
+                  <div
+                    className="w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: row.color }}
+                  />
+                )}
+                {row.param}
+              </div>
+
+              {row.months.map((v, i) => (
+                <div
+                  key={i}
+                  style={{ width: colWidth }}
+                  className="px-2 text-center text-gray-300"
+                >
+                  {formatValue(v)}
+                </div>
+              ))}
+
+              <div
+                style={{ width: totalWidth }}
+                className="px-2 text-center font-semibold text-gray-100"
+              >
+                {row.total}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
