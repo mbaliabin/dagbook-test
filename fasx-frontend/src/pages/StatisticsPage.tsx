@@ -297,7 +297,7 @@ export default function StatsPage() {
               columns={filteredMonths}
               index={0}
               showBottomTotal={true}
-              bottomRowName="Итого по дистанции"
+              bottomRowName="Общая пройденная дистанция"
             />
           </>
         )}
