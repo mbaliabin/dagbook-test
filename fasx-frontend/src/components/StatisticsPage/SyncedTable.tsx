@@ -15,8 +15,8 @@ interface Props {
   columns: string[];
   index: number;
   formatAsTime?: boolean;
-  showBottomTotal?: boolean; // показывать итоговую строку
-  bottomRowName?: string;    // название итоговой строки
+  showBottomTotal?: boolean;
+  bottomRowName?: string;
 }
 
 export const SyncedTable = ({
@@ -122,11 +122,11 @@ export const SyncedTable = ({
               </div>
               {row.months.map((v, i) => (
                 <div key={i} style={{ width: colWidth }} className="px-2 text-center text-gray-300">
-                  {formatValue(v)}
+                  {v ? formatValue(v) : <span className="text-gray-500">–</span>}
                 </div>
               ))}
               <div style={{ width: totalWidth }} className="px-2 text-center font-semibold text-gray-100">
-                {formatValue(row.total)}
+                {row.total ? formatValue(row.total) : <span className="text-gray-500">–</span>}
               </div>
             </div>
           ))}
@@ -152,11 +152,11 @@ export const SyncedTable = ({
                   style={{ width: colWidth }}
                   className="px-2 text-center font-semibold text-gray-200"
                 >
-                  {formatValue(v)}
+                  {v ? formatValue(v) : <span className="text-gray-500">–</span>}
                 </div>
               ))}
               <div style={{ width: totalWidth }} className="px-2 text-center font-bold text-gray-100">
-                {formatValue(grandTotal)}
+                {grandTotal ? formatValue(grandTotal) : <span className="text-gray-500">–</span>}
               </div>
             </div>
           )}

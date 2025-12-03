@@ -73,17 +73,22 @@ export default function StatsPage() {
     return `${h}:${m.toString().padStart(2,"0")}`;
   };
 
-  const computeWeekColumns = () => {
-    const start = dayjs().startOf("year");
-    const end = dayjs().endOf("year");
-    const weeks: string[] = [];
-    let current = start.startOf("week");
-    while (current.isBefore(end)) {
-      weeks.push(`W${current.week()}`);
-      current = current.add(1,"week");
-    }
-    return weeks;
-  };
+ const computeWeekColumns = () => {
+   const year = dayjs().year();
+   const start = dayjs().year(year).startOf("year");
+   const end = dayjs().year(year).endOf("year");
+   const weeks: string[] = [];
+   let current = start.startOf("week");
+
+   while (current.isBefore(end) || current.isSame(end, "week")) {
+     if (current.year() === year) {
+       weeks.push(`W${current.week()}`);
+     }
+     current = current.add(1, "week");
+   }
+
+   return weeks;
+ };
 
   const computeMonthColumns = () => months;
 
