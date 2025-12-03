@@ -19,9 +19,9 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-import EnduranceChart from "../components/StatisticsPage/EnduranceChart"
-import DistanceChart from "../components/StatisticsPage/DistanceChart"
-import SyncedTable from "../components/StatisticsPage/SyncedTable"
+import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
+import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
+import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
@@ -235,7 +235,7 @@ export default function StatsPage() {
         {/* ГРАФИКИ И ТАБЛИЦЫ — теперь через компоненты */}
         {reportType === "Общий отчет" && (
           <>
-            <EnduranceChart chartData={enduranceChartData} zones={filteredEnduranceZones} />
+            <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
             <SyncedTable
               title="Параметры дня"
@@ -271,7 +271,7 @@ export default function StatsPage() {
 
         {reportType === "Общая дистанция" && (
           <>
-            <DistanceChart chartData={distanceChartData} types={activeDistanceTypes} />
+            <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
 
             <SyncedTable
               title="Дистанция по видам тренировок"
