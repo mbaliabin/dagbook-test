@@ -1,5 +1,5 @@
 // src/pages/StatisticsPage/StatsPage.tsx
-import React, { useRef } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
@@ -133,7 +133,6 @@ export default function StatsPage() {
 
   const activeDistanceTypes = filteredDistanceTypes.filter(t=>t.months.some(v=>v>0)).map(t=>t.type);
 
-  // Данные для графиков
   const enduranceChartData = filteredMonths.map((month, i) => {
     const obj: any = { month };
     filteredEnduranceZones.forEach(z => obj[z.zone] = z.months[i] ?? 0);
@@ -232,7 +231,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* ГРАФИКИ И ТАБЛИЦЫ — теперь через компоненты */}
+        {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
@@ -249,21 +248,30 @@ export default function StatsPage() {
               ]}
               columns={filteredMonths}
               index={0}
+              showBottomTotal={true}
             />
 
-            SyncedTable
+            <SyncedTable
               title="Зоны выносливости"
-              rows={filteredEnduranceZones.map(z=>({param:z.zone, color:z.color, months:z.months, total:z.total}))}
+              rows={filteredEnduranceZones.map(z => ({
+                param: z.zone,
+                color: z.color,
+                months: z.months,
+                total: z.total,
+              }))}
               columns={filteredMonths}
               formatAsTime
               index={1}
               showBottomTotal={true}
             />
 
-
             <SyncedTable
               title="Тип активности"
-              rows={filteredMovementTypes.map(m=>({param:m.type, months:m.months, total:m.total}))}
+              rows={filteredMovementTypes.map(m => ({
+                param: m.type,
+                months: m.months,
+                total: m.total,
+              }))}
               columns={filteredMonths}
               formatAsTime
               index={2}
@@ -277,17 +285,17 @@ export default function StatsPage() {
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
 
             <SyncedTable
-                          title="Дистанция по видам тренировок"
-                          rows={filteredDistanceTypes.map(t=>({
-                            param: t.type,
-                            color: distanceColors[t.type],
-                        months: t.months,
-                            total: `${t.total} км`
-                          }))}
-                          columns={filteredMonths}
-                          index={0}
-                        />
-
+              title="Дистанция по видам тренировок"
+              rows={filteredDistanceTypes.map(t => ({
+                param: t.type,
+                color: distanceColors[t.type],
+                months: t.months,
+                total: t.total,
+              }))}
+              columns={filteredMonths}
+              index={0}
+              showBottomTotal={true}
+            />
           </>
         )}
 
