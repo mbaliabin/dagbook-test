@@ -277,12 +277,17 @@ export default function StatsPage() {
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
 
             <SyncedTable
-              title="Дистанция по видам тренировок"
-              rows={filteredDistanceTypes.map(t=>({param:t.type, color:distanceColors[t.type], months:t.months, total:t.total}))}
-              columns={filteredMonths}
-              index={3}
-              showBottomTotal={true}
-            />
+                          title="Дистанция по видам тренировок"
+                          rows={filteredDistanceTypes.map(t=>({
+                            param: t.type,
+                            color: distanceColors[t.type],
+                        months: t.months,
+                            total: `${t.total} км`
+                          }))}
+                          columns={filteredMonths}
+                          index={0}
+                        />
+
           </>
         )}
 
