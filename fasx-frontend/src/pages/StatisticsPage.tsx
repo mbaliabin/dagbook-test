@@ -263,7 +263,7 @@ export default function StatsPage() {
               formatAsTime
               index={1}
               showBottomTotal={true}
-              bottomRowName="Всего по зонам"
+              bottomRowName="Общая выносливость"
             />
 
             <SyncedTable
@@ -277,7 +277,7 @@ export default function StatsPage() {
               formatAsTime
               index={2}
               showBottomTotal={true}
-              bottomRowName="Общее время"
+              bottomRowName=" Общее по видам активности"
             />
           </>
         )}
