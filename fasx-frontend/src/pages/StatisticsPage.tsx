@@ -37,19 +37,16 @@ export default function StatsPage() {
     endDate: dayjs().endOf("year").toDate(),
   });
 
-  const [tempRange, setTempRange] = React.useState({
-    startDate: dayjs().startOf("year").toDate(),
-    endDate: dayjs().endOf("year").toDate(),
-  });
-
+  const [tempRange, setTempRange] = React.useState(dateRange);
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
+
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   const [totals, setTotals] = React.useState({ trainingDays: 0, sessions: 0, time: "0:00", distance: 0 });
   const [columns, setColumns] = React.useState<string[]>([]);
   const [enduranceZones, setEnduranceZones] = React.useState<any[]>([]);
-  const [movementTypes, setMovementTypes] = React.useState<any[]>([]);
+  const [movementTypes, setMovementTypes] = React.useState<any[]>([]); // ← теперь будет километраж
   const [distanceByType, setDistanceByType] = React.useState<any[]>([]);
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, any>>({});
 
@@ -116,7 +113,6 @@ export default function StatsPage() {
 
       // === КОЛОНКИ ===
       let cols: string[] = [];
-
       if (periodType === "week") {
         const year = dayjs().year();
         const firstDayOfYear = dayjs(`${year}-01-01`);
@@ -151,7 +147,7 @@ export default function StatsPage() {
         }
       };
 
-      // Зоны, типы, дистанция — как раньше
+      // Зоны выносливости
       const zoneColors = { I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444" };
       const zoneKeys = { I1: "zone1Min", I2: "zone2Min", I3: "zone3Min", I4: "zone4Min", I5: "zone5Min" };
 
@@ -167,33 +163,43 @@ export default function StatsPage() {
         ),
       }));
 
+      // ТИП АКТИВНОСТИ — ТЕПЕРЬ КИЛОМЕТРЫ!
       const typeMap: Record<string, string> = {
         XC_Skiing_Skate: "Лыжи / скейтинг",
         XC_Skiing_Classic: "Лыжи, классика",
         RollerSki_Classic: "Роллеры, классика",
         RollerSki_Skate: "Роллеры, скейтинг",
         Bike: "Велосипед",
+        Running: "Бег",
+        StrengthTraining: "Силовая",
+        Other: "Другое",
       };
 
       const types = [...new Set(workouts.map((w: any) => w.type))];
 
       const movementData = types.map(t => ({
         type: typeMap[t] || t,
-        months: cols.map((_, i) => workouts.filter(w => {
-          const d = dayjs(w.date);
-          return d.isValid() && getIndex(d) === i;
-        }).length),
+        months: cols.map((_, i) => Math.round(
+          workouts
+            .filter(w => {
+              const d = dayjs(w.date);
+              return d.isValid() && getIndex(d) === i && w.type === t;
+            })
+            .reduce((s: number, w: any) => s + (w.distance || 0), 0)
+        )),
       }));
 
+      // Дистанция по видам (для второго отчёта)
       const distanceData = types.map(t => ({
         type: typeMap[t] || t,
-        months: cols.map((_, i) => workouts
-          .filter(w => {
-            const d = dayjs(w.date);
-            return d.isValid() && getIndex(d) === i;
-          })
-          .reduce((s: number, w: any) => s + (w.distance || 0), 0)
-        ),
+        months: cols.map((_, i) => Math.round(
+          workouts
+            .filter(w => {
+              const d = dayjs(w.date);
+              return d.isValid() && getIndex(d) === i && w.type === t;
+            })
+            .reduce((s: number, w: any) => s + (w.distance || 0), 0)
+        )),
       }));
 
       setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a: number, b: number) => a + b, 0) })));
@@ -327,12 +333,7 @@ export default function StatsPage() {
                     endDate: tempRange.endDate,
                     key: "selection"
                   }]}
-                  onChange={(item: any) => {
-                    setTempRange({
-                      startDate: item.selection.startDate,
-                      endDate: item.selection.endDate,
-                    });
-                  }}
+                  onChange={(item: any) => setTempRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
                   showSelectionPreview={true}
                   moveRangeOnFirstSelection={false}
                   months={2}
@@ -361,8 +362,7 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* TOTALS + ГРАФИКИ + ТАБЛИЦЫ — как у тебя было */}
-        {/* (оставляю без изменений — всё работает) */}
+        {/* TOTALS */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
@@ -373,9 +373,11 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
+
             <SyncedTable
               title="Параметры дня"
               rows={[
@@ -388,22 +390,34 @@ export default function StatsPage() {
               index={0}
               showBottomTotal={false}
             />
+
             <SyncedTable
               title="Зоны выносливости"
-              rows={filteredEnduranceZones.map(z => ({ param: z.zone, color: z.color, months: z.months, total: z.total }))}
+              rows={filteredEnduranceZones.map(z => ({
+                param: z.zone,
+                color: z.color,
+                months: z.months,
+                total: z.total,
+              }))}
               columns={columns}
               formatAsTime
               index={1}
-              showBottomTotal
+              showBottomTotal={true}
               bottomRowName="Общая выносливость"
             />
+
+            {/* ТЕПЕРЬ В ОБЩЕМ ОТЧЁТЕ — КИЛОМЕТРЫ ПО ВИДАМ! */}
             <SyncedTable
               title="Тип активности"
-              rows={filteredMovementTypes.map(m => ({ param: m.type, months: m.months, total: m.total }))}
+              rows={filteredMovementTypes.map(m => ({
+                param: m.type,
+                months: m.months,
+                total: m.total,
+              }))}
               columns={columns}
               index={2}
-              showBottomTotal
-              bottomRowName="Общее по видам активности"
+              showBottomTotal={true}
+              bottomRowName="Общая дистанция"
             />
           </>
         )}
@@ -413,10 +427,15 @@ export default function StatsPage() {
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
             <SyncedTable
               title="Дистанция по видам тренировок"
-              rows={filteredDistanceTypes.map(t => ({ param: t.type, color: distanceColors[t.type] || "#888", months: t.months, total: t.total }))}
+              rows={filteredDistanceTypes.map(t => ({
+                param: t.type,
+                color: distanceColors[t.type] || "#888",
+                months: t.months,
+                total: t.total,
+              }))}
               columns={columns}
               index={0}
-              showBottomTotal
+              showBottomTotal={true}
               bottomRowName="Общая пройденная дистанция"
             />
           </>
