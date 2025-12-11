@@ -23,7 +23,7 @@ import {
 import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
 import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
 import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
-import { getStatistics, DailyStats } from "../../services/statisticsService";
+import { getStatistics, DailyStats } from "../../api/StatisticsService";
 
 dayjs.extend(weekOfYear);
 dayjs.locale("ru");
