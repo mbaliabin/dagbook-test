@@ -38,7 +38,6 @@ export default function StatsPage() {
   });
 
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
-
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -119,8 +118,7 @@ export default function StatsPage() {
         const firstWeekStart = firstDayOfYear.startOf("week");
         let current = firstWeekStart;
         let weekNum = 1;
-
-        while (current.year() === year || (current.year() === year + 1 && weekNum === 1)) {
+        while (current.year() <= year) {
           cols.push(`W${weekNum}`);
           weekNum++;
           current = current.add(1, "week");
@@ -134,11 +132,10 @@ export default function StatsPage() {
           current = current.add(1, "day");
         }
       }
-
       setColumns(cols);
 
-      // === ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: какой индекс у даты ===
-      const getIndexForDate = (date: dayjs.Dayjs): number => {
+      // === ИНДЕКС ДЛЯ ДАТЫ ===
+      const getIndex = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
           const year = dayjs().year();
           const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
@@ -150,24 +147,22 @@ export default function StatsPage() {
         }
       };
 
-      // === Зоны выносливости ===
+      // Зоны
       const zoneColors = { I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444" };
       const zoneKeys = { I1: "zone1Min", I2: "zone2Min", I3: "zone3Min", I4: "zone4Min", I5: "zone5Min" };
 
       const enduranceData = ["I1", "I2", "I3", "I4", "I5"].map(z => ({
         zone: z,
         color: zoneColors[z as keyof typeof zoneColors],
-        months: cols.map((_, i) => {
-          return workouts
-            .filter(w => {
-              const d = dayjs(w.date);
-              return d.isValid() && getIndexForDate(d) === i;
-            })
-            .reduce((sum: number, w: any) => sum + (w[zoneKeys[z as keyof typeof zoneKeys]] || 0), 0);
-        }),
+        months: cols.map((_, i) => workouts
+          .filter(w => {
+            const d = dayjs(w.date);
+            return d.isValid() && getIndex(d) === i;
+          })
+          .reduce((sum: number, w: any) => sum + (w[zoneKeys[z as keyof typeof zoneKeys]] || 0), 0)
+        ),
       }));
 
-      // === Типы активности и дистанция ===
       const typeMap: Record<string, string> = {
         XC_Skiing_Skate: "Лыжи / скейтинг",
         XC_Skiing_Classic: "Лыжи, классика",
@@ -182,7 +177,7 @@ export default function StatsPage() {
         type: typeMap[t] || t,
         months: cols.map((_, i) => workouts.filter(w => {
           const d = dayjs(w.date);
-          return d.isValid() && getIndexForDate(d) === i;
+          return d.isValid() && getIndex(d) === i;
         }).length),
       }));
 
@@ -191,7 +186,7 @@ export default function StatsPage() {
         months: cols.map((_, i) => workouts
           .filter(w => {
             const d = dayjs(w.date);
-            return d.isValid() && getIndexForDate(d) === i;
+            return d.isValid() && getIndex(d) === i;
           })
           .reduce((s: number, w: any) => s + (w.distance || 0), 0)
         ),
@@ -210,7 +205,6 @@ export default function StatsPage() {
 
   React.useEffect(() => { loadData(); }, [loadData]);
 
-  // === Остальное без изменений ===
   const filteredEnduranceZones = enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) }));
   const filteredMovementTypes = movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) }));
   const filteredDistanceTypes = distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) }));
@@ -275,8 +269,75 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-        {/* HEADER, MENU, FILTERS — как у тебя */}
-        {/* ... (оставь как было, только кнопки с setPeriodType и setDateRange) */}
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
+          <div className="flex items-center space-x-4">
+            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
+            <h1 className="text-2xl font-bold text-white">{name}</h1>
+          </div>
+          <div className="flex items-center space-x-2 flex-wrap">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <Plus className="w-4 h-4 mr-1"/> Добавить тренировку
+            </button>
+            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
+              <LogOut className="w-4 h-4 mr-1"/> Выйти
+            </button>
+          </div>
+        </div>
+
+        {/* MENU */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+                <Icon className="w-6 h-6"/>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* FILTERS */}
+        <div className="flex flex-wrap gap-4 mb-4">
+          <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
+            <option>Общий отчет</option>
+            <option>Общая дистанция</option>
+          </select>
+
+          <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
+          <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("month").toDate(), endDate: dayjs().endOf("month").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
+          <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+
+          <div className="relative">
+            <button onClick={() => setShowDateRangePicker(p => !p)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+              <Calendar className="w-4 h-4 mr-1"/> Произвольный период
+              <ChevronDown className="w-4 h-4 ml-1"/>
+            </button>
+            {showDateRangePicker && (
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                <DateRange
+                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: "selection" }]}
+                  onChange={(item: any) => {
+                    setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate });
+                    setPeriodType("custom");
+                  }}
+                  months={1}
+                  direction="horizontal"
+                  locale={ru}
+                  weekStartsOn={1}
+                  moveRangeOnFirstSelection={false}
+                  rangeColors={["#3b82f6"]}
+                />
+                <div className="flex justify-end mt-2 space-x-2">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
+                  <button onClick={() => { setShowDateRangePicker(false); loadData(); }} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* TOTALS */}
         <div>
@@ -289,6 +350,7 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
