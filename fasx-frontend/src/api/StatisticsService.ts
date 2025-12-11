@@ -51,7 +51,7 @@ export async function getStatistics(params: StatsParams) {
 
   // Получаем ежедневную информацию
   const dailyRes = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/daily-information/user?start=${startStr}&end=${endStr}`,
+    `${import.meta.env.VITE_API_URL}/api/dailyInformation/user?start=${startStr}&end=${endStr}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }
