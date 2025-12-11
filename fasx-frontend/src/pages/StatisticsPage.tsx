@@ -32,7 +32,6 @@ export default function StatsPage() {
   const [reportType, setReportType] = React.useState("Общий отчет");
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
-  // Диапазон дат — теперь всегда актуальный
   const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
@@ -116,9 +115,12 @@ export default function StatsPage() {
 
       if (periodType === "week") {
         const year = dayjs().year();
-        let current = dayjs(`${year}-01-01`).startOf("week");
+        const firstDayOfYear = dayjs(`${year}-01-01`);
+        const firstWeekStart = firstDayOfYear.startOf("week");
+        let current = firstWeekStart;
         let weekNum = 1;
-        while (current.year() === year) {
+
+        while (current.year() === year || (current.year() === year + 1 && weekNum === 1)) {
           cols.push(`W${weekNum}`);
           weekNum++;
           current = current.add(1, "week");
@@ -127,8 +129,7 @@ export default function StatsPage() {
         cols = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
       } else if (periodType === "custom") {
         let current = dayjs(dateRange.startDate);
-        const end = dayjs(dateRange.endDate);
-        while (current.isBefore(end) || current.isSame(end, "day")) {
+        while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
           cols.push(current.format("DD MMM"));
           current = current.add(1, "day");
         }
@@ -136,19 +137,20 @@ export default function StatsPage() {
 
       setColumns(cols);
 
-      // === Группировка по колонкам ===
-      const getIndex = (date: dayjs.Dayjs) => {
+      // === ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: какой индекс у даты ===
+      const getIndexForDate = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
           const year = dayjs().year();
-          const start = dayjs(`${year}-01-01`).startOf("week");
-          return Math.floor(date.diff(start, "week"));
+          const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
+          return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
         } else if (periodType === "custom") {
-          return date.diff(dayjs(dateRange.startDate), "day");
+          return date.diff(dayjs(dateRange.startDate).startOf("day"), "day");
         } else {
           return date.month();
         }
       };
 
+      // === Зоны выносливости ===
       const zoneColors = { I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444" };
       const zoneKeys = { I1: "zone1Min", I2: "zone2Min", I3: "zone3Min", I4: "zone4Min", I5: "zone5Min" };
 
@@ -157,15 +159,15 @@ export default function StatsPage() {
         color: zoneColors[z as keyof typeof zoneColors],
         months: cols.map((_, i) => {
           return workouts
-            .filter((w: any) => {
+            .filter(w => {
               const d = dayjs(w.date);
-              if (!d.isValid()) return false;
-              return getIndex(d) === i;
+              return d.isValid() && getIndexForDate(d) === i;
             })
             .reduce((sum: number, w: any) => sum + (w[zoneKeys[z as keyof typeof zoneKeys]] || 0), 0);
         }),
       }));
 
+      // === Типы активности и дистанция ===
       const typeMap: Record<string, string> = {
         XC_Skiing_Skate: "Лыжи / скейтинг",
         XC_Skiing_Classic: "Лыжи, классика",
@@ -175,22 +177,21 @@ export default function StatsPage() {
       };
 
       const types = [...new Set(workouts.map((w: any) => w.type))];
+
       const movementData = types.map(t => ({
         type: typeMap[t] || t,
-        months: cols.map((_, i) => workouts.filter((w: any) => {
+        months: cols.map((_, i) => workouts.filter(w => {
           const d = dayjs(w.date);
-          if (!d.isValid()) return false;
-          return getIndex(d) === i;
+          return d.isValid() && getIndexForDate(d) === i;
         }).length),
       }));
 
       const distanceData = types.map(t => ({
         type: typeMap[t] || t,
         months: cols.map((_, i) => workouts
-          .filter((w: any) => {
+          .filter(w => {
             const d = dayjs(w.date);
-            if (!d.isValid()) return false;
-            return getIndex(d) === i;
+            return d.isValid() && getIndexForDate(d) === i;
           })
           .reduce((s: number, w: any) => s + (w.distance || 0), 0)
         ),
@@ -205,10 +206,11 @@ export default function StatsPage() {
     } finally {
       setLoading(false);
     }
-  }, [dateRange.startDate, dateRange.endDate, periodType]);
+  }, [dateRange, periodType]);
 
   React.useEffect(() => { loadData(); }, [loadData]);
 
+  // === Остальное без изменений ===
   const filteredEnduranceZones = enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) }));
   const filteredMovementTypes = movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) }));
   const filteredDistanceTypes = distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) }));
@@ -273,85 +275,8 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
-          <div className="flex items-center space-x-4">
-            <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
-            <h1 className="text-2xl font-bold text-white">{name}</h1>
-          </div>
-          <div className="flex items-center space-x-2 flex-wrap">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <Plus className="w-4 h-4 mr-1"/> Добавить тренировку
-            </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
-              <LogOut className="w-4 h-4 mr-1"/> Выйти
-            </button>
-          </div>
-        </div>
-
-        {/* MENU */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
-                <Icon className="w-6 h-6"/>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* FILTERS */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
-            <option>Общий отчет</option>
-            <option>Общая дистанция</option>
-          </select>
-
-          <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя</button>
-          <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("month").toDate(), endDate: dayjs().endOf("month").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц</button>
-          <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
-
-          <div className="relative">
-            <button onClick={() => setShowDateRangePicker(p => !p)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
-              <Calendar className="w-4 h-4 mr-1"/> Произвольный период
-              <ChevronDown className="w-4 h-4 ml-1"/>
-            </button>
-            {showDateRangePicker && (
-              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-4">
-                <DateRange
-                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: "selection" }]}
-                  onChange={(item: any) => {
-                    setDateRange({
-                      startDate: item.selection.startDate,
-                      endDate: item.selection.endDate,
-                    });
-                    setPeriodType("custom");
-                  }}
-                  months={2}
-                  direction="horizontal"
-                  locale={ru}
-                  weekStartsOn={1}
-                  moveRangeOnFirstSelection={false}
-                  rangeColors={["#3b82f6"]}
-                />
-                <div className="flex justify-end mt-4">
-                  <button
-                    onClick={() => {
-                      setShowDateRangePicker(false);
-                      loadData(); // Перезагружаем данные при применении
-                    }}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
-                  >
-                    Применить
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* HEADER, MENU, FILTERS — как у тебя */}
+        {/* ... (оставь как было, только кнопки с setPeriodType и setDateRange) */}
 
         {/* TOTALS */}
         <div>
@@ -364,7 +289,6 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
