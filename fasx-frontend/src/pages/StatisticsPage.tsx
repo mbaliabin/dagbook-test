@@ -32,7 +32,12 @@ export default function StatsPage() {
   const [reportType, setReportType] = React.useState("Общий отчет");
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
-  const [dateRange, setDateRange] = React.useState<{ startDate: Date; endDate: Date }>({
+  const [dateRange, setDateRange] = React.useState({
+    startDate: dayjs().startOf("year").toDate(),
+    endDate: dayjs().endOf("year").toDate(),
+  });
+
+  const [tempRange, setTempRange] = React.useState({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
   });
@@ -134,7 +139,6 @@ export default function StatsPage() {
       }
       setColumns(cols);
 
-      // === ИНДЕКС ДЛЯ ДАТЫ ===
       const getIndex = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
           const year = dayjs().year();
@@ -147,7 +151,7 @@ export default function StatsPage() {
         }
       };
 
-      // Зоны
+      // Зоны, типы, дистанция — как раньше
       const zoneColors = { I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444" };
       const zoneKeys = { I1: "zone1Min", I2: "zone2Min", I3: "zone3Min", I4: "zone4Min", I5: "zone5Min" };
 
@@ -311,35 +315,54 @@ export default function StatsPage() {
           <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
 
           <div className="relative">
-            <button onClick={() => setShowDateRangePicker(p => !p)} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
+            <button onClick={() => { setTempRange(dateRange); setShowDateRangePicker(true); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
               <Calendar className="w-4 h-4 mr-1"/> Произвольный период
               <ChevronDown className="w-4 h-4 ml-1"/>
             </button>
             {showDateRangePicker && (
-              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+              <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-4">
                 <DateRange
-                  ranges={[{ startDate: dateRange.startDate, endDate: dateRange.endDate, key: "selection" }]}
+                  ranges={[{
+                    startDate: tempRange.startDate,
+                    endDate: tempRange.endDate,
+                    key: "selection"
+                  }]}
                   onChange={(item: any) => {
-                    setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate });
-                    setPeriodType("custom");
+                    setTempRange({
+                      startDate: item.selection.startDate,
+                      endDate: item.selection.endDate,
+                    });
                   }}
-                  months={1}
+                  showSelectionPreview={true}
+                  moveRangeOnFirstSelection={false}
+                  months={2}
                   direction="horizontal"
                   locale={ru}
                   weekStartsOn={1}
-                  moveRangeOnFirstSelection={false}
                   rangeColors={["#3b82f6"]}
                 />
-                <div className="flex justify-end mt-2 space-x-2">
-                  <button onClick={() => setShowDateRangePicker(false)} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300">Отмена</button>
-                  <button onClick={() => { setShowDateRangePicker(false); loadData(); }} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white">Применить</button>
+                <div className="flex justify-end gap-2 mt-3">
+                  <button onClick={() => setShowDateRangePicker(false)} className="px-4 py-2 border border-gray-600 rounded hover:bg-gray-700 text-gray-300">
+                    Отмена
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDateRange(tempRange);
+                      setPeriodType("custom");
+                      setShowDateRangePicker(false);
+                    }}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
+                  >
+                    Применить
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* TOTALS */}
+        {/* TOTALS + ГРАФИКИ + ТАБЛИЦЫ — как у тебя было */}
+        {/* (оставляю без изменений — всё работает) */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
@@ -350,11 +373,9 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
-
             <SyncedTable
               title="Параметры дня"
               rows={[
@@ -367,32 +388,21 @@ export default function StatsPage() {
               index={0}
               showBottomTotal={false}
             />
-
             <SyncedTable
               title="Зоны выносливости"
-              rows={filteredEnduranceZones.map(z => ({
-                param: z.zone,
-                color: z.color,
-                months: z.months,
-                total: z.total,
-              }))}
+              rows={filteredEnduranceZones.map(z => ({ param: z.zone, color: z.color, months: z.months, total: z.total }))}
               columns={columns}
               formatAsTime
               index={1}
-              showBottomTotal={true}
+              showBottomTotal
               bottomRowName="Общая выносливость"
             />
-
             <SyncedTable
               title="Тип активности"
-              rows={filteredMovementTypes.map(m => ({
-                param: m.type,
-                months: m.months,
-                total: m.total,
-              }))}
+              rows={filteredMovementTypes.map(m => ({ param: m.type, months: m.months, total: m.total }))}
               columns={columns}
               index={2}
-              showBottomTotal={true}
+              showBottomTotal
               bottomRowName="Общее по видам активности"
             />
           </>
@@ -403,15 +413,10 @@ export default function StatsPage() {
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
             <SyncedTable
               title="Дистанция по видам тренировок"
-              rows={filteredDistanceTypes.map(t => ({
-                param: t.type,
-                color: distanceColors[t.type] || "#888",
-                months: t.months,
-                total: t.total,
-              }))}
+              rows={filteredDistanceTypes.map(t => ({ param: t.type, color: distanceColors[t.type] || "#888", months: t.months, total: t.total }))}
               columns={columns}
               index={0}
-              showBottomTotal={true}
+              showBottomTotal
               bottomRowName="Общая пройденная дистанция"
             />
           </>
