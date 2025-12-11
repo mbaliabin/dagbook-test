@@ -42,6 +42,7 @@ app.use('/api/profile', profileRoutes)
 app.use('/api/workouts', workoutRoutes)
 app.use("/api/daily-information", dailyInformationRouter);
 app.use('/api/statistics', statisticsRoutes)
+app.use(statisticsRoutes);
 
 
 // Проверка соединения с БД

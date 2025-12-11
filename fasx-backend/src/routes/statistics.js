@@ -1,9 +1,10 @@
-const express = require("express");
-const { prisma } = require("../prisma");
-const { authenticateToken } = require("../middleware/authMiddleware.js");
+// src/routes/statistics.js
+import express from "express";
+import prisma from "../prisma/client.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek.js";
 
-const dayjs = require("dayjs");
-const isoWeek = require("dayjs/plugin/isoWeek");
 dayjs.extend(isoWeek);
 
 const router = express.Router();
@@ -81,4 +82,4 @@ router.get("/api/statistics", authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
