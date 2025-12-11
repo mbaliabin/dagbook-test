@@ -8,7 +8,6 @@ import userRoutes from './routes/user.js'
 import profileRoutes from './routes/profile.js'
 import workoutRoutes from './routes/workouts.js'  // Импорт роутов тренировок
 import dailyInformationRouter from './routes/dailyInformation.js';
-import statisticsRoutes from './routes/statistics.js'
 
 dotenv.config()
 
@@ -41,8 +40,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/workouts', workoutRoutes)
 app.use("/api/daily-information", dailyInformationRouter);
-app.use('/api/statistics', statisticsRoutes)
-app.use(statisticsRoutes);
+
 
 
 // Проверка соединения с БД
