@@ -11,18 +11,20 @@ router.get("/range", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { start, end } = req.query;
 
-    if (!start || !end) return res.status(400).json({ error: "Missing start or end date" });
+    if (!start || !end) {
+      return res.status(400).json({ error: "Missing start or end date" });
+    }
 
-    const startDate = new Date(start as string);
-    const endDate = new Date(end as string);
-    endDate.setHours(23,59,59,999);
+    const startDate = new Date(start as string);        // ← было: new Date(start as string
+    const endDate = new Date(end as string);            // ← было: new Date(end as string
+    endDate.setHours(23, 59, 59, 999);
 
     const entries = await prisma.dailyInformation.findMany({
       where: {
         userId,
-        date: { gte: startDate, lte: endDate }
+        date: { gte: startDate, lte: endDate },
       },
-      orderBy: { date: "asc" }
+      orderBy: { date: "asc" },
     });
 
     res.json(entries);
