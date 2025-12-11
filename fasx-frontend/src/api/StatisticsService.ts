@@ -1,5 +1,8 @@
 // src/services/statisticsService.ts
 import dayjs from "dayjs";
+import express from 'express'
+import { prisma } from '../prisma'
+import { authenticateToken } from '../middleware/authMiddleware'
 
 interface StatsParams {
   startDate: Date;
@@ -41,7 +44,7 @@ export async function getStatistics(params: StatsParams) {
 
   // Получаем тренировки
   const workoutsRes = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/workouts/user?start=${startStr}&end=${endStr}`,
+    `${import.meta.env.VITE_API_URL}/api/workouts?start=${startStr}&end=${endStr}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }

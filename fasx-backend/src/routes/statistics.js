@@ -1,6 +1,6 @@
 const express = require("express");
 const { prisma } = require("../prisma");
-const { authenticateToken } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../middleware/authMiddleware.js");
 
 const dayjs = require("dayjs");
 const isoWeek = require("dayjs/plugin/isoWeek");
