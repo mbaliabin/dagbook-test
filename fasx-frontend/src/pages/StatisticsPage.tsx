@@ -55,7 +55,7 @@ const MOVEMENT_TYPE_MAP: Record<string, string> = {
   Other: "Другое",
 };
 const DISTANCE_COLORS: Record<string, string> = {
-  "Лыжи / свободный стиль": "#4ade80",
+  "Лыжи, свободный стиль": "#4ade80",
   "Лыжи, классический стиль": "#22d3ee",
   "Лыжероллеры, классический стиль": "#facc15",
   "Лыжероллеры, свободный стиль": "#fb923c",
