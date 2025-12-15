@@ -3,10 +3,10 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { CustomTooltip } from "./CustomTooltip";
 
 const distanceColors: Record<string, string> = {
-  "Лыжи / скейтинг": "#4ade80",
-  "Лыжи, классика": "#22d3ee",
-  "Роллеры, классика": "#facc15",
-  "Роллеры, скейтинг": "#fb923c",
+  "Лыжи, свободный стиль": "#4ade80",
+  "Лыжи, классический стиль": "#22d3ee",
+  "Лыжероллеры, классический стиль": "#facc15",
+  "Лыжероллеры, свободный стиль": "#fb923c",
   "Велосипед": "#3b82f6",
 };
 
