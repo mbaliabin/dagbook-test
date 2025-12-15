@@ -1,8 +1,11 @@
 // src/pages/StatisticsPage/StatsPage.tsx
+
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
+// 💡 Добавляем плагин для функций сравнения дат (isSameOrAfter, isSameOrBefore)
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import "dayjs/locale/ru";
 import {
   Home, BarChart3, ClipboardList, CalendarDays,
@@ -17,7 +20,9 @@ import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
 import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
 import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
 
+// 🚀 Расширяем Day.js необходимыми плагинами
 dayjs.extend(weekOfYear);
+dayjs.extend(isSameOrBefore); // <-- Активируем плагин
 dayjs.locale("ru");
 
 type PeriodType = "week" | "month" | "year" | "custom";
@@ -88,6 +93,7 @@ export default function StatsPage() {
         const startDay = dayjs(dateRange.startDate).startOf("day");
         const endDay = dayjs(dateRange.endDate).startOf("day");
 
+        // ЭТИ ФУНКЦИИ ТЕПЕРЬ ДОСТУПНЫ БЛАГОДАРЯ ПЛАГИНУ:
         return d.isSameOrAfter(startDay) && d.isSameOrBefore(endDay);
       });
 
