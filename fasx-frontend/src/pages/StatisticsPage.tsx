@@ -262,34 +262,36 @@ export default function StatsPage() {
             distance: totalDistance,
         });
 
-        // 3. ФОРМИРОВАНИЕ КОЛОНОК (УПРОЩЕННОЕ ФОРМАТИРОВАНИЕ)
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК (УПРОЩЕННОЕ ФОРМАТИРОВАНИЕ, ИСПРАВЛЕННЫЙ ЦИКЛ)
         let cols: string[] = [];
         let current = periodStartDay;
 
-        const periodEndDayCheck = periodEndDay.add(1, 'day');
-
         if (periodType === "day") {
-             while (current.isBefore(periodEndDayCheck)) {
+             // Разбить по ДНЯМ
+             while (current.isBefore(periodEndDay) || current.isSame(periodEndDay, "day")) {
                  cols.push(current.format("DD MMM"));
                  current = current.add(1, "day");
              }
         } else if (periodType === "week") {
+             // Разбить по НЕДЕЛЯМ
              let currentWeekStart = periodStartDay.startOf('week');
              let weekNum = 1;
-             while (currentWeekStart.isBefore(periodEndDayCheck)) {
+             while (currentWeekStart.isBefore(periodEndDay) || currentWeekStart.isSame(periodEndDay, "week")) {
                  cols.push(`W${weekNum}`);
                  currentWeekStart = currentWeekStart.add(1, 'week');
                  weekNum++;
              }
         } else if (periodType === "month") {
+             // Разбить по МЕСЯЦАМ
              let currentMonthStart = periodStartDay.startOf('month');
-             while (currentMonthStart.isBefore(periodEndDayCheck)) {
+             while (currentMonthStart.isBefore(periodEndDay) || currentMonthStart.isSame(periodEndDay, "month")) {
                  cols.push(currentMonthStart.format("MMM"));
                  currentMonthStart = currentMonthStart.add(1, 'month');
              }
         } else if (periodType === "year") {
+             // Разбить по ГОДАМ
              let currentYearStart = periodStartDay.startOf('year');
-             while (currentYearStart.isBefore(periodEndDayCheck)) {
+             while (currentYearStart.isBefore(periodEndDay) || currentYearStart.isSame(periodEndDay, "year")) {
                  cols.push(currentYearStart.format("YYYY"));
                  currentYearStart = currentYearStart.add(1, 'year');
              }
@@ -456,7 +458,6 @@ export default function StatsPage() {
       if (periodType === "day") {
           return count > 0 ? '+' : '';
       }
-      // В агрегированных режимах возвращаем ЧИСЛО дней со статусом
       return count > 0 ? `${count}` : '';
     }
 
