@@ -81,8 +81,14 @@ export default function StatsPage() {
 
       // Фильтруем тренировки по выбранному периоду на фронте
       const workouts = allWorkouts.filter((w: any) => {
+        if (!w?.date) return false;
         const d = dayjs(w.date);
-        return d.isSameOrAfter(startStr) && d.isSameOrBefore(endStr);
+        if (!d.isValid()) return false;
+
+        const startDay = dayjs(dateRange.startDate).startOf("day");
+        const endDay = dayjs(dateRange.endDate).startOf("day");
+
+        return d.isSameOrAfter(startDay) && d.isSameOrBefore(endDay);
       });
 
       // === Дальше — тот же расчёт, что был раньше ===
