@@ -211,7 +211,7 @@ export default function StatsPage() {
             if (periodType === "week") {
                 const year = dayjs().year();
                 const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-                // ИСПРАВЛЕНО
+                // Исправлено
                 return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
             } else if (periodType === "custom") {
                 const periodStartDayClean = periodStartDay.startOf('day');
@@ -367,7 +367,7 @@ export default function StatsPage() {
   }, [columns, filteredDistanceTypes]);
 
   /**
-   * НОВЫЙ МЕТОД: Вычисление ежедневного параметра
+   * МЕТОД: Вычисление ежедневного параметра
    * @param param Ключ параметра (например, physical, pulse, skadet)
    */
   const getDailyParam = (param: DailyParamKey | string, index: number) => {
@@ -375,6 +375,7 @@ export default function StatsPage() {
     // Проверка, является ли параметр одним из шести статусов (skadet, syk, ...)
     const isStatusParam = STATUS_PARAMS.some(p => p.id === param);
 
+    // --- Логика для произвольного периода (Custom/День) ---
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
       const dailyEntry = dailyInfo[dateKey];
@@ -382,15 +383,15 @@ export default function StatsPage() {
       if (!dailyEntry) return "-";
 
       if (isStatusParam) {
-          // Если это статус, проверяем, совпадает ли main_param с текущим статусом
+          // Для произвольного периода: '+' если статус активен в этот день
           return dailyEntry.main_param === param ? '+' : '';
       }
 
-      // Для числовых полей и сна (physical, mental, pulse, sleep_duration)
+      // Для числовых полей и сна
       return dailyEntry[param as DailyParamKey] ?? "-";
     }
 
-    // Логика для режимов "week", "month", "year"
+    // --- Логика для агрегированных режимов ("week", "month", "year") ---
     const dailyKeys = Object.keys(dailyInfo);
     let relevantDates: string[] = [];
 
@@ -405,18 +406,22 @@ export default function StatsPage() {
 
     if (relevantDates.length === 0) return isStatusParam ? '' : "-";
 
-    // Логика для статусных параметров (Травма, Болезнь и т.д.)
+    // 1. ЛОГИКА ДЛЯ СТАТУСНЫХ ПАРАМЕТРОВ (Травма, Болезнь и т.д.)
     if (isStatusParam) {
-      // Считаем, сколько дней в периоде имели этот статус
+      // Считаем, сколько ДНЕЙ в периоде имели этот статус
       const count = relevantDates.filter(d => dailyInfo[d].main_param === param).length;
-      return count > 0 ? `${count}` : ''; // Возвращаем количество дней со статусом
+      return count > 0 ? `${count}` : ''; // Возвращаем ЧИСЛО дней
     }
 
-    // Логика для числовых параметров (physical, mental, sleep_quality, pulse)
+    // 2. ЛОГИКА ДЛЯ ЧИСЛОВЫХ ПАРАМЕТРОВ (physical, mental, sleep_quality, pulse, sleep_duration)
+    // Эти параметры должны показывать СРЕДНЕЕ ЗНАЧЕНИЕ за период
     const values = relevantDates.map(d => dailyInfo[d][param as DailyParamKey]).filter(v => typeof v === 'number' && v !== 0);
+
     if (values.length === 0) return "-";
 
     const sum = values.reduce((s, v) => s + v, 0);
+
+    // Для всех числовых параметров возвращаем округленное среднее
     return Math.round(sum / values.length);
   };
 
@@ -537,11 +542,11 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ИСПРАВЛЕННАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы) */}
+            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы, с числовым итогом дней) */}
             <SyncedTable
-              title="Параметры дня"
+              title="Параметры дня (Дни со статусом)"
               rows={[
-                // Только статусные параметры
+                // Только статусные параметры (Травма, Болезнь, Выходной и т.д.)
                 ...STATUS_PARAMS.map(p => ({
                     param: p.label,
                     months: columns.map((_, i) => getDailyParam(p.id, i)),
