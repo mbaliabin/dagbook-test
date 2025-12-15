@@ -13,6 +13,7 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+// Предполагаем, что компоненты EnduranceChart, DistanceChart, SyncedTable импортируются корректно
 import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
 import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
 import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
@@ -76,7 +77,6 @@ const DISTANCE_COLORS: Record<string, string> = {
   "Велосипед": "#3b82f6",
 };
 
-// Список всех параметров статуса, которые нужно отобразить как отдельные строки
 const STATUS_PARAMS: { id: string, label: string }[] = [
     { id: 'skadet', label: 'Травма' },
     { id: 'syk', label: 'Болезнь' },
@@ -86,7 +86,6 @@ const STATUS_PARAMS: { id: string, label: string }[] = [
     { id: 'konkurranse', label: 'Соревнование' },
 ];
 
-// Расширенный тип для параметров дня
 type DailyParamKey = "physical" | "mental" | "sleep_quality" | "pulse" | "main_param" | "sleep_duration";
 
 export default function StatsPage() {
@@ -98,7 +97,6 @@ export default function StatsPage() {
 
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
-  // Исходный диапазон дат
   const [dateRange, setDateRange] = React.useState({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
@@ -120,7 +118,7 @@ export default function StatsPage() {
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   // -----------------------------------------------------------
-  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ
+  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ (Календарные периоды)
   // -----------------------------------------------------------
   const handlePeriodChange = (newPeriodType: PeriodType) => {
     setPeriodType(newPeriodType);
@@ -131,18 +129,25 @@ export default function StatsPage() {
 
     switch (newPeriodType) {
         case "day":
+            // День: С начала текущего дня до конца
             newStartDate = today.startOf('day');
             newEndDate = today.endOf('day');
             break;
+
         case "week":
-            newStartDate = today.subtract(6, 'day').startOf('day');
-            newEndDate = today.endOf('day');
+            // Неделя: С начала текущей календарной недели (Пн) до конца (Вс)
+            newStartDate = today.startOf('week');
+            newEndDate = today.endOf('week');
             break;
+
         case "month":
+            // Месяц: С 1 числа текущего месяца до конца
             newStartDate = today.startOf('month');
             newEndDate = today.endOf('month');
             break;
+
         case "year":
+            // Год: С 1 января текущего года до 31 декабря
             newStartDate = today.startOf('year');
             newEndDate = today.endOf('year');
             break;
@@ -156,7 +161,6 @@ export default function StatsPage() {
 
   // Инициализация при первом рендере
   React.useEffect(() => {
-      // Устанавливаем начальный диапазон (по умолчанию 'year')
       handlePeriodChange("year");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -164,9 +168,6 @@ export default function StatsPage() {
   // 2. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА
   // -----------------------------------------------------------
 
-  /**
-   * Определяет, к какому столбцу (периоду агрегации) принадлежит дата.
-   */
   const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
       const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
       const workoutDateClean = date.startOf('day');
@@ -265,38 +266,30 @@ export default function StatsPage() {
         let cols: string[] = [];
         let current = periodStartDay;
 
-        const periodEndDayCheck = periodEndDay.add(1, 'day'); // Для цикла while
+        const periodEndDayCheck = periodEndDay.add(1, 'day');
 
         if (periodType === "day") {
-             // Разбить по ДНЯМ
              while (current.isBefore(periodEndDayCheck)) {
-                 // Оставим только день и месяц
                  cols.push(current.format("DD MMM"));
                  current = current.add(1, "day");
              }
         } else if (periodType === "week") {
-             // Разбить по НЕДЕЛЯМ
              let currentWeekStart = periodStartDay.startOf('week');
              let weekNum = 1;
              while (currentWeekStart.isBefore(periodEndDayCheck)) {
-                 // Оставим только WN
                  cols.push(`W${weekNum}`);
                  currentWeekStart = currentWeekStart.add(1, 'week');
                  weekNum++;
              }
         } else if (periodType === "month") {
-             // Разбить по МЕСЯЦАМ
              let currentMonthStart = periodStartDay.startOf('month');
              while (currentMonthStart.isBefore(periodEndDayCheck)) {
-                 // Оставим только название месяца
                  cols.push(currentMonthStart.format("MMM"));
                  currentMonthStart = currentMonthStart.add(1, 'month');
              }
         } else if (periodType === "year") {
-             // Разбить по ГОДАМ
              let currentYearStart = periodStartDay.startOf('year');
              while (currentYearStart.isBefore(periodEndDayCheck)) {
-                 // Оставим только год
                  cols.push(currentYearStart.format("YYYY"));
                  currentYearStart = currentYearStart.add(1, 'year');
              }
@@ -456,27 +449,24 @@ export default function StatsPage() {
 
     if (relevantDates.length === 0) return isStatusParam ? '' : "-";
 
-    // 1. ЛОГИКА ДЛЯ СТАТУСНЫХ ПАРАМЕТРОВ (Травма, Болезнь и т.д.)
+    // 1. ЛОГИКА ДЛЯ СТАТУСНЫХ ПАРАМЕТРОВ
     if (isStatusParam) {
       const count = relevantDates.filter(d => dailyInfo[d].main_param === param).length;
 
       if (periodType === "day") {
-          // В режиме "День" показываем '+' или пустоту
           return count > 0 ? '+' : '';
       }
       // В агрегированных режимах возвращаем ЧИСЛО дней со статусом
       return count > 0 ? `${count}` : '';
     }
 
-    // 2. ЛОГИКА ДЛЯ ЧИСЛОВЫХ ПАРАМЕТРОВ (physical, mental, sleep_quality, pulse, sleep_duration)
-    // Эти параметры должны показывать СРЕДНЕЕ ЗНАЧЕНИЕ за период
+    // 2. ЛОГИКА ДЛЯ ЧИСЛОВЫХ ПАРАМЕТРОВ (СРЕДНЕЕ)
     const values = relevantDates.map(d => dailyInfo[d][param as DailyParamKey]).filter(v => typeof v === 'number' && v !== 0);
 
     if (values.length === 0) return "-";
 
     const sum = values.reduce((s, v) => s + v, 0);
 
-    // Для всех числовых параметров возвращаем округленное среднее
     return Math.round(sum / values.length);
   };
 
@@ -578,7 +568,6 @@ export default function StatsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      // Применяем новый диапазон, сохраняя текущий PeriodType (агрегацию)
                       setDateRange(tempRange);
                       setShowDateRangePicker(false);
                     }}
@@ -615,11 +604,10 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы, с числовым итогом дней) */}
+            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title={`Параметры дня (Агрегация: ${periodType === 'day' ? 'День' : periodType === 'week' ? 'Неделя' : periodType === 'month' ? 'Месяц' : 'Год'})`}
               rows={[
-                // Только статусные параметры (Травма, Болезнь, Выходной и т.д.)
                 ...STATUS_PARAMS.map(p => ({
                     param: p.label,
                     months: columns.map((_, i) => getDailyParam(p.id, i)),
@@ -640,7 +628,7 @@ export default function StatsPage() {
                 total: z.total,
               }))}
               columns={columns}
-              formatAsTime // Форматирование как время (H:MM)
+              formatAsTime
               index={1}
               showBottomTotal={true}
               bottomRowName="Общая выносливость"
@@ -655,7 +643,7 @@ export default function StatsPage() {
                 total: m.total,
               }))}
               columns={columns}
-              formatAsTime // Форматирование как время (H:MM)
+              formatAsTime
               index={2}
               showBottomTotal={true}
               bottomRowName="Общее время"
