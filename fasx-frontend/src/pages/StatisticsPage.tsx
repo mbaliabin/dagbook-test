@@ -85,6 +85,7 @@ export default function StatsPage() {
   const [reportType, setReportType] = React.useState("Общий отчет");
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
+  // Исходный диапазон дат (обычно текущий год)
   const [dateRange, setDateRange] = React.useState({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
@@ -118,13 +119,18 @@ export default function StatsPage() {
     }
 
     try {
+      // Определение опорных точек для всего периода
+      const periodStartDay = dayjs(dateRange.startDate).startOf("day");
+      const periodEndDay = dayjs(dateRange.endDate).endOf("day");
+
       // 1. ЗАГРУЗКА ДАННЫХ
       const [workoutsRes, dailyRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(
-          `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${dayjs(dateRange.startDate).format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
+          // Используем dates из dateRange для запроса daily info
+          `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
           { headers: { Authorization: `Bearer ${token}` } }
         ),
       ]);
@@ -148,14 +154,12 @@ export default function StatsPage() {
       });
       setDailyInfo(dailyMap);
 
-      const startDay = dayjs(dateRange.startDate).startOf("day");
-      const endDay = dayjs(dateRange.endDate).endOf("day");
-
       // Фильтрация тренировок по диапазону
       const workouts = allWorkouts.filter((w) => {
         if (!w?.date) return false;
         const d = dayjs(w.date);
-        return d.isValid() && d.isBetween(startDay, endDay, null, "[]");
+        // Фильтрация: d должна быть между periodStartDay (включительно) и periodEndDay (включительно)
+        return d.isValid() && d.isBetween(periodStartDay, periodEndDay, null, "[]");
       });
 
       // 2. РАСЧЕТ ИТОГОВ
@@ -172,42 +176,39 @@ export default function StatsPage() {
         distance: totalDistance,
       });
 
-      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА (Возвращена логика для "week")
+      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА (Скорректировано для custom)
       let cols: string[] = [];
-      const periodStartDay = dayjs(dateRange.startDate).startOf("day");
 
       const getIndex = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
-          // ИСХОДНАЯ ЛОГИКА: Расчет недели относительно начала текущего года
+          // Логика для "week": относительно начала текущего года
           const year = dayjs().year();
           const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
           return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
         } else if (periodType === "custom") {
-          // Расчет относительно начала периода
+          // Логика для "custom": разница в днях от начала периода (periodStartDay из внешнего скоупа)
           return date.diff(periodStartDay, "day");
         } else {
-          // month / year
           return date.month();
         }
       };
 
       if (periodType === "week") {
-        // ИСХОДНАЯ ЛОГИКА: Показываем все недели текущего года, независимо от dateRange
+        // Показываем все недели текущего года
         const year = dayjs().year();
         const firstDayOfYear = dayjs(`${year}-01-01`);
-        const firstWeekStart = firstDayOfYear.startOf("week");
-        let current = firstWeekStart;
+        let current = firstDayOfYear.startOf("week");
         let weekNum = 1;
-        // Продолжаем, пока текущая точка не выйдет за пределы текущего года (или чуть больше)
         while (current.year() <= year || (current.year() === year + 1 && current.week() === 1)) {
           cols.push(`W${weekNum}`);
           weekNum++;
           current = current.add(1, "week");
-          if (weekNum > 54) break; // Ограничение на случай бесконечного цикла
+          if (weekNum > 54) break;
         }
       } else if (periodType === "month" || periodType === "year") {
-        cols = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+        cols = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
       } else if (periodType === "custom") {
+        // Формируем столбцы по дням в произвольном периоде
         let current = periodStartDay;
         while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
           cols.push(current.format("DD MMM"));
@@ -217,10 +218,18 @@ export default function StatsPage() {
       setColumns(cols);
 
       const numPeriods = cols.length;
+      if (numPeriods === 0) {
+          // Защита от пустых массивов
+          setEnduranceZones([]);
+          setMovementTypes([]);
+          setDistanceByType([]);
+          setLoading(false);
+          return;
+      }
 
       // 4. РАСЧЕТ ДАННЫХ ПО ПЕРИОДАМ
 
-      // Зоны выносливости (Время)
+      // Зоны выносливости (Время, минуты)
       const enduranceData = ZONE_NAMES.map(z => {
         const months = new Array(numPeriods).fill(0);
         const key = ZONE_KEYS[z as keyof typeof ZONE_KEYS];
@@ -242,7 +251,7 @@ export default function StatsPage() {
         };
       });
 
-      // Типы активности (ВРЕМЯ — для Общего Отчета)
+      // Типы активности (ВРЕМЯ, минуты — для Общего Отчета)
       const allTypes = [...new Set(workouts.map(w => w.type))];
       const movementData = allTypes.map(t => {
         const typeName = MOVEMENT_TYPE_MAP[t] || t;
@@ -307,14 +316,13 @@ export default function StatsPage() {
     }
   }, [dateRange, periodType]);
 
-  // ... (Остальная часть компонента, включая useMemo, остается прежней)
 
   React.useEffect(() => { loadData(); }, [loadData]);
 
-  // Используем useMemo для мемоизации данных графиков, чтобы избежать пересчетов при ререндерах
-  const filteredEnduranceZones = enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) }));
-  const filteredMovementTypes = movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) }));
-  const filteredDistanceTypes = distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) }));
+  // Мемоизация и фильтрация данных для рендера
+  const filteredEnduranceZones = React.useMemo(() => enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) })), [enduranceZones, columns]);
+  const filteredMovementTypes = React.useMemo(() => movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) })), [movementTypes, columns]);
+  const filteredDistanceTypes = React.useMemo(() => distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) })), [distanceByType, columns]);
 
   const activeDistanceTypes = React.useMemo(() => {
     return filteredDistanceTypes
@@ -340,19 +348,11 @@ export default function StatsPage() {
 
 
   const getDailyParam = (param: "physical" | "mental" | "sleep_quality" | "pulse", index: number) => {
-    // Эта логика осталась из исходного кода, предполагая, что она работает в рамках вашего приложения.
+    // Эта логика взята из исходного кода
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
       return dailyInfo[dateKey]?.[param] ?? "-";
     }
-
-    // В оригинальной логике, для week/month/year используется dayjs().month() === index,
-    // что работает, если dateRange соответствует текущему году.
-    // Для режимов week/month/year, где столбцы - это месяцы или недели, требуется сложная
-    // логика поиска дат, принадлежащих этому столбцу, в dailyInfo.
-
-    // Если "week" или "year/month" выбраны с помощью кнопок, то dateRange соответствует году.
-    // Здесь оставлена оригинальная упрощенная логика:
 
     if (periodType === "week") {
       const year = dayjs().year();
@@ -425,7 +425,7 @@ export default function StatsPage() {
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
           </select>
-          {/* Кнопки возвращают к полному году, т.к. недельная стастика за одну неделю не нужна */}
+          {/* Кнопки устанавливают диапазон на полный год, чтобы увидеть все столбцы */}
           <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя (Год)</button>
           <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц (Год)</button>
           <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
@@ -517,7 +517,7 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — теперь ВРЕМЯ (минуты) */}
+            {/* Тип активности — ВРЕМЯ (минуты) */}
             <SyncedTable
               title="Тип активности (Время, мин)"
               rows={filteredMovementTypes.map(m => ({
