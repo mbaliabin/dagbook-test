@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -9,58 +9,58 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String   @id @default(cuid())
+  email     String   @unique
   password  String
   name      String
   avatarUrl String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  isVerified        Boolean   @default(false)       // новое поле
-  verificationToken String?                        // новое поле
+  isVerified        Boolean @default(false) // новое поле
+  verificationToken String? // новое поле
 
-  profile   Profile?
-  workouts  Workout[]
+  profile  Profile?
+  workouts Workout[]
 
-  followers Follow[]  @relation("following")
-  following Follow[]  @relation("follower")
+  followers        Follow[]           @relation("following")
+  following        Follow[]           @relation("follower")
   dailyInformation DailyInformation[] // <-- добавлено
 }
 
 model Workout {
-  id          String      @id @default(cuid())
-  user        User        @relation(fields: [userId], references: [id])
-  userId      String
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
-  name        String
-  date        DateTime
-  comment     String?
+  name    String
+  date    DateTime
+  comment String?
 
-  effort      Int?        // Воспринимаемая нагрузка (1–10)
-  feeling     Int?        // Самочувствие (1–10)
-  type        WorkoutType
-  duration    Int         // Суммарное время тренировки в минутах
-  distance    Float?      // Только если не силовая и не другое
+  effort   Int? // Воспринимаемая нагрузка (1–10)
+  feeling  Int? // Самочувствие (1–10)
+  type     WorkoutType
+  duration Int // Суммарное время тренировки в минутах
+  distance Float? // Только если не силовая и не другое
 
-  zone1Min    Int         @default(0)
-  zone2Min    Int         @default(0)
-  zone3Min    Int         @default(0)
-  zone4Min    Int         @default(0)
-  zone5Min    Int         @default(0)
+  zone1Min Int @default(0)
+  zone2Min Int @default(0)
+  zone3Min Int @default(0)
+  zone4Min Int @default(0)
+  zone5Min Int @default(0)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime?   @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Follow {
-  id           String   @id @default(cuid())
-  follower     User     @relation("follower", fields: [followerId], references: [id])
-  followerId   String
+  id         String @id @default(cuid())
+  follower   User   @relation("follower", fields: [followerId], references: [id])
+  followerId String
 
-  following    User     @relation("following", fields: [followingId], references: [id])
-  followingId  String
+  following   User   @relation("following", fields: [followingId], references: [id])
+  followingId String
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Profile {
@@ -84,19 +84,17 @@ enum WorkoutType {
 }
 
 model DailyInformation {
-  id            Int      @id @default(autoincrement())
-  userId        String
-  date          DateTime
-  main_param    String?
-  physical      Int      @default(0)
-  mental        Int      @default(0)
-  sleep_quality Int      @default(0)
-  pulse         Int?
+  id             Int      @id @default(autoincrement())
+  userId         String
+  date           DateTime
+  main_param     String?
+  physical       Int      @default(0)
+  mental         Int      @default(0)
+  sleep_quality  Int      @default(0)
+  pulse          Int?
   sleep_duration String?
-  comment       String?
-  created_at    DateTime @default(now())
+  comment        String?
+  created_at     DateTime @default(now())
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_daily_user") // обратное поле не трогаем
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_daily_user") // обратное поле не трогаем
 }
-
-
