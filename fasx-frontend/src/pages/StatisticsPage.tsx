@@ -77,8 +77,7 @@ const DISTANCE_COLORS: Record<string, string> = {
   "Велосипед": "#3b82f6",
 };
 
-// НОВЫЙ МАППИНГ для mainParam
-// Используем ID из DailyParameters.tsx и русские названия
+// МАППИНГ для mainParam и новый список параметров для таблицы
 const MAIN_PARAM_MAP: Record<string, string> = {
   skadet: "Травма",
   syk: "Болезнь",
@@ -88,7 +87,17 @@ const MAIN_PARAM_MAP: Record<string, string> = {
   konkurranse: "Соревнование",
 };
 
-// Расширенный тип для параметров дня, включая новое поле main_param
+// Список всех параметров статуса, которые нужно отобразить как отдельные строки
+const STATUS_PARAMS: { id: string, label: string }[] = [
+    { id: 'skadet', label: 'Травма' },
+    { id: 'syk', label: 'Болезнь' },
+    { id: 'paReise', label: 'В пути' },
+    { id: 'hoydedogn', label: 'Смена часового пояса' },
+    { id: 'fridag', label: 'Выходной' },
+    { id: 'konkurranse', label: 'Соревнование' },
+];
+
+// Расширенный тип для параметров дня
 type DailyParamKey = "physical" | "mental" | "sleep_quality" | "pulse" | "main_param" | "sleep_duration";
 
 export default function StatsPage() {
@@ -119,7 +128,6 @@ export default function StatsPage() {
   const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]); // Для Общего отчета (время)
   const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]); // Для Общей дистанции (км)
 
-  // Добавляем main_param и sleep_duration в типизацию
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   const loadData = React.useCallback(async () => {
@@ -134,7 +142,6 @@ export default function StatsPage() {
     }
 
     try {
-        // Определение опорных точек
         const periodStartDay = dayjs(dateRange.startDate).startOf("day");
         const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
@@ -164,14 +171,13 @@ export default function StatsPage() {
                 mental: entry.mental ?? null,
                 sleep_quality: entry.sleep_quality ?? null,
                 pulse: entry.pulse ?? null,
-                // ДОБАВЛЕНИЕ НОВЫХ ПОЛЕЙ
                 main_param: entry.main_param ?? null,
                 sleep_duration: entry.sleep_duration ?? null,
             };
         });
         setDailyInfo(dailyMap);
 
-        // Фильтрация тренировок по диапазону (Улучшенная надежность)
+        // Фильтрация тренировок по диапазону
         const workouts = allWorkouts.filter((w) => {
             if (!w?.date) return false;
 
@@ -205,7 +211,7 @@ export default function StatsPage() {
             if (periodType === "week") {
                 const year = dayjs().year();
                 const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
+                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week"));
             } else if (periodType === "custom") {
                 const periodStartDayClean = periodStartDay.startOf('day');
                 const workoutDateClean = date.startOf('day');
@@ -248,9 +254,6 @@ export default function StatsPage() {
         }
 
         // 4. РАСЧЕТ ДАННЫХ ПО ПЕРИОДАМ
-        // ... (Расчеты enduranceData, movementData, distanceData остаются прежними)
-        // ... (Просто удалил их для краткости, они должны быть в вашем коде)
-
         const enduranceData = ZONE_NAMES.map(z => {
             const months = new Array(numPeriods).fill(0);
             const key = ZONE_KEYS[z as keyof typeof ZONE_KEYS];
@@ -363,22 +366,30 @@ export default function StatsPage() {
   }, [columns, filteredDistanceTypes]);
 
   /**
-   * НОВЫЙ МЕТОД: Вычисление ежедневного параметра (среднее для недели/месяца или прямое значение для дня)
-   * @param param Ключ параметра (включая main_param)
-   * @param index Индекс периода
-   * @param isMainParam Является ли это полем main_param (для специфической логики вывода)
+   * НОВЫЙ МЕТОД: Вычисление ежедневного параметра
+   * @param param Ключ параметра (например, physical, pulse, skadet)
    */
-  const getDailyParam = (param: DailyParamKey, index: number, isMainParam: boolean = false) => {
+  const getDailyParam = (param: DailyParamKey | string, index: number) => {
+
+    // Проверка, является ли параметр одним из шести статусов (skadet, syk, ...)
+    const isStatusParam = STATUS_PARAMS.some(p => p.id === param);
 
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
-      const value = dailyInfo[dateKey]?.[param] ?? "-";
+      const dailyEntry = dailyInfo[dateKey];
 
-      // Если это main_param, выводим русское название, иначе значение
-      return isMainParam && value !== "-" && typeof value === 'string' ? MAIN_PARAM_MAP[value] || value : value;
+      if (!dailyEntry) return "-";
+
+      if (isStatusParam) {
+          // Если это статус, проверяем, совпадает ли main_param с текущим статусом
+          return dailyEntry.main_param === param ? '+' : '';
+      }
+
+      // Для числовых полей и сна (physical, mental, pulse, sleep_duration)
+      return dailyEntry[param as DailyParamKey] ?? "-";
     }
 
-    // Для режимов "week", "month", "year" вычисляем среднее или самый частый элемент
+    // Логика для режимов "week", "month", "year"
     const dailyKeys = Object.keys(dailyInfo);
     let relevantDates: string[] = [];
 
@@ -391,31 +402,17 @@ export default function StatsPage() {
       relevantDates = dailyKeys.filter(d => dayjs(d).month() === index);
     }
 
-    if (relevantDates.length === 0) return "-";
+    if (relevantDates.length === 0) return isStatusParam ? '' : "-";
 
-    // Специальная логика для main_param: находим самый частый статус за период
-    if (isMainParam) {
-      const statuses = relevantDates
-        .map(d => dailyInfo[d].main_param)
-        .filter(s => s !== null && s !== undefined);
-
-      if (statuses.length === 0) return "-";
-
-      // Считаем частоту статусов
-      const counts: Record<string, number> = statuses.reduce((acc, status) => {
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Находим самый частый
-      const mostFrequentStatusId = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-
-      // Возвращаем русское название
-      return MAIN_PARAM_MAP[mostFrequentStatusId] || mostFrequentStatusId;
+    // Логика для статусных параметров (Травма, Болезнь и т.д.)
+    if (isStatusParam) {
+      // Считаем, сколько дней в периоде имели этот статус
+      const count = relevantDates.filter(d => dailyInfo[d].main_param === param).length;
+      return count > 0 ? `${count}` : ''; // Возвращаем количество дней со статусом
     }
 
     // Логика для числовых параметров (physical, mental, sleep_quality, pulse)
-    const values = relevantDates.map(d => dailyInfo[d][param]).filter(v => typeof v === 'number' && v !== 0);
+    const values = relevantDates.map(d => dailyInfo[d][param as DailyParamKey]).filter(v => typeof v === 'number' && v !== 0);
     if (values.length === 0) return "-";
 
     const sum = values.reduce((s, v) => s + v, 0);
@@ -441,7 +438,6 @@ export default function StatsPage() {
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
         {/* HEADER */}
-        {/* ... (Ваш код HEADER) ... */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
@@ -458,7 +454,6 @@ export default function StatsPage() {
         </div>
 
         {/* MENU */}
-        {/* ... (Ваш код MENU) ... */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -473,7 +468,6 @@ export default function StatsPage() {
         </div>
 
         {/* FILTERS */}
-        {/* ... (Ваш код FILTERS) ... */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
@@ -526,7 +520,6 @@ export default function StatsPage() {
         </div>
 
         {/* TOTALS */}
-        {/* ... (Ваш код TOTALS) ... */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
@@ -543,11 +536,17 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* НОВАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
+            {/* ИСПРАВЛЕННАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title="Параметры дня"
               rows={[
-                { param: "Основной статус", months: columns.map((_, i) => getDailyParam("main_param", i, true)), total: "-" },
+                // Новые статусные параметры
+                ...STATUS_PARAMS.map(p => ({
+                    param: p.label,
+                    months: columns.map((_, i) => getDailyParam(p.id, i)),
+                    total: "-",
+                })),
+                // Старые числовые параметры
                 { param: "Физика", months: columns.map((_, i) => getDailyParam("physical", i)), total: "-" },
                 { param: "Психика", months: columns.map((_, i) => getDailyParam("mental", i)), total: "-" },
                 { param: "Качество сна", months: columns.map((_, i) => getDailyParam("sleep_quality", i)), total: "-" },
