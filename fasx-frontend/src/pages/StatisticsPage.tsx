@@ -95,6 +95,7 @@ export default function StatsPage() {
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
 
+  // Дефолтное значение для первого рендера (будет перезаписано в useEffect)
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
   const [dateRange, setDateRange] = React.useState({
@@ -129,25 +130,21 @@ export default function StatsPage() {
 
     switch (newPeriodType) {
         case "day":
-            // День: С начала текущего дня до конца
             newStartDate = today.startOf('day');
             newEndDate = today.endOf('day');
             break;
 
         case "week":
-            // Неделя: С начала текущей календарной недели (Пн) до конца (Вс)
             newStartDate = today.startOf('week');
             newEndDate = today.endOf('week');
             break;
 
         case "month":
-            // Месяц: С 1 числа текущего месяца до конца
             newStartDate = today.startOf('month');
             newEndDate = today.endOf('month');
             break;
 
         case "year":
-            // Год: С 1 января текущего года до 31 декабря
             newStartDate = today.startOf('year');
             newEndDate = today.endOf('year');
             break;
@@ -159,8 +156,9 @@ export default function StatsPage() {
     });
   };
 
-  // Инициализация при первом рендере
+  // Инициализация при первом рендере: Установка Года по умолчанию
   React.useEffect(() => {
+      // Устанавливаем агрегацию "year" (помесячно)
       handlePeriodChange("year");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -605,9 +603,9 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
+            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (Убран заголовок агрегации) */}
             <SyncedTable
-              title={`Параметры дня (Агрегация: ${periodType === 'day' ? 'День' : periodType === 'week' ? 'Неделя' : periodType === 'month' ? 'Месяц' : 'Год'})`}
+              title="Параметры дня"
               rows={[
                 ...STATUS_PARAMS.map(p => ({
                     param: p.label,
@@ -635,9 +633,9 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — ВРЕМЯ (минуты) */}
+            {/* Тип активности — ВРЕМЯ (Убрано "(Время, мин)" из заголовка) */}
             <SyncedTable
-              title="Тип активности (Время, мин)"
+              title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
                 param: m.type,
                 months: m.months,
