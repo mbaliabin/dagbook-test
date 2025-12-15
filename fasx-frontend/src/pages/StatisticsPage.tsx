@@ -92,10 +92,12 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [name] = React.useState("Пользователь");
+  // ИЗМЕНЕНИЕ: Имя пользователя
+  const [name, setName] = React.useState("Загрузка...");
+  const [loadingProfile, setLoadingProfile] = React.useState(true); // Добавлен для имени
+
   const [reportType, setReportType] = React.useState("Общий отчет");
 
-  // Дефолтное значение для первого рендера
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
   const [dateRange, setDateRange] = React.useState({
@@ -106,6 +108,7 @@ export default function StatsPage() {
   const [tempRange, setTempRange] = React.useState(dateRange);
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
+  // ИЗМЕНЕНИЕ: Убираем дублирование загрузки, используем общее состояние loading
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -119,10 +122,48 @@ export default function StatsPage() {
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   // -----------------------------------------------------------
-  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ
+  // 1. ЛОГИКА ЗАГРУЗКИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ (В стиле ProfilePage, но упрощенно)
+  // -----------------------------------------------------------
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        setName("Нет авторизации");
+        setLoadingProfile(false);
+        return;
+    }
+
+    try {
+        // Предполагаем, что этот эндпоинт работает как getUserProfile
+        const userRes = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!userRes.ok) {
+            setName("Ошибка загрузки");
+            return;
+        }
+
+        const userData = await userRes.json();
+
+        // Используем поля, как в ProfilePage (или аналогичные, если у вас Name)
+        const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+        // ИЛИ: const fullName = userData.name || "";
+
+        setName(fullName || "Пользователь");
+
+    } catch (err) {
+        console.error("Failed to fetch user data:", err);
+        setName("Ошибка сети");
+    } finally {
+        setLoadingProfile(false);
+    }
+  };
+
+
+  // -----------------------------------------------------------
+  // 2. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ
   // -----------------------------------------------------------
   const handlePeriodChange = (newPeriodType: PeriodType) => {
-    // Сохраняем выбранный тип периода (для подсветки кнопки)
     setPeriodType(newPeriodType);
 
     const today = dayjs();
@@ -146,7 +187,6 @@ export default function StatsPage() {
             break;
 
         case "year":
-            // Диапазон: Текущий Год
             newStartDate = today.startOf('year');
             newEndDate = today.endOf('year');
             break;
@@ -158,20 +198,20 @@ export default function StatsPage() {
     });
   };
 
-  // Инициализация при первом рендере: Установка Года по умолчанию (помесячная агрегация)
+  // Инициализация при первом рендере: Установка Года по умолчанию и загрузка имени
   React.useEffect(() => {
       handlePeriodChange("year");
+      fetchProfile(); // Загрузка имени
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -----------------------------------------------------------
-  // 2. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА (Определяет тип агрегации)
+  // 3. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА (Определяет тип агрегации)
   // -----------------------------------------------------------
 
   const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
       const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
       const workoutDateClean = date.startOf('day');
 
-      // Определяем фактический тип агрегации: Год отображаем по месяцам
       const actualAggregationType = periodType === 'year' ? 'month' : periodType;
 
       if (actualAggregationType === "day") {
@@ -182,13 +222,12 @@ export default function StatsPage() {
       } else if (actualAggregationType === "month") {
           return workoutDateClean.diff(periodStartDayClean, 'month');
       } else {
-          // Запасной случай для 'year', хотя actualAggregationType должен быть 'month'
           return workoutDateClean.diff(periodStartDayClean, 'year');
       }
   }, [periodType, dateRange.startDate]);
 
   // -----------------------------------------------------------
-  // 3. ФУНКЦИЯ ЗАГРУЗКИ И РАСЧЕТА ДАННЫХ
+  // 4. ФУНКЦИЯ ЗАГРУЗКИ И РАСЧЕТА ДАННЫХ
   // -----------------------------------------------------------
 
   const loadData = React.useCallback(async () => {
@@ -265,7 +304,7 @@ export default function StatsPage() {
             distance: totalDistance,
         });
 
-        // 3. ФОРМИРОВАНИЕ КОЛОНОК (Используем actualAggregationType)
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК
         let cols: string[] = [];
         let current = periodStartDay;
 
@@ -391,6 +430,7 @@ export default function StatsPage() {
   }, [dateRange, periodType, getIndex]);
 
 
+  // Запуск загрузки данных при изменении диапазона/периода
   React.useEffect(() => { loadData(); }, [loadData]);
 
   // Мемоизация и фильтрация данных для рендера
@@ -432,10 +472,8 @@ export default function StatsPage() {
     const dailyKeys = Object.keys(dailyInfo);
     let relevantDates: string[] = [];
 
-    // Определяем тип агрегации, используемый в колонках
     const actualAggregationType = periodType === 'year' ? 'month' : periodType;
 
-    // Определение дат, попадающих в текущий столбец (period)
     if (actualAggregationType === "day") {
         const targetDate = periodStartDay.add(index, "day").format("YYYY-MM-DD");
         relevantDates = dailyKeys.filter(d => d === targetDate);
@@ -487,7 +525,8 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  if (loading) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl">Загрузка...</div>;
+  // Проверка на общую загрузку: ждем профиль И основные данные
+  if (loading || loadingProfile) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl">Загрузка...</div>;
   if (error) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-red-400 text-xl">Ошибка: {error}</div>;
 
   return (
@@ -594,7 +633,7 @@ export default function StatsPage() {
 
         {/* TOTALS */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
+          <h1 className="2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
             <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
@@ -609,7 +648,7 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (Убран заголовок агрегации) */}
+            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title="Параметры дня"
               rows={[
@@ -639,7 +678,7 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — ВРЕМЯ (Убран подзаголовок "(Время, мин)") */}
+            {/* Тип активности — ВРЕМЯ */}
             <SyncedTable
               title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
