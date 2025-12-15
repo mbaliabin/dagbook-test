@@ -110,214 +110,233 @@ export default function StatsPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
+    console.log("--- STARTING loadData ---");
 
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("Нет авторизации");
-      setLoading(false);
-      return;
+        setError("Нет авторизации");
+        setLoading(false);
+        return;
     }
 
     try {
-      // Определение опорных точек
-      const periodStartDay = dayjs(dateRange.startDate).startOf("day");
-      const periodEndDay = dayjs(dateRange.endDate).endOf("day");
+        // Определение опорных точек
+        const periodStartDay = dayjs(dateRange.startDate).startOf("day");
+        const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
-      // 1. ЗАГРУЗКА ДАННЫХ
-      const [workoutsRes, dailyRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(
-          // Используем dates из dateRange для запроса daily info
-          `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        ),
-      ]);
+        console.log(`Requested Range: ${periodStartDay.format('YYYY-MM-DD')} to ${periodEndDay.format('YYYY-MM-DD')}`);
+        console.log(`Current Period Type: ${periodType}`);
 
-      if (!workoutsRes.ok) throw new Error("Ошибка загрузки тренировок");
-      if (!dailyRes.ok) throw new Error("Ошибка загрузки daily info");
+        // 1. ЗАГРУЗКА ДАННЫХ
+        const [workoutsRes, dailyRes] = await Promise.all([
+            fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
+                headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(
+                // Используем dates из dateRange для запроса daily info
+                `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            ),
+        ]);
 
-      const allWorkouts: Workout[] = await workoutsRes.json();
-      const dailyRaw = await dailyRes.json();
+        if (!workoutsRes.ok) throw new Error("Ошибка загрузки тренировок");
+        if (!dailyRes.ok) throw new Error("Ошибка загрузки daily info");
 
-      // Обработка daily info
-      const dailyMap: Record<string, any> = {};
-      dailyRaw.forEach((entry: any) => {
-        const key = dayjs(entry.date).format("YYYY-MM-DD");
-        dailyMap[key] = {
-          physical: entry.physical ?? null,
-          mental: entry.mental ?? null,
-          sleep_quality: entry.sleep_quality ?? null,
-          pulse: entry.pulse ?? null,
+        const allWorkouts: Workout[] = await workoutsRes.json();
+        const dailyRaw = await dailyRes.json();
+
+        // Обработка daily info
+        const dailyMap: Record<string, any> = {};
+        dailyRaw.forEach((entry: any) => {
+            const key = dayjs(entry.date).format("YYYY-MM-DD");
+            dailyMap[key] = {
+                physical: entry.physical ?? null,
+                mental: entry.mental ?? null,
+                sleep_quality: entry.sleep_quality ?? null,
+                pulse: entry.pulse ?? null,
+            };
+        });
+        setDailyInfo(dailyMap);
+
+        // Фильтрация тренировок по диапазону
+        const workouts = allWorkouts.filter((w) => {
+            if (!w?.date) return false;
+            const d = dayjs(w.date);
+            // Фильтрация: d должна быть между periodStartDay (включительно) и periodEndDay (включительно)
+            return d.isValid() && d.isBetween(periodStartDay, periodEndDay, null, "[]");
+        });
+
+        console.log(`Total Workouts in Range: ${workouts.length}`);
+        if (workouts.length > 0) {
+             console.log(`First workout date: ${workouts[0].date}`);
+        }
+
+        // 2. РАСЧЕТ ИТОГОВ
+        const daysSet = new Set(workouts.map((w) => dayjs(w.date).format("YYYY-MM-DD")));
+        const totalMin = workouts.reduce((s, w) => s + (w.duration || 0), 0);
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        const totalDistance = Math.round(workouts.reduce((s, w) => s + (w.distance || 0), 0));
+
+        setTotals({
+            trainingDays: daysSet.size,
+            sessions: workouts.length,
+            time: `${h}:${m.toString().padStart(2, "0")}`,
+            distance: totalDistance,
+        });
+
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА
+        let cols: string[] = [];
+
+        const getIndex = (date: dayjs.Dayjs): number => {
+            if (periodType === "week") {
+                const year = dayjs().year();
+                const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
+                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
+            } else if (periodType === "custom") {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сравниваем startOf('day'), чтобы игнорировать время
+                const periodStartDayClean = periodStartDay.startOf('day');
+                const workoutDateClean = date.startOf('day');
+
+                const index = workoutDateClean.diff(periodStartDayClean, "day");
+
+                if (workouts.length > 0 && date.format('YYYY-MM-DD') === workouts[0].date.substring(0, 10)) {
+                   console.log(`[DEBUG INDEX] Start Date: ${periodStartDayClean.format('YYYY-MM-DD')}, Workout Date: ${date.format('YYYY-MM-DD HH:mm')}, Calculated Index: ${index}`);
+                }
+
+                return index;
+            } else {
+                return date.month();
+            }
         };
-      });
-      setDailyInfo(dailyMap);
 
-      // Фильтрация тренировок по диапазону
-      const workouts = allWorkouts.filter((w) => {
-        if (!w?.date) return false;
-        const d = dayjs(w.date);
-        // Фильтрация: d должна быть между periodStartDay (включительно) и periodEndDay (включительно)
-        return d.isValid() && d.isBetween(periodStartDay, periodEndDay, null, "[]");
-      });
-
-      // 2. РАСЧЕТ ИТОГОВ
-      const daysSet = new Set(workouts.map((w) => dayjs(w.date).format("YYYY-MM-DD")));
-      const totalMin = workouts.reduce((s, w) => s + (w.duration || 0), 0);
-      const h = Math.floor(totalMin / 60);
-      const m = totalMin % 60;
-      const totalDistance = Math.round(workouts.reduce((s, w) => s + (w.distance || 0), 0));
-
-      setTotals({
-        trainingDays: daysSet.size,
-        sessions: workouts.length,
-        time: `${h}:${m.toString().padStart(2, "0")}`,
-        distance: totalDistance,
-      });
-
-      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА
-      let cols: string[] = [];
-
-      const getIndex = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
-          // Логика для "week": относительно начала текущего года
-          const year = dayjs().year();
-          const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-          return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
+            // Показываем все недели текущего года
+            const year = dayjs().year();
+            const firstDayOfYear = dayjs(`${year}-01-01`);
+            let current = firstDayOfYear.startOf("week");
+            let weekNum = 1;
+            while (current.year() <= year || (current.year() === year + 1 && current.week() === 1)) {
+                cols.push(`W${weekNum}`);
+                weekNum++;
+                current = current.add(1, "week");
+                if (weekNum > 54) break;
+            }
+        } else if (periodType === "month" || periodType === "year") {
+            cols = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
         } else if (periodType === "custom") {
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сравниваем startOf('day'), чтобы игнорировать время
-          const periodStartDayClean = periodStartDay.startOf('day');
-          const workoutDateClean = date.startOf('day');
-
-          return workoutDateClean.diff(periodStartDayClean, "day");
-        } else {
-          return date.month();
-        }
-      };
-
-      if (periodType === "week") {
-        // Показываем все недели текущего года
-        const year = dayjs().year();
-        const firstDayOfYear = dayjs(`${year}-01-01`);
-        let current = firstDayOfYear.startOf("week");
-        let weekNum = 1;
-        while (current.year() <= year || (current.year() === year + 1 && current.week() === 1)) {
-          cols.push(`W${weekNum}`);
-          weekNum++;
-          current = current.add(1, "week");
-          if (weekNum > 54) break;
-        }
-      } else if (periodType === "month" || periodType === "year") {
-        cols = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-      } else if (periodType === "custom") {
-        // Формируем столбцы по дням в произвольном периоде
-        let current = periodStartDay;
-        while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
-          cols.push(current.format("DD MMM"));
-          current = current.add(1, "day");
-        }
-      }
-      setColumns(cols);
-
-      const numPeriods = cols.length;
-      if (numPeriods === 0) {
-          // Защита от пустых массивов
-          setEnduranceZones([]);
-          setMovementTypes([]);
-          setDistanceByType([]);
-          setLoading(false);
-          return;
-      }
-
-      // 4. РАСЧЕТ ДАННЫХ ПО ПЕРИОДАМ
-
-      // Зоны выносливости (Время, минуты)
-      const enduranceData = ZONE_NAMES.map(z => {
-        const months = new Array(numPeriods).fill(0);
-        const key = ZONE_KEYS[z as keyof typeof ZONE_KEYS];
-
-        workouts.forEach(w => {
-          const d = dayjs(w.date);
-          if (d.isValid()) {
-            const index = getIndex(d);
-            if (index >= 0 && index < numPeriods) {
-              months[index] += (w[key] || 0);
+            // Формируем столбцы по дням в произвольном периоде
+            let current = periodStartDay;
+            while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
+                cols.push(current.format("DD MMM"));
+                current = current.add(1, "day");
             }
-          }
+        }
+        setColumns(cols);
+
+        const numPeriods = cols.length;
+        console.log(`Number of Columns (Periods): ${numPeriods}`);
+        if (numPeriods === 0) {
+            setEnduranceZones([]);
+            setMovementTypes([]);
+            setDistanceByType([]);
+            setLoading(false);
+            return;
+        }
+
+        // 4. РАСЧЕТ ДАННЫХ ПО ПЕРИОДАМ
+
+        // Зоны выносливости (Время, минуты)
+        const enduranceData = ZONE_NAMES.map(z => {
+            const months = new Array(numPeriods).fill(0);
+            const key = ZONE_KEYS[z as keyof typeof ZONE_KEYS];
+
+            workouts.forEach(w => {
+                const d = dayjs(w.date);
+                if (d.isValid()) {
+                    const index = getIndex(d);
+                    if (index >= 0 && index < numPeriods) {
+                        months[index] += (w[key] || 0);
+                        if (index === 0 && w[key] > 0) {
+                            console.log(`[DEBUG DATA WRITE] Zone ${z} recorded ${w[key]} min at index 0.`);
+                        }
+                    } else {
+                         console.error(`[DEBUG INDEX FAIL] Workout date: ${w.date}, Calculated index: ${index} is outside bounds (0 to ${numPeriods - 1}).`);
+                    }
+                }
+            });
+
+            return {
+                zone: z as EnduranceZone['zone'],
+                color: ZONE_COLORS[z],
+                months: months,
+            };
         });
 
-        return {
-          zone: z as EnduranceZone['zone'],
-          color: ZONE_COLORS[z],
-          months: months,
-        };
-      });
+        // Типы активности (ВРЕМЯ, минуты — для Общего Отчета)
+        const allTypes = [...new Set(workouts.map(w => w.type))];
+        const movementData = allTypes.map(t => {
+            const typeName = MOVEMENT_TYPE_MAP[t] || t;
+            const months = new Array(numPeriods).fill(0);
 
-      // Типы активности (ВРЕМЯ, минуты — для Общего Отчета)
-      const allTypes = [...new Set(workouts.map(w => w.type))];
-      const movementData = allTypes.map(t => {
-        const typeName = MOVEMENT_TYPE_MAP[t] || t;
-        const months = new Array(numPeriods).fill(0);
+            workouts.forEach(w => {
+                if (w.type === t) {
+                    const d = dayjs(w.date);
+                    if (d.isValid()) {
+                        const index = getIndex(d);
+                        if (index >= 0 && index < numPeriods) {
+                            // Используем duration (минуты)
+                            months[index] += (w.duration || 0);
+                        }
+                    }
+                }
+            });
 
-        workouts.forEach(w => {
-          if (w.type === t) {
-            const d = dayjs(w.date);
-            if (d.isValid()) {
-              const index = getIndex(d);
-              if (index >= 0 && index < numPeriods) {
-                // Используем duration (минуты)
-                months[index] += (w.duration || 0);
-              }
-            }
-          }
+            return {
+                type: typeName,
+                months: months,
+            };
         });
 
-        return {
-          type: typeName,
-          months: months,
-        };
-      });
+        // Дистанция по видам (КИЛОМЕТРЫ — для отчета "Общая дистанция")
+        const distanceData = allTypes.map(t => {
+            const typeName = MOVEMENT_TYPE_MAP[t] || t;
+            const months = new Array(numPeriods).fill(0);
 
-      // Дистанция по видам (КИЛОМЕТРЫ — для отчета "Общая дистанция")
-      const distanceData = allTypes.map(t => {
-        const typeName = MOVEMENT_TYPE_MAP[t] || t;
-        const months = new Array(numPeriods).fill(0);
+            workouts.forEach(w => {
+                if (w.type === t) {
+                    const d = dayjs(w.date);
+                    if (d.isValid()) {
+                        const index = getIndex(d);
+                        if (index >= 0 && index < numPeriods) {
+                            months[index] += (w.distance || 0);
+                        }
+                    }
+                }
+            });
 
-        workouts.forEach(w => {
-          if (w.type === t) {
-            const d = dayjs(w.date);
-            if (d.isValid()) {
-              const index = getIndex(d);
-              if (index >= 0 && index < numPeriods) {
-                // Используем distance (км)
-                months[index] += (w.distance || 0);
-              }
-            }
-          }
+            return {
+                type: typeName,
+                months: months.map(v => Math.round(v)),
+            };
         });
 
-        return {
-          type: typeName,
-          months: months.map(v => Math.round(v)),
-        };
-      });
 
-
-      setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a, b) => a + b, 0) })));
-      setMovementTypes(movementData.map(m => ({ ...m, total: m.months.reduce((a, b) => a + b, 0) })));
-      setDistanceByType(distanceData.map(d => ({
-        ...d,
-        total: d.months.reduce((a, b) => a + b, 0),
-        color: DISTANCE_COLORS[d.type]
-      })));
+        setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a, b) => a + b, 0) })));
+        setMovementTypes(movementData.map(m => ({ ...m, total: m.months.reduce((a, b) => a + b, 0) })));
+        setDistanceByType(distanceData.map(d => ({
+            ...d,
+            total: d.months.reduce((a, b) => a + b, 0),
+            color: DISTANCE_COLORS[d.type]
+        })));
 
     } catch (err: any) {
-      setError(err.message || "Ошибка загрузки данных");
+        setError(err.message || "Ошибка загрузки данных");
     } finally {
-      setLoading(false);
+        setLoading(false);
+        console.log("--- FINISHED loadData ---");
     }
-  }, [dateRange, periodType]);
+}, [dateRange, periodType]);
 
 
   React.useEffect(() => { loadData(); }, [loadData]);
