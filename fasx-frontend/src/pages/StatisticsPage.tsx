@@ -531,9 +531,15 @@ export default function StatsPage() {
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            // ЛОГИКА АКТИВНОСТИ: Ищем вхождение пути, чтобы подсветить активную страницу
+            const isActive = location.pathname.includes(item.path);
             return (
-              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+              <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex flex-col items-center text-sm transition-colors
+                              ${isActive ? "text-blue-500 font-semibold" : "text-gray-400 hover:text-white"}`}
+              >
                 <Icon className="w-6 h-6"/>
                 <span>{item.label}</span>
               </button>
@@ -612,8 +618,7 @@ export default function StatsPage() {
 
         {/* TOTALS */}
         <div>
-          {/* ИЗМЕНЕН ЗАГОЛОВОК И УВЕЛИЧЕН РАЗМЕР ШРИФТА */}
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Общая информация</h1>
+          <h1 className="text-4xl font-semibold tracking-wide text-gray-100">Общая информация</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
             <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
