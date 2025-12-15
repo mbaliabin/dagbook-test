@@ -13,33 +13,23 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+// ИМПОРТ ФУНКЦИИ ПРОФИЛЯ
+import { getUserProfile } from "../api/getUserProfile";
+
 // Предполагаем, что компоненты EnduranceChart, DistanceChart, SyncedTable импортируются корректно
 import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
 import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
 import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
 
-// --- КОНСТАНТЫ И ТИПЫ ДАННЫХ ---
+// --- КОНСТАНТЫ И ТИПЫ ДАННЫХ (Остаются прежними) ---
 dayjs.extend(weekOfYear);
 dayjs.extend(isBetween);
 dayjs.locale("ru");
 
 type PeriodType = "day" | "week" | "month" | "year";
 
-// Типы для структурирования данных
-interface PeriodData {
-  months: (number | string)[];
-  total: number | string;
-}
-
-interface EnduranceZone extends PeriodData {
-  zone: 'I1' | 'I2' | 'I3' | 'I4' | 'I5';
-  color: string;
-}
-
-interface MovementType extends PeriodData {
-  type: string;
-  color?: string;
-}
+interface EnduranceZone { /* ... */ }
+interface MovementType { /* ... */ }
 
 interface Workout {
   date: string;
@@ -53,12 +43,10 @@ interface Workout {
   zone5Min: number;
 }
 
-// Константы для зон выносливости
 const ZONE_COLORS: Record<string, string> = { I1: "#4ade80", I2: "#22d3ee", I3: "#facc15", I4: "#fb923c", I5: "#ef4444" };
 const ZONE_KEYS: Record<string, keyof Workout> = { I1: "zone1Min", I2: "zone2Min", I3: "zone3Min", I4: "zone4Min", I5: "zone5Min" };
 const ZONE_NAMES = ["I1", "I2", "I3", "I4", "I5"];
 
-// Константы для типов активности
 const MOVEMENT_TYPE_MAP: Record<string, string> = {
   XC_Skiing_Skate: "Лыжи / скейтинг",
   XC_Skiing_Classic: "Лыжи, классика",
@@ -92,9 +80,9 @@ export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ИЗМЕНЕНИЕ: Имя пользователя
+  // СОСТОЯНИЯ, КАК В PROFILEPAGE:
   const [name, setName] = React.useState("Загрузка...");
-  const [loadingProfile, setLoadingProfile] = React.useState(true); // Добавлен для имени
+  const [loadingProfile, setLoadingProfile] = React.useState(true);
 
   const [reportType, setReportType] = React.useState("Общий отчет");
 
@@ -108,52 +96,34 @@ export default function StatsPage() {
   const [tempRange, setTempRange] = React.useState(dateRange);
   const [showDateRangePicker, setShowDateRangePicker] = React.useState(false);
 
-  // ИЗМЕНЕНИЕ: Убираем дублирование загрузки, используем общее состояние loading
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   const [totals, setTotals] = React.useState({ trainingDays: 0, sessions: 0, time: "0:00", distance: 0 });
   const [columns, setColumns] = React.useState<string[]>([]);
 
-  const [enduranceZones, setEnduranceZones] = React.useState<EnduranceZone[]>([]);
-  const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]);
-  const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]);
+  const [enduranceZones, setEnduranceZones] = React.useState<any[]>([]);
+  const [movementTypes, setMovementTypes] = React.useState<any[]>([]);
+  const [distanceByType, setDistanceByType] = React.useState<any[]>([]);
 
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   // -----------------------------------------------------------
-  // 1. ЛОГИКА ЗАГРУЗКИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ (В стиле ProfilePage, но упрощенно)
+  // 1. ЛОГИКА ЗАГРУЗКИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ (Использует getUserProfile)
   // -----------------------------------------------------------
   const fetchProfile = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        setName("Нет авторизации");
-        setLoadingProfile(false);
-        return;
-    }
-
     try {
-        // Предполагаем, что этот эндпоинт работает как getUserProfile
-        const userRes = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!userRes.ok) {
-            setName("Ошибка загрузки");
-            return;
-        }
-
-        const userData = await userRes.json();
-
-        // Используем поля, как в ProfilePage (или аналогичные, если у вас Name)
-        const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
-        // ИЛИ: const fullName = userData.name || "";
-
-        setName(fullName || "Пользователь");
-
+        const data = await getUserProfile();
+        // В вашем ProfilePage вы использовали data.name
+        setName(data.name || "Пользователь");
     } catch (err) {
-        console.error("Failed to fetch user data:", err);
-        setName("Ошибка сети");
+        console.error("Ошибка профиля:", err);
+        setError("Не удалось загрузить профиль");
+        setName("Ошибка!");
+        // В случае ошибки авторизации, возможно, стоит перенаправить пользователя
+        if (err instanceof Error && err.message.includes("авторизации")) {
+             navigate('/login');
+        }
     } finally {
         setLoadingProfile(false);
     }
@@ -164,6 +134,7 @@ export default function StatsPage() {
   // 2. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ
   // -----------------------------------------------------------
   const handlePeriodChange = (newPeriodType: PeriodType) => {
+    // ... (логика handlePeriodChange) ...
     setPeriodType(newPeriodType);
 
     const today = dayjs();
@@ -205,25 +176,25 @@ export default function StatsPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -----------------------------------------------------------
-  // 3. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА (Определяет тип агрегации)
+  // 3. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА
   // -----------------------------------------------------------
 
   const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
-      const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
-      const workoutDateClean = date.startOf('day');
+    const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
+    const workoutDateClean = date.startOf('day');
 
-      const actualAggregationType = periodType === 'year' ? 'month' : periodType;
+    const actualAggregationType = periodType === 'year' ? 'month' : periodType;
 
-      if (actualAggregationType === "day") {
-          return workoutDateClean.diff(periodStartDayClean, "day");
-      } else if (actualAggregationType === "week") {
-          const periodStartWeek = periodStartDayClean.startOf('week');
-          return workoutDateClean.diff(periodStartWeek, 'week');
-      } else if (actualAggregationType === "month") {
-          return workoutDateClean.diff(periodStartDayClean, 'month');
-      } else {
-          return workoutDateClean.diff(periodStartDayClean, 'year');
-      }
+    if (actualAggregationType === "day") {
+        return workoutDateClean.diff(periodStartDayClean, "day");
+    } else if (actualAggregationType === "week") {
+        const periodStartWeek = periodStartDayClean.startOf('week');
+        return workoutDateClean.diff(periodStartWeek, 'week');
+    } else if (actualAggregationType === "month") {
+        return workoutDateClean.diff(periodStartDayClean, 'month');
+    } else {
+        return workoutDateClean.diff(periodStartDayClean, 'year');
+    }
   }, [periodType, dateRange.startDate]);
 
   // -----------------------------------------------------------
@@ -236,6 +207,7 @@ export default function StatsPage() {
 
     const token = localStorage.getItem("token");
     if (!token) {
+        // Если нет токена, профиль должен был уже перенаправить
         setError("Нет авторизации");
         setLoading(false);
         return;
@@ -245,7 +217,6 @@ export default function StatsPage() {
         const periodStartDay = dayjs(dateRange.startDate).startOf("day");
         const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
-        // 1. ЗАГРУЗКА ДАННЫХ
         const [workoutsRes, dailyRes] = await Promise.all([
             fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -362,7 +333,7 @@ export default function StatsPage() {
                 }
             });
             return {
-                zone: z as EnduranceZone['zone'],
+                zone: z as any,
                 color: ZONE_COLORS[z],
                 months: months,
             };
@@ -427,7 +398,7 @@ export default function StatsPage() {
     } finally {
         setLoading(false);
     }
-  }, [dateRange, periodType, getIndex]);
+  }, [dateRange, periodType, getIndex, navigate]); // Добавили navigate в зависимости loadData
 
 
   // Запуск загрузки данных при изменении диапазона/периода
@@ -464,7 +435,7 @@ export default function StatsPage() {
    * МЕТОД: Вычисление ежедневного параметра
    */
   const getDailyParam = (param: DailyParamKey | string, index: number) => {
-
+    // ... (логика getDailyParam) ...
     const isStatusParam = STATUS_PARAMS.some(p => p.id === param);
     const periodStartDay = dayjs(dateRange.startDate).startOf("day");
     const periodEndDay = dayjs(dateRange.endDate).endOf("day");
@@ -525,7 +496,7 @@ export default function StatsPage() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // Проверка на общую загрузку: ждем профиль И основные данные
+  // Ждем загрузку профиля И основные данные
   if (loading || loadingProfile) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl">Загрузка...</div>;
   if (error) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-red-400 text-xl">Ошибка: {error}</div>;
 
@@ -645,10 +616,8 @@ export default function StatsPage() {
         {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
-            {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title="Параметры дня"
               rows={[
@@ -678,7 +647,6 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — ВРЕМЯ */}
             <SyncedTable
               title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
@@ -697,7 +665,6 @@ export default function StatsPage() {
 
         {reportType === "Общая дистанция" && (
           <>
-            {/* График дистанции по видам (Километры) */}
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
             <SyncedTable
               title="Дистанция по видам тренировок (км)"
