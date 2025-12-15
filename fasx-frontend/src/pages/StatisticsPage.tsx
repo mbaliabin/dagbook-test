@@ -239,7 +239,7 @@ export default function StatsPage() {
                 sleep_duration: entry.sleep_duration ?? null,
             };
         });
-        setDailyInfo(dailyMap);
+        setDailyInfo(dailyMap); // Обновляем состояние
 
         // Фильтрация тренировок по диапазону
         const workouts = allWorkouts.filter((w) => {
@@ -385,9 +385,10 @@ export default function StatsPage() {
             };
         });
 
+
         setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a, b) => a + b, 0) })));
 
-        // Устанавливаем ВСЕ типы активности (даже с total=0), чтобы они отображались в таблице
+        // Устанавливаем ВСЕ типы активности (даже с total=0)
         setMovementTypes(movementData);
 
         setDistanceByType(distanceData.map(d => ({
@@ -400,22 +401,18 @@ export default function StatsPage() {
     } finally {
         setLoading(false);
     }
-  }, [dateRange, periodType, getIndex, navigate, dailyInfo]);
+  // ИСПРАВЛЕНИЕ: dailyInfo удален из зависимостей, чтобы избежать бесконечного цикла.
+  }, [dateRange, periodType, getIndex, navigate]);
 
 
   React.useEffect(() => { loadData(); }, [loadData]);
 
   // Мемоизация и фильтрация данных для рендера
   const filteredEnduranceZones = React.useMemo(() => enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) })), [enduranceZones, columns]);
-
-  // MovementTypes теперь содержит ВСЕ типы, даже если total=0
   const filteredMovementTypes = React.useMemo(() => movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) })), [movementTypes, columns]);
-
-  // DistanceByType теперь содержит ВСЕ типы
   const filteredDistanceTypes = React.useMemo(() => distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) })), [distanceByType, columns]);
 
   const activeDistanceTypes = React.useMemo(() => {
-    // Для графика мы фильтруем только те типы, где есть данные
     return filteredDistanceTypes
       .filter(t => DISTANCE_COLORS[t.type] && t.months.some((v: number) => v > 0))
       .map(t => t.type);
