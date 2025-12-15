@@ -608,7 +608,7 @@ export default function StatsPage() {
 
         {/* TOTALS */}
         <div>
-          <h1 className="2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
+          <h1 className="2xl font-semibold tracking-wide text-gray-100">Общая информация</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
             <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
             <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
