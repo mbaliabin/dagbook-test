@@ -59,7 +59,7 @@ const DISTANCE_COLORS: Record<string, string> = {
   "Лыжи, классический стиль": "#22d3ee",
   "Лыжероллеры, классический стиль": "#facc15",
   "Лыжероллеры, свободный стиль": "#fb923c",
-  "Велосипед": "#3b82f6",
+  "Велосипед": "#ef4444",
 };
 
 const STATUS_PARAMS: { id: string, label: string }[] = [
