@@ -312,5 +312,3 @@ const computeWeekColumns = () => {
     </div>
     );
 }
-
-test
