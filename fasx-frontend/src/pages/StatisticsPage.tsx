@@ -239,7 +239,7 @@ export default function StatsPage() {
                 sleep_duration: entry.sleep_duration ?? null,
             };
         });
-        setDailyInfo(dailyMap); // Обновляем состояние
+        setDailyInfo(dailyMap);
 
         // Фильтрация тренировок по диапазону
         const workouts = allWorkouts.filter((w) => {
@@ -511,7 +511,11 @@ export default function StatsPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
-            <h1 className="text-2xl font-bold text-white">{name}</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-white">{name}</h1>
+              {/* ДОБАВЛЕНА ТЕКУЩАЯ ДАТА */}
+              <p className="text-sm text-gray-400">{dayjs().format("D MMMM YYYY [г]")}</p>
+            </div>
           </div>
           <div className="flex items-center space-x-2 flex-wrap">
             <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center">
@@ -608,14 +612,15 @@ export default function StatsPage() {
 
         {/* TOTALS */}
         <div>
-                  <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Общая информация</h1>
-                  <div className="flex flex-wrap gap-10 text-sm mt-3">
-                    <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
-                    <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
-                    <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
-                    <div><p className="text-gray-400">Общее расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
-                  </div>
-                </div>
+          {/* ИЗМЕНЕН ЗАГОЛОВОК И УВЕЛИЧЕН РАЗМЕР ШРИФТА */}
+          <h1 className="text-4xl font-semibold tracking-wide text-gray-100">Общая информация</h1>
+          <div className="flex flex-wrap gap-10 text-sm mt-3">
+            <div><p className="text-gray-400">Тренировочные дни</p><p className="text-xl text-gray-100">{totals.trainingDays}</p></div>
+            <div><p className="text-gray-400">Сессий</p><p className="text-xl text-gray-100">{totals.sessions}</p></div>
+            <div><p className="text-gray-400">Время</p><p className="text-xl text-gray-100">{totals.time}</p></div>
+            <div><p className="text-gray-400">Общее расстояние (км)</p><p className="text-xl text-gray-100">{totals.distance}</p></div>
+          </div>
+        </div>
 
         {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
@@ -675,12 +680,11 @@ export default function StatsPage() {
             {/* График дистанции по видам (Километры) */}
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
 
-            {/* ТАБЛИЦА: Удалено поле 'color' и отображаются ВСЕ типы */}
+            {/* ТАБЛИЦА: Отображаются ВСЕ типы */}
             <SyncedTable
               title="Дистанция по видам тренировок (км)"
               rows={filteredDistanceTypes.map(t => ({
                 param: t.type,
-                // color: t.color, // Удалено
                 months: t.months,
                 total: t.total,
               }))}
