@@ -45,20 +45,20 @@ const ZONE_KEYS: Record<string, keyof Workout> = { I1: "zone1Min", I2: "zone2Min
 const ZONE_NAMES = ["I1", "I2", "I3", "I4", "I5"];
 
 const MOVEMENT_TYPE_MAP: Record<string, string> = {
-  XC_Skiing_Skate: "Лыжи / скейтинг",
-  XC_Skiing_Classic: "Лыжи, классика",
-  RollerSki_Classic: "Роллеры, классика",
-  RollerSki_Skate: "Роллеры, скейтинг",
+  XC_Skiing_Skate: "Лыжи / свободный стиль",
+  XC_Skiing_Classic: "Лыжи, классический стиль",
+  RollerSki_Classic: "Лыжероллеры, классический стиль",
+  RollerSki_Skate: "Лыжероллеры, свободный стиль",
   Bike: "Велосипед",
   Running: "Бег",
-  StrengthTraining: "Силовая",
+  StrengthTraining: "Силовая тренировка",
   Other: "Другое",
 };
 const DISTANCE_COLORS: Record<string, string> = {
-  "Лыжи / скейтинг": "#4ade80",
-  "Лыжи, классика": "#22d3ee",
-  "Роллеры, классика": "#facc15",
-  "Роллеры, скейтинг": "#fb923c",
+  "Лыжи / свободный стиль": "#4ade80",
+  "Лыжи, классический стиль": "#22d3ee",
+  "Лыжероллеры, классический стиль": "#facc15",
+  "Лыжероллеры, свободный стиль": "#fb923c",
   "Велосипед": "#3b82f6",
 };
 
