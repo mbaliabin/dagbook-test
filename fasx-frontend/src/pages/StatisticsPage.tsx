@@ -211,7 +211,7 @@ export default function StatsPage() {
             if (periodType === "week") {
                 const year = dayjs().year();
                 const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week"));
+               return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
             } else if (periodType === "custom") {
                 const periodStartDayClean = periodStartDay.startOf('day');
                 const workoutDateClean = date.startOf('day');
