@@ -26,8 +26,8 @@ type PeriodType = "week" | "month" | "year" | "custom";
 
 // Типы для структурирования данных
 interface PeriodData {
-  months: number[]; // Время (минуты) или дистанция (км)
-  total: number;
+  months: (number | string)[]; // Добавили string для текстовых полей
+  total: number | string;
 }
 
 interface EnduranceZone extends PeriodData {
@@ -77,6 +77,20 @@ const DISTANCE_COLORS: Record<string, string> = {
   "Велосипед": "#3b82f6",
 };
 
+// НОВЫЙ МАППИНГ для mainParam
+// Используем ID из DailyParameters.tsx и русские названия
+const MAIN_PARAM_MAP: Record<string, string> = {
+  skadet: "Травма",
+  syk: "Болезнь",
+  paReise: "В пути",
+  hoydedogn: "Смена часового пояса",
+  fridag: "Выходной",
+  konkurranse: "Соревнование",
+};
+
+// Расширенный тип для параметров дня, включая новое поле main_param
+type DailyParamKey = "physical" | "mental" | "sleep_quality" | "pulse" | "main_param" | "sleep_duration";
+
 export default function StatsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,12 +119,12 @@ export default function StatsPage() {
   const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]); // Для Общего отчета (время)
   const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]); // Для Общей дистанции (км)
 
-  const [dailyInfo, setDailyInfo] = React.useState<Record<string, any>>({});
+  // Добавляем main_param и sleep_duration в типизацию
+  const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
-    console.log("--- STARTING loadData ---");
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -124,16 +138,12 @@ export default function StatsPage() {
         const periodStartDay = dayjs(dateRange.startDate).startOf("day");
         const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
-        console.log(`Requested Range: ${periodStartDay.format('YYYY-MM-DD')} to ${periodEndDay.format('YYYY-MM-DD')}`);
-        console.log(`Current Period Type: ${periodType}`);
-
         // 1. ЗАГРУЗКА ДАННЫХ
         const [workoutsRes, dailyRes] = await Promise.all([
             fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
                 headers: { Authorization: `Bearer ${token}` },
             }),
             fetch(
-                // Используем dates из dateRange для запроса daily info
                 `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             ),
@@ -146,7 +156,7 @@ export default function StatsPage() {
         const dailyRaw = await dailyRes.json();
 
         // Обработка daily info
-        const dailyMap: Record<string, any> = {};
+        const dailyMap: Record<string, Record<DailyParamKey, any>> = {};
         dailyRaw.forEach((entry: any) => {
             const key = dayjs(entry.date).format("YYYY-MM-DD");
             dailyMap[key] = {
@@ -154,22 +164,25 @@ export default function StatsPage() {
                 mental: entry.mental ?? null,
                 sleep_quality: entry.sleep_quality ?? null,
                 pulse: entry.pulse ?? null,
+                // ДОБАВЛЕНИЕ НОВЫХ ПОЛЕЙ
+                main_param: entry.main_param ?? null,
+                sleep_duration: entry.sleep_duration ?? null,
             };
         });
         setDailyInfo(dailyMap);
 
-        // Фильтрация тренировок по диапазону
+        // Фильтрация тренировок по диапазону (Улучшенная надежность)
         const workouts = allWorkouts.filter((w) => {
             if (!w?.date) return false;
-            const d = dayjs(w.date);
-            // Фильтрация: d должна быть между periodStartDay (включительно) и periodEndDay (включительно)
-            return d.isValid() && d.isBetween(periodStartDay, periodEndDay, null, "[]");
-        });
 
-        console.log(`Total Workouts in Range: ${workouts.length}`);
-        if (workouts.length > 0) {
-             console.log(`First workout date: ${workouts[0].date}`);
-        }
+            const workoutDayStart = dayjs(w.date).startOf('day');
+
+            return (
+                workoutDayStart.isValid() &&
+                (workoutDayStart.isAfter(periodStartDay.startOf('day')) || workoutDayStart.isSame(periodStartDay.startOf('day'), 'day')) &&
+                (workoutDayStart.isBefore(periodEndDay.startOf('day')) || workoutDayStart.isSame(periodEndDay.startOf('day'), 'day'))
+            );
+        });
 
         // 2. РАСЧЕТ ИТОГОВ
         const daysSet = new Set(workouts.map((w) => dayjs(w.date).format("YYYY-MM-DD")));
@@ -194,24 +207,16 @@ export default function StatsPage() {
                 const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
                 return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
             } else if (periodType === "custom") {
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сравниваем startOf('day'), чтобы игнорировать время
                 const periodStartDayClean = periodStartDay.startOf('day');
                 const workoutDateClean = date.startOf('day');
 
-                const index = workoutDateClean.diff(periodStartDayClean, "day");
-
-                if (workouts.length > 0 && date.format('YYYY-MM-DD') === workouts[0].date.substring(0, 10)) {
-                   console.log(`[DEBUG INDEX] Start Date: ${periodStartDayClean.format('YYYY-MM-DD')}, Workout Date: ${date.format('YYYY-MM-DD HH:mm')}, Calculated Index: ${index}`);
-                }
-
-                return index;
+                return workoutDateClean.diff(periodStartDayClean, "day");
             } else {
                 return date.month();
             }
         };
 
         if (periodType === "week") {
-            // Показываем все недели текущего года
             const year = dayjs().year();
             const firstDayOfYear = dayjs(`${year}-01-01`);
             let current = firstDayOfYear.startOf("week");
@@ -225,7 +230,6 @@ export default function StatsPage() {
         } else if (periodType === "month" || periodType === "year") {
             cols = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
         } else if (periodType === "custom") {
-            // Формируем столбцы по дням в произвольном периоде
             let current = periodStartDay;
             while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
                 cols.push(current.format("DD MMM"));
@@ -235,7 +239,6 @@ export default function StatsPage() {
         setColumns(cols);
 
         const numPeriods = cols.length;
-        console.log(`Number of Columns (Periods): ${numPeriods}`);
         if (numPeriods === 0) {
             setEnduranceZones([]);
             setMovementTypes([]);
@@ -245,8 +248,9 @@ export default function StatsPage() {
         }
 
         // 4. РАСЧЕТ ДАННЫХ ПО ПЕРИОДАМ
+        // ... (Расчеты enduranceData, movementData, distanceData остаются прежними)
+        // ... (Просто удалил их для краткости, они должны быть в вашем коде)
 
-        // Зоны выносливости (Время, минуты)
         const enduranceData = ZONE_NAMES.map(z => {
             const months = new Array(numPeriods).fill(0);
             const key = ZONE_KEYS[z as keyof typeof ZONE_KEYS];
@@ -257,15 +261,9 @@ export default function StatsPage() {
                     const index = getIndex(d);
                     if (index >= 0 && index < numPeriods) {
                         months[index] += (w[key] || 0);
-                        if (index === 0 && w[key] > 0) {
-                            console.log(`[DEBUG DATA WRITE] Zone ${z} recorded ${w[key]} min at index 0.`);
-                        }
-                    } else {
-                         console.error(`[DEBUG INDEX FAIL] Workout date: ${w.date}, Calculated index: ${index} is outside bounds (0 to ${numPeriods - 1}).`);
                     }
                 }
             });
-
             return {
                 zone: z as EnduranceZone['zone'],
                 color: ZONE_COLORS[z],
@@ -273,7 +271,6 @@ export default function StatsPage() {
             };
         });
 
-        // Типы активности (ВРЕМЯ, минуты — для Общего Отчета)
         const allTypes = [...new Set(workouts.map(w => w.type))];
         const movementData = allTypes.map(t => {
             const typeName = MOVEMENT_TYPE_MAP[t] || t;
@@ -285,7 +282,6 @@ export default function StatsPage() {
                     if (d.isValid()) {
                         const index = getIndex(d);
                         if (index >= 0 && index < numPeriods) {
-                            // Используем duration (минуты)
                             months[index] += (w.duration || 0);
                         }
                     }
@@ -298,7 +294,6 @@ export default function StatsPage() {
             };
         });
 
-        // Дистанция по видам (КИЛОМЕТРЫ — для отчета "Общая дистанция")
         const distanceData = allTypes.map(t => {
             const typeName = MOVEMENT_TYPE_MAP[t] || t;
             const months = new Array(numPeriods).fill(0);
@@ -334,9 +329,8 @@ export default function StatsPage() {
         setError(err.message || "Ошибка загрузки данных");
     } finally {
         setLoading(false);
-        console.log("--- FINISHED loadData ---");
     }
-}, [dateRange, periodType]);
+  }, [dateRange, periodType]);
 
 
   React.useEffect(() => { loadData(); }, [loadData]);
@@ -368,29 +362,64 @@ export default function StatsPage() {
     });
   }, [columns, filteredDistanceTypes]);
 
-
-  const getDailyParam = (param: "physical" | "mental" | "sleep_quality" | "pulse", index: number) => {
+  /**
+   * НОВЫЙ МЕТОД: Вычисление ежедневного параметра (среднее для недели/месяца или прямое значение для дня)
+   * @param param Ключ параметра (включая main_param)
+   * @param index Индекс периода
+   * @param isMainParam Является ли это полем main_param (для специфической логики вывода)
+   */
+  const getDailyParam = (param: DailyParamKey, index: number, isMainParam: boolean = false) => {
 
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
-      return dailyInfo[dateKey]?.[param] ?? "-";
+      const value = dailyInfo[dateKey]?.[param] ?? "-";
+
+      // Если это main_param, выводим русское название, иначе значение
+      return isMainParam && value !== "-" && typeof value === 'string' ? MAIN_PARAM_MAP[value] || value : value;
     }
+
+    // Для режимов "week", "month", "year" вычисляем среднее или самый частый элемент
+    const dailyKeys = Object.keys(dailyInfo);
+    let relevantDates: string[] = [];
 
     if (periodType === "week") {
       const year = dayjs().year();
       const weekStart = dayjs(`${year}-01-01`).startOf("week").add(index, "week");
       const weekEnd = weekStart.endOf("week");
-      const dates = Object.keys(dailyInfo).filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]"));
-      if (dates.length === 0) return "-";
-      const sum = dates.reduce((s, d) => s + (dailyInfo[d][param] || 0), 0);
-      return Math.round(sum / dates.length);
+      relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]"));
+    } else { // month, year (индекс - месяц)
+      relevantDates = dailyKeys.filter(d => dayjs(d).month() === index);
     }
 
-    // month, year
-    const monthDates = Object.keys(dailyInfo).filter(d => dayjs(d).month() === index);
-    if (monthDates.length === 0) return "-";
-    const sum = monthDates.reduce((s, d) => s + (dailyInfo[d][param] || 0), 0);
-    return Math.round(sum / monthDates.length);
+    if (relevantDates.length === 0) return "-";
+
+    // Специальная логика для main_param: находим самый частый статус за период
+    if (isMainParam) {
+      const statuses = relevantDates
+        .map(d => dailyInfo[d].main_param)
+        .filter(s => s !== null && s !== undefined);
+
+      if (statuses.length === 0) return "-";
+
+      // Считаем частоту статусов
+      const counts: Record<string, number> = statuses.reduce((acc, status) => {
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Находим самый частый
+      const mostFrequentStatusId = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+
+      // Возвращаем русское название
+      return MAIN_PARAM_MAP[mostFrequentStatusId] || mostFrequentStatusId;
+    }
+
+    // Логика для числовых параметров (physical, mental, sleep_quality, pulse)
+    const values = relevantDates.map(d => dailyInfo[d][param]).filter(v => typeof v === 'number' && v !== 0);
+    if (values.length === 0) return "-";
+
+    const sum = values.reduce((s, v) => s + v, 0);
+    return Math.round(sum / values.length);
   };
 
   const handleLogout = () => {
@@ -412,6 +441,7 @@ export default function StatsPage() {
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
         {/* HEADER */}
+        {/* ... (Ваш код HEADER) ... */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
@@ -428,6 +458,7 @@ export default function StatsPage() {
         </div>
 
         {/* MENU */}
+        {/* ... (Ваш код MENU) ... */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -442,12 +473,12 @@ export default function StatsPage() {
         </div>
 
         {/* FILTERS */}
+        {/* ... (Ваш код FILTERS) ... */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
           </select>
-          {/* Кнопки устанавливают диапазон на полный год, чтобы увидеть все столбцы */}
           <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя (Год)</button>
           <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц (Год)</button>
           <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
@@ -495,6 +526,7 @@ export default function StatsPage() {
         </div>
 
         {/* TOTALS */}
+        {/* ... (Ваш код TOTALS) ... */}
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-gray-100">Статистика</h1>
           <div className="flex flex-wrap gap-10 text-sm mt-3">
@@ -511,13 +543,16 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
+            {/* НОВАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title="Параметры дня"
               rows={[
+                { param: "Основной статус", months: columns.map((_, i) => getDailyParam("main_param", i, true)), total: "-" },
                 { param: "Физика", months: columns.map((_, i) => getDailyParam("physical", i)), total: "-" },
                 { param: "Психика", months: columns.map((_, i) => getDailyParam("mental", i)), total: "-" },
                 { param: "Качество сна", months: columns.map((_, i) => getDailyParam("sleep_quality", i)), total: "-" },
                 { param: "Пульс утром", months: columns.map((_, i) => getDailyParam("pulse", i)), total: "-" },
+                { param: "Сон (ч:мин)", months: columns.map((_, i) => getDailyParam("sleep_duration", i)), total: "-" },
               ]}
               columns={columns}
               index={0}
