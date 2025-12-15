@@ -95,7 +95,7 @@ export default function StatsPage() {
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
 
-  // Дефолтное значение для первого рендера (будет перезаписано в useEffect)
+  // Дефолтное значение для первого рендера
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
   const [dateRange, setDateRange] = React.useState({
@@ -119,9 +119,10 @@ export default function StatsPage() {
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   // -----------------------------------------------------------
-  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ (Календарные периоды)
+  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ
   // -----------------------------------------------------------
   const handlePeriodChange = (newPeriodType: PeriodType) => {
+    // Сохраняем выбранный тип периода (для подсветки кнопки)
     setPeriodType(newPeriodType);
 
     const today = dayjs();
@@ -145,6 +146,7 @@ export default function StatsPage() {
             break;
 
         case "year":
+            // Диапазон: Текущий Год
             newStartDate = today.startOf('year');
             newEndDate = today.endOf('year');
             break;
@@ -156,28 +158,31 @@ export default function StatsPage() {
     });
   };
 
-  // Инициализация при первом рендере: Установка Года по умолчанию
+  // Инициализация при первом рендере: Установка Года по умолчанию (помесячная агрегация)
   React.useEffect(() => {
-      // Устанавливаем агрегацию "year" (помесячно)
       handlePeriodChange("year");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -----------------------------------------------------------
-  // 2. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА
+  // 2. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА (Определяет тип агрегации)
   // -----------------------------------------------------------
 
   const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
       const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
       const workoutDateClean = date.startOf('day');
 
-      if (periodType === "day") {
+      // Определяем фактический тип агрегации: Год отображаем по месяцам
+      const actualAggregationType = periodType === 'year' ? 'month' : periodType;
+
+      if (actualAggregationType === "day") {
           return workoutDateClean.diff(periodStartDayClean, "day");
-      } else if (periodType === "week") {
+      } else if (actualAggregationType === "week") {
           const periodStartWeek = periodStartDayClean.startOf('week');
           return workoutDateClean.diff(periodStartWeek, 'week');
-      } else if (periodType === "month") {
+      } else if (actualAggregationType === "month") {
           return workoutDateClean.diff(periodStartDayClean, 'month');
-      } else { // year
+      } else {
+          // Запасной случай для 'year', хотя actualAggregationType должен быть 'month'
           return workoutDateClean.diff(periodStartDayClean, 'year');
       }
   }, [periodType, dateRange.startDate]);
@@ -260,18 +265,18 @@ export default function StatsPage() {
             distance: totalDistance,
         });
 
-        // 3. ФОРМИРОВАНИЕ КОЛОНОК (УПРОЩЕННОЕ ФОРМАТИРОВАНИЕ, ИСПРАВЛЕННЫЙ ЦИКЛ)
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК (Используем actualAggregationType)
         let cols: string[] = [];
         let current = periodStartDay;
 
-        if (periodType === "day") {
-             // Разбить по ДНЯМ
+        const actualAggregationType = periodType === 'year' ? 'month' : periodType;
+
+        if (actualAggregationType === "day") {
              while (current.isBefore(periodEndDay) || current.isSame(periodEndDay, "day")) {
                  cols.push(current.format("DD MMM"));
                  current = current.add(1, "day");
              }
-        } else if (periodType === "week") {
-             // Разбить по НЕДЕЛЯМ
+        } else if (actualAggregationType === "week") {
              let currentWeekStart = periodStartDay.startOf('week');
              let weekNum = 1;
              while (currentWeekStart.isBefore(periodEndDay) || currentWeekStart.isSame(periodEndDay, "week")) {
@@ -279,15 +284,13 @@ export default function StatsPage() {
                  currentWeekStart = currentWeekStart.add(1, 'week');
                  weekNum++;
              }
-        } else if (periodType === "month") {
-             // Разбить по МЕСЯЦАМ
+        } else if (actualAggregationType === "month") {
              let currentMonthStart = periodStartDay.startOf('month');
              while (currentMonthStart.isBefore(periodEndDay) || currentMonthStart.isSame(periodEndDay, "month")) {
                  cols.push(currentMonthStart.format("MMM"));
                  currentMonthStart = currentMonthStart.add(1, 'month');
              }
-        } else if (periodType === "year") {
-             // Разбить по ГОДАМ
+        } else if (actualAggregationType === "year") {
              let currentYearStart = periodStartDay.startOf('year');
              while (currentYearStart.isBefore(periodEndDay) || currentYearStart.isSame(periodEndDay, "year")) {
                  cols.push(currentYearStart.format("YYYY"));
@@ -429,15 +432,18 @@ export default function StatsPage() {
     const dailyKeys = Object.keys(dailyInfo);
     let relevantDates: string[] = [];
 
+    // Определяем тип агрегации, используемый в колонках
+    const actualAggregationType = periodType === 'year' ? 'month' : periodType;
+
     // Определение дат, попадающих в текущий столбец (period)
-    if (periodType === "day") {
+    if (actualAggregationType === "day") {
         const targetDate = periodStartDay.add(index, "day").format("YYYY-MM-DD");
         relevantDates = dailyKeys.filter(d => d === targetDate);
-    } else if (periodType === "week") {
+    } else if (actualAggregationType === "week") {
       const weekStart = periodStartDay.startOf("week").add(index, "week");
       const weekEnd = weekStart.endOf("week");
       relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]") && dayjs(d).isBetween(periodStartDay, periodEndDay, null, "[]"));
-    } else if (periodType === "month") {
+    } else if (actualAggregationType === "month") {
       const monthStart = periodStartDay.startOf("month").add(index, "month");
       const monthEnd = monthStart.endOf("month");
       relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(monthStart, monthEnd, null, "[]") && dayjs(d).isBetween(periodStartDay, periodEndDay, null, "[]"));
@@ -453,7 +459,7 @@ export default function StatsPage() {
     if (isStatusParam) {
       const count = relevantDates.filter(d => dailyInfo[d].main_param === param).length;
 
-      if (periodType === "day") {
+      if (actualAggregationType === "day") {
           return count > 0 ? '+' : '';
       }
       return count > 0 ? `${count}` : '';
@@ -633,7 +639,7 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — ВРЕМЯ (Убрано "(Время, мин)" из заголовка) */}
+            {/* Тип активности — ВРЕМЯ (Убран подзаголовок "(Время, мин)") */}
             <SyncedTable
               title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
