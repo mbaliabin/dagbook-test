@@ -13,7 +13,7 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-// ИМПОРТ ФУНКЦИИ ПРОФИЛЯ, КАК В PROFILEPAGE
+// ИМПОРТ ФУНКЦИИ ПРОФИЛЯ
 import { getUserProfile } from "../api/getUserProfile";
 
 // Предполагаем, что компоненты EnduranceChart, DistanceChart, SyncedTable импортируются корректно
@@ -332,8 +332,11 @@ export default function StatsPage() {
             };
         });
 
-        const allTypes = [...new Set(workouts.map(w => w.type))];
-        const movementData = allTypes.map(t => {
+        // >>> ИСПОЛЬЗУЕМ ВСЕ КЛЮЧИ ТИПОВ ДЛЯ ОТОБРАЖЕНИЯ ВСЕХ СТРОК <<<
+        const allPossibleTypes = Object.keys(MOVEMENT_TYPE_MAP);
+
+        // Расчет Movement Data (Время)
+        const movementData = allPossibleTypes.map(t => {
             const typeName = MOVEMENT_TYPE_MAP[t] || t;
             const months = new Array(numPeriods).fill(0);
 
@@ -348,14 +351,17 @@ export default function StatsPage() {
                     }
                 }
             });
+            const total = months.reduce((a, b) => a + b, 0);
 
             return {
                 type: typeName,
                 months: months,
+                total: total,
             };
         });
 
-        const distanceData = allTypes.map(t => {
+        // Расчет Distance Data (Дистанция)
+        const distanceData = allPossibleTypes.map(t => {
             const typeName = MOVEMENT_TYPE_MAP[t] || t;
             const months = new Array(numPeriods).fill(0);
 
@@ -370,19 +376,22 @@ export default function StatsPage() {
                     }
                 }
             });
+            const total = months.reduce((a, b) => a + b, 0);
 
             return {
                 type: typeName,
                 months: months.map(v => Math.round(v)),
+                total: Math.round(total),
             };
         });
 
-
         setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a, b) => a + b, 0) })));
-        setMovementTypes(movementData.map(m => ({ ...m, total: m.months.reduce((a, b) => a + b, 0) })));
+
+        // Устанавливаем ВСЕ типы активности (даже с total=0), чтобы они отображались в таблице
+        setMovementTypes(movementData);
+
         setDistanceByType(distanceData.map(d => ({
             ...d,
-            total: d.months.reduce((a, b) => a + b, 0),
             color: DISTANCE_COLORS[d.type]
         })));
 
@@ -391,19 +400,22 @@ export default function StatsPage() {
     } finally {
         setLoading(false);
     }
-  }, [dateRange, periodType, getIndex, navigate]);
+  }, [dateRange, periodType, getIndex, navigate, dailyInfo]);
 
 
   React.useEffect(() => { loadData(); }, [loadData]);
 
   // Мемоизация и фильтрация данных для рендера
   const filteredEnduranceZones = React.useMemo(() => enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) })), [enduranceZones, columns]);
+
+  // MovementTypes теперь содержит ВСЕ типы, даже если total=0
   const filteredMovementTypes = React.useMemo(() => movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) })), [movementTypes, columns]);
 
-  // Здесь мы используем исходный массив distanceByType, чтобы получить типы для графика.
+  // DistanceByType теперь содержит ВСЕ типы
   const filteredDistanceTypes = React.useMemo(() => distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) })), [distanceByType, columns]);
 
   const activeDistanceTypes = React.useMemo(() => {
+    // Для графика мы фильтруем только те типы, где есть данные
     return filteredDistanceTypes
       .filter(t => DISTANCE_COLORS[t.type] && t.months.some((v: number) => v > 0))
       .map(t => t.type);
@@ -644,7 +656,7 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
-            {/* Тип активности — ВРЕМЯ */}
+            {/* Тип активности — ВРЕМЯ (Отображаются ВСЕ типы) */}
             <SyncedTable
               title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
@@ -666,12 +678,12 @@ export default function StatsPage() {
             {/* График дистанции по видам (Километры) */}
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
 
-            {/* ТАБЛИЦА: Удалено поле 'color' для удаления кружков */}
+            {/* ТАБЛИЦА: Удалено поле 'color' и отображаются ВСЕ типы */}
             <SyncedTable
               title="Дистанция по видам тренировок (км)"
               rows={filteredDistanceTypes.map(t => ({
                 param: t.type,
-                // color: t.color, // УДАЛЕНО: для скрытия цветных кружков
+                // color: t.color, // Удалено
                 months: t.months,
                 total: t.total,
               }))}
