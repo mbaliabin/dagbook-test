@@ -22,7 +22,8 @@ dayjs.extend(weekOfYear);
 dayjs.extend(isBetween);
 dayjs.locale("ru");
 
-type PeriodType = "week" | "month" | "year" | "custom";
+// Обновленный тип: теперь это тип агрегации, а не тип диапазона
+type PeriodType = "day" | "week" | "month" | "year";
 
 // Типы для структурирования данных
 interface PeriodData {
@@ -77,16 +78,6 @@ const DISTANCE_COLORS: Record<string, string> = {
   "Велосипед": "#3b82f6",
 };
 
-// МАППИНГ для mainParam и новый список параметров для таблицы
-const MAIN_PARAM_MAP: Record<string, string> = {
-  skadet: "Травма",
-  syk: "Болезнь",
-  paReise: "В пути",
-  hoydedogn: "Смена часового пояса",
-  fridag: "Выходной",
-  konkurranse: "Соревнование",
-};
-
 // Список всех параметров статуса, которые нужно отобразить как отдельные строки
 const STATUS_PARAMS: { id: string, label: string }[] = [
     { id: 'skadet', label: 'Травма' },
@@ -106,9 +97,11 @@ export default function StatsPage() {
 
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
+
+  // Устанавливаем агрегацию по умолчанию на "Год"
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
-  // Исходный диапазон дат (обычно текущий год)
+  // Исходный диапазон дат (текущий год)
   const [dateRange, setDateRange] = React.useState({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
@@ -123,12 +116,82 @@ export default function StatsPage() {
   const [totals, setTotals] = React.useState({ trainingDays: 0, sessions: 0, time: "0:00", distance: 0 });
   const [columns, setColumns] = React.useState<string[]>([]);
 
-  // Строгая типизация
   const [enduranceZones, setEnduranceZones] = React.useState<EnduranceZone[]>([]);
-  const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]); // Для Общего отчета (время)
-  const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]); // Для Общей дистанции (км)
+  const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]);
+  const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]);
 
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
+
+  // -----------------------------------------------------------
+  // 1. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ И АГРЕГАЦИЕЙ
+  // -----------------------------------------------------------
+  const handlePeriodChange = (newPeriodType: PeriodType) => {
+    setPeriodType(newPeriodType);
+
+    const today = dayjs();
+    let newStartDate: dayjs.Dayjs;
+    let newEndDate: dayjs.Dayjs;
+
+    switch (newPeriodType) {
+        case "day":
+            newStartDate = today.startOf('day');
+            newEndDate = today.endOf('day');
+            break;
+        case "week":
+            newStartDate = today.subtract(6, 'day').startOf('day'); // Последние 7 дней
+            newEndDate = today.endOf('day');
+            break;
+        case "month":
+            newStartDate = today.startOf('month');
+            newEndDate = today.endOf('month');
+            break;
+        case "year":
+            newStartDate = today.startOf('year');
+            newEndDate = today.endOf('year');
+            break;
+    }
+
+    setDateRange({
+        startDate: newStartDate.toDate(),
+        endDate: newEndDate.toDate(),
+    });
+  };
+
+  // Инициализация при первом рендере
+  React.useEffect(() => {
+      // Устанавливаем начальный диапазон (по умолчанию 'year')
+      handlePeriodChange("year");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // -----------------------------------------------------------
+  // 2. ФУНКЦИЯ ДЛЯ ОПРЕДЕЛЕНИЯ ИНДЕКСА ПЕРИОДА
+  // -----------------------------------------------------------
+
+  /**
+   * Определяет, к какому столбцу (периоду агрегации) принадлежит дата.
+   */
+  const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
+      const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
+      const workoutDateClean = date.startOf('day');
+
+      if (periodType === "day") {
+          return workoutDateClean.diff(periodStartDayClean, "day");
+      } else if (periodType === "week") {
+          // Считаем недели от начала выбранного периода
+          const periodStartWeek = periodStartDayClean.startOf('week');
+          return workoutDateClean.diff(periodStartWeek, 'week');
+      } else if (periodType === "month") {
+          // Считаем месяцы от начала выбранного периода
+          return workoutDateClean.diff(periodStartDayClean, 'month');
+      } else { // year
+          // Считаем годы от начала выбранного периода
+          return workoutDateClean.diff(periodStartDayClean, 'year');
+      }
+  }, [periodType, dateRange.startDate]);
+
+  // -----------------------------------------------------------
+  // 3. ФУНКЦИЯ ЗАГРУЗКИ И РАСЧЕТА ДАННЫХ
+  // -----------------------------------------------------------
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -151,7 +214,7 @@ export default function StatsPage() {
                 headers: { Authorization: `Bearer ${token}` },
             }),
             fetch(
-                `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${dayjs(dateRange.endDate).format("YYYY-MM-DD")}`,
+                `${import.meta.env.VITE_API_URL}/api/daily-information/range?start=${periodStartDay.format("YYYY-MM-DD")}&end=${periodEndDay.format("YYYY-MM-DD")}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             ),
         ]);
@@ -185,8 +248,8 @@ export default function StatsPage() {
 
             return (
                 workoutDayStart.isValid() &&
-                (workoutDayStart.isAfter(periodStartDay.startOf('day')) || workoutDayStart.isSame(periodStartDay.startOf('day'), 'day')) &&
-                (workoutDayStart.isBefore(periodEndDay.startOf('day')) || workoutDayStart.isSame(periodEndDay.startOf('day'), 'day'))
+                (workoutDayStart.isAfter(periodStartDay) || workoutDayStart.isSame(periodStartDay, 'day')) &&
+                (workoutDayStart.isBefore(periodEndDay) || workoutDayStart.isSame(periodEndDay, 'day'))
             );
         });
 
@@ -204,44 +267,42 @@ export default function StatsPage() {
             distance: totalDistance,
         });
 
-        // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК
         let cols: string[] = [];
+        let current = periodStartDay;
 
-        const getIndex = (date: dayjs.Dayjs): number => {
-            if (periodType === "week") {
-                const year = dayjs().year();
-                const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-                // Исправлено
-                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
-            } else if (periodType === "custom") {
-                const periodStartDayClean = periodStartDay.startOf('day');
-                const workoutDateClean = date.startOf('day');
+        const periodEndDayCheck = periodEndDay.add(1, 'day'); // Для цикла while
 
-                return workoutDateClean.diff(periodStartDayClean, "day");
-            } else {
-                return date.month();
-            }
-        };
-
-        if (periodType === "week") {
-            const year = dayjs().year();
-            const firstDayOfYear = dayjs(`${year}-01-01`);
-            let current = firstDayOfYear.startOf("week");
-            let weekNum = 1;
-            while (current.year() <= year || (current.year() === year + 1 && current.week() === 1)) {
-                cols.push(`W${weekNum}`);
-                weekNum++;
-                current = current.add(1, "week");
-                if (weekNum > 54) break;
-            }
-        } else if (periodType === "month" || periodType === "year") {
-            cols = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-        } else if (periodType === "custom") {
-            let current = periodStartDay;
-            while (current.isBefore(dateRange.endDate) || current.isSame(dateRange.endDate, "day")) {
-                cols.push(current.format("DD MMM"));
-                current = current.add(1, "day");
-            }
+        if (periodType === "day") {
+             // Разбить по ДНЯМ
+             while (current.isBefore(periodEndDayCheck)) {
+                 cols.push(current.format("DD MMM YYYY"));
+                 current = current.add(1, "day");
+             }
+        } else if (periodType === "week") {
+             // Разбить по НЕДЕЛЯМ
+             let currentWeekStart = periodStartDay.startOf('week');
+             let weekNum = 1;
+             while (currentWeekStart.isBefore(periodEndDayCheck)) {
+                 const weekEnd = currentWeekStart.endOf('week').isBefore(periodEndDay) ? currentWeekStart.endOf('week') : periodEndDay;
+                 cols.push(`W${weekNum} (${currentWeekStart.format("DD.MM")}-${weekEnd.format("DD.MM")})`);
+                 currentWeekStart = currentWeekStart.add(1, 'week');
+                 weekNum++;
+             }
+        } else if (periodType === "month") {
+             // Разбить по МЕСЯЦАМ
+             let currentMonthStart = periodStartDay.startOf('month');
+             while (currentMonthStart.isBefore(periodEndDayCheck)) {
+                 cols.push(currentMonthStart.format("MMM YYYY"));
+                 currentMonthStart = currentMonthStart.add(1, 'month');
+             }
+        } else if (periodType === "year") {
+             // Разбить по ГОДАМ
+             let currentYearStart = periodStartDay.startOf('year');
+             while (currentYearStart.isBefore(periodEndDayCheck)) {
+                 cols.push(currentYearStart.format("YYYY"));
+                 currentYearStart = currentYearStart.add(1, 'year');
+             }
         }
         setColumns(cols);
 
@@ -334,7 +395,7 @@ export default function StatsPage() {
     } finally {
         setLoading(false);
     }
-  }, [dateRange, periodType]);
+  }, [dateRange, periodType, getIndex]);
 
 
   React.useEffect(() => { loadData(); }, [loadData]);
@@ -368,49 +429,46 @@ export default function StatsPage() {
 
   /**
    * МЕТОД: Вычисление ежедневного параметра
-   * @param param Ключ параметра (например, physical, pulse, skadet)
    */
   const getDailyParam = (param: DailyParamKey | string, index: number) => {
 
-    // Проверка, является ли параметр одним из шести статусов (skadet, syk, ...)
     const isStatusParam = STATUS_PARAMS.some(p => p.id === param);
+    const periodStartDay = dayjs(dateRange.startDate).startOf("day");
+    const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
-    // --- Логика для произвольного периода (Custom/День) ---
-    if (periodType === "custom") {
-      const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
-      const dailyEntry = dailyInfo[dateKey];
-
-      if (!dailyEntry) return "-";
-
-      if (isStatusParam) {
-          // Для произвольного периода: '+' если статус активен в этот день
-          return dailyEntry.main_param === param ? '+' : '';
-      }
-
-      // Для числовых полей и сна
-      return dailyEntry[param as DailyParamKey] ?? "-";
-    }
-
-    // --- Логика для агрегированных режимов ("week", "month", "year") ---
     const dailyKeys = Object.keys(dailyInfo);
     let relevantDates: string[] = [];
 
-    if (periodType === "week") {
-      const year = dayjs().year();
-      const weekStart = dayjs(`${year}-01-01`).startOf("week").add(index, "week");
+    // Определение дат, попадающих в текущий столбец (period)
+    if (periodType === "day") {
+        const targetDate = periodStartDay.add(index, "day").format("YYYY-MM-DD");
+        relevantDates = dailyKeys.filter(d => d === targetDate);
+    } else if (periodType === "week") {
+      const weekStart = periodStartDay.startOf("week").add(index, "week");
       const weekEnd = weekStart.endOf("week");
-      relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]"));
-    } else { // month, year (индекс - месяц)
-      relevantDates = dailyKeys.filter(d => dayjs(d).month() === index);
+      relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]") && dayjs(d).isBetween(periodStartDay, periodEndDay, null, "[]"));
+    } else if (periodType === "month") {
+      const monthStart = periodStartDay.startOf("month").add(index, "month");
+      const monthEnd = monthStart.endOf("month");
+      relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(monthStart, monthEnd, null, "[]") && dayjs(d).isBetween(periodStartDay, periodEndDay, null, "[]"));
+    } else { // year
+      const yearStart = periodStartDay.startOf("year").add(index, "year");
+      const yearEnd = yearStart.endOf("year");
+      relevantDates = dailyKeys.filter(d => dayjs(d).isBetween(yearStart, yearEnd, null, "[]") && dayjs(d).isBetween(periodStartDay, periodEndDay, null, "[]"));
     }
 
     if (relevantDates.length === 0) return isStatusParam ? '' : "-";
 
     // 1. ЛОГИКА ДЛЯ СТАТУСНЫХ ПАРАМЕТРОВ (Травма, Болезнь и т.д.)
     if (isStatusParam) {
-      // Считаем, сколько ДНЕЙ в периоде имели этот статус
       const count = relevantDates.filter(d => dailyInfo[d].main_param === param).length;
-      return count > 0 ? `${count}` : ''; // Возвращаем ЧИСЛО дней
+
+      if (periodType === "day") {
+          // В режиме "День" показываем '+' или пустоту
+          return count > 0 ? '+' : '';
+      }
+      // В агрегированных режимах возвращаем ЧИСЛО дней со статусом
+      return count > 0 ? `${count}` : '';
     }
 
     // 2. ЛОГИКА ДЛЯ ЧИСЛОВЫХ ПАРАМЕТРОВ (physical, mental, sleep_quality, pulse, sleep_duration)
@@ -479,13 +537,25 @@ export default function StatsPage() {
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
           </select>
-          <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя (Год)</button>
-          <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц (Год)</button>
-          <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
+
+          {/* КНОПКИ ПЕРИОДА С ПОДСВЕТКОЙ */}
+          {["day", "week", "month", "year"].map((type) => (
+              <button
+                  key={type}
+                  onClick={() => handlePeriodChange(type as PeriodType)}
+                  className={`px-3 py-1 rounded text-sm transition-colors
+                              ${periodType === type
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]"
+                              }`}
+              >
+                  {type === "day" ? "День" : type === "week" ? "Неделя" : type === "month" ? "Месяц" : "Год"}
+              </button>
+          ))}
 
           <div className="relative">
             <button onClick={() => { setTempRange(dateRange); setShowDateRangePicker(true); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
-              <Calendar className="w-4 h-4 mr-1"/> Произвольный период
+              <Calendar className="w-4 h-4 mr-1"/> Выбрать период
               <ChevronDown className="w-4 h-4 ml-1"/>
             </button>
             {showDateRangePicker && (
@@ -511,8 +581,8 @@ export default function StatsPage() {
                   </button>
                   <button
                     onClick={() => {
+                      // Применяем новый диапазон, сохраняя текущий PeriodType (агрегацию)
                       setDateRange(tempRange);
-                      setPeriodType("custom");
                       setShowDateRangePicker(false);
                     }}
                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"
@@ -544,7 +614,7 @@ export default function StatsPage() {
 
             {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы, с числовым итогом дней) */}
             <SyncedTable
-              title="Параметры дня (Дни со статусом)"
+              title={`Параметры дня (Агрегация по: ${periodType === 'day' ? 'Дням' : periodType === 'week' ? 'Неделям' : periodType === 'month' ? 'Месяцам' : 'Годам'})`}
               rows={[
                 // Только статусные параметры (Травма, Болезнь, Выходной и т.д.)
                 ...STATUS_PARAMS.map(p => ({
