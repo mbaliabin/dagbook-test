@@ -45,7 +45,7 @@ const ZONE_KEYS: Record<string, keyof Workout> = { I1: "zone1Min", I2: "zone2Min
 const ZONE_NAMES = ["I1", "I2", "I3", "I4", "I5"];
 
 const MOVEMENT_TYPE_MAP: Record<string, string> = {
-  XC_Skiing_Skate: "Лыжи / свободный стиль",
+  XC_Skiing_Skate: "Лыжи, свободный стиль",
   XC_Skiing_Classic: "Лыжи, классический стиль",
   RollerSki_Classic: "Лыжероллеры, классический стиль",
   RollerSki_Skate: "Лыжероллеры, свободный стиль",
