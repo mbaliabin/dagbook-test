@@ -22,12 +22,11 @@ dayjs.extend(weekOfYear);
 dayjs.extend(isBetween);
 dayjs.locale("ru");
 
-// Обновленный тип: теперь это тип агрегации, а не тип диапазона
 type PeriodType = "day" | "week" | "month" | "year";
 
 // Типы для структурирования данных
 interface PeriodData {
-  months: (number | string)[]; // Добавили string для текстовых полей
+  months: (number | string)[];
   total: number | string;
 }
 
@@ -51,7 +50,6 @@ interface Workout {
   zone3Min: number;
   zone4Min: number;
   zone5Min: number;
-  // Другие поля тренировки...
 }
 
 // Константы для зон выносливости
@@ -98,10 +96,9 @@ export default function StatsPage() {
   const [name] = React.useState("Пользователь");
   const [reportType, setReportType] = React.useState("Общий отчет");
 
-  // Устанавливаем агрегацию по умолчанию на "Год"
   const [periodType, setPeriodType] = React.useState<PeriodType>("year");
 
-  // Исходный диапазон дат (текущий год)
+  // Исходный диапазон дат
   const [dateRange, setDateRange] = React.useState({
     startDate: dayjs().startOf("year").toDate(),
     endDate: dayjs().endOf("year").toDate(),
@@ -138,7 +135,7 @@ export default function StatsPage() {
             newEndDate = today.endOf('day');
             break;
         case "week":
-            newStartDate = today.subtract(6, 'day').startOf('day'); // Последние 7 дней
+            newStartDate = today.subtract(6, 'day').startOf('day');
             newEndDate = today.endOf('day');
             break;
         case "month":
@@ -177,14 +174,11 @@ export default function StatsPage() {
       if (periodType === "day") {
           return workoutDateClean.diff(periodStartDayClean, "day");
       } else if (periodType === "week") {
-          // Считаем недели от начала выбранного периода
           const periodStartWeek = periodStartDayClean.startOf('week');
           return workoutDateClean.diff(periodStartWeek, 'week');
       } else if (periodType === "month") {
-          // Считаем месяцы от начала выбранного периода
           return workoutDateClean.diff(periodStartDayClean, 'month');
       } else { // year
-          // Считаем годы от начала выбранного периода
           return workoutDateClean.diff(periodStartDayClean, 'year');
       }
   }, [periodType, dateRange.startDate]);
@@ -267,7 +261,7 @@ export default function StatsPage() {
             distance: totalDistance,
         });
 
-        // 3. ФОРМИРОВАНИЕ КОЛОНОК
+        // 3. ФОРМИРОВАНИЕ КОЛОНОК (УПРОЩЕННОЕ ФОРМАТИРОВАНИЕ)
         let cols: string[] = [];
         let current = periodStartDay;
 
@@ -276,7 +270,8 @@ export default function StatsPage() {
         if (periodType === "day") {
              // Разбить по ДНЯМ
              while (current.isBefore(periodEndDayCheck)) {
-                 cols.push(current.format("DD MMM YYYY"));
+                 // Оставим только день и месяц
+                 cols.push(current.format("DD MMM"));
                  current = current.add(1, "day");
              }
         } else if (periodType === "week") {
@@ -284,8 +279,8 @@ export default function StatsPage() {
              let currentWeekStart = periodStartDay.startOf('week');
              let weekNum = 1;
              while (currentWeekStart.isBefore(periodEndDayCheck)) {
-                 const weekEnd = currentWeekStart.endOf('week').isBefore(periodEndDay) ? currentWeekStart.endOf('week') : periodEndDay;
-                 cols.push(`W${weekNum} (${currentWeekStart.format("DD.MM")}-${weekEnd.format("DD.MM")})`);
+                 // Оставим только WN
+                 cols.push(`W${weekNum}`);
                  currentWeekStart = currentWeekStart.add(1, 'week');
                  weekNum++;
              }
@@ -293,13 +288,15 @@ export default function StatsPage() {
              // Разбить по МЕСЯЦАМ
              let currentMonthStart = periodStartDay.startOf('month');
              while (currentMonthStart.isBefore(periodEndDayCheck)) {
-                 cols.push(currentMonthStart.format("MMM YYYY"));
+                 // Оставим только название месяца
+                 cols.push(currentMonthStart.format("MMM"));
                  currentMonthStart = currentMonthStart.add(1, 'month');
              }
         } else if (periodType === "year") {
              // Разбить по ГОДАМ
              let currentYearStart = periodStartDay.startOf('year');
              while (currentYearStart.isBefore(periodEndDayCheck)) {
+                 // Оставим только год
                  cols.push(currentYearStart.format("YYYY"));
                  currentYearStart = currentYearStart.add(1, 'year');
              }
@@ -532,7 +529,7 @@ export default function StatsPage() {
         </div>
 
         {/* FILTERS */}
-        <div className="flex flex-wrap gap-4 mb-4">
+        <div className="flex flex-wrap gap-4 mb-4 items-center">
           <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
@@ -593,6 +590,12 @@ export default function StatsPage() {
               </div>
             )}
           </div>
+
+          {/* ОТОБРАЖЕНИЕ ТЕКУЩЕГО ВЫБРАННОГО ПЕРИОДА */}
+          <div className="ml-4 text-sm text-gray-400 p-1 border border-gray-700 rounded-md">
+            Период: **{dayjs(dateRange.startDate).format("DD MMM YYYY")}** &ndash; **{dayjs(dateRange.endDate).format("DD MMM YYYY")}**
+          </div>
+
         </div>
 
         {/* TOTALS */}
@@ -614,7 +617,7 @@ export default function StatsPage() {
 
             {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы, с числовым итогом дней) */}
             <SyncedTable
-              title={`Параметры дня (Агрегация по: ${periodType === 'day' ? 'Дням' : periodType === 'week' ? 'Неделям' : periodType === 'month' ? 'Месяцам' : 'Годам'})`}
+              title={`Параметры дня (Агрегация: ${periodType === 'day' ? 'День' : periodType === 'week' ? 'Неделя' : periodType === 'month' ? 'Месяц' : 'Год'})`}
               rows={[
                 // Только статусные параметры (Травма, Болезнь, Выходной и т.д.)
                 ...STATUS_PARAMS.map(p => ({
