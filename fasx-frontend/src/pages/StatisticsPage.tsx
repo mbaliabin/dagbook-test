@@ -211,7 +211,8 @@ export default function StatsPage() {
             if (periodType === "week") {
                 const year = dayjs().year();
                 const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
-               return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
+                // ИСПРАВЛЕНО
+                return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
             } else if (periodType === "custom") {
                 const periodStartDayClean = periodStartDay.startOf('day');
                 const workoutDateClean = date.startOf('day');
@@ -536,22 +537,16 @@ export default function StatsPage() {
             {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
-            {/* ИСПРАВЛЕННАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
+            {/* ИСПРАВЛЕННАЯ ТАБЛИЦА ПАРАМЕТРОВ ДНЯ (только статусы) */}
             <SyncedTable
               title="Параметры дня"
               rows={[
-                // Новые статусные параметры
+                // Только статусные параметры
                 ...STATUS_PARAMS.map(p => ({
                     param: p.label,
                     months: columns.map((_, i) => getDailyParam(p.id, i)),
                     total: "-",
                 })),
-                // Старые числовые параметры
-                { param: "Физика", months: columns.map((_, i) => getDailyParam("physical", i)), total: "-" },
-                { param: "Психика", months: columns.map((_, i) => getDailyParam("mental", i)), total: "-" },
-                { param: "Качество сна", months: columns.map((_, i) => getDailyParam("sleep_quality", i)), total: "-" },
-                { param: "Пульс утром", months: columns.map((_, i) => getDailyParam("pulse", i)), total: "-" },
-                { param: "Сон (ч:мин)", months: columns.map((_, i) => getDailyParam("sleep_duration", i)), total: "-" },
               ]}
               columns={columns}
               index={0}
