@@ -13,7 +13,7 @@ import ru from "date-fns/locale/ru";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-// ИМПОРТ ФУНКЦИИ ПРОФИЛЯ
+// ИМПОРТ ФУНКЦИИ ПРОФИЛЯ, КАК В PROFILEPAGE
 import { getUserProfile } from "../api/getUserProfile";
 
 // Предполагаем, что компоненты EnduranceChart, DistanceChart, SyncedTable импортируются корректно
@@ -21,15 +21,12 @@ import { EnduranceChart } from "../components/StatisticsPage/EnduranceChart";
 import { DistanceChart } from "../components/StatisticsPage/DistanceChart";
 import { SyncedTable } from "../components/StatisticsPage/SyncedTable";
 
-// --- КОНСТАНТЫ И ТИПЫ ДАННЫХ (Остаются прежними) ---
+// --- КОНСТАНТЫ И ТИПЫ ДАННЫХ ---
 dayjs.extend(weekOfYear);
 dayjs.extend(isBetween);
 dayjs.locale("ru");
 
 type PeriodType = "day" | "week" | "month" | "year";
-
-interface EnduranceZone { /* ... */ }
-interface MovementType { /* ... */ }
 
 interface Workout {
   date: string;
@@ -109,18 +106,16 @@ export default function StatsPage() {
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, Record<DailyParamKey, any>> | {}>({});
 
   // -----------------------------------------------------------
-  // 1. ЛОГИКА ЗАГРУЗКИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ (Использует getUserProfile)
+  // 1. ЛОГИКА ЗАГРУЗКИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ
   // -----------------------------------------------------------
   const fetchProfile = async () => {
     try {
         const data = await getUserProfile();
-        // В вашем ProfilePage вы использовали data.name
         setName(data.name || "Пользователь");
     } catch (err) {
         console.error("Ошибка профиля:", err);
         setError("Не удалось загрузить профиль");
         setName("Ошибка!");
-        // В случае ошибки авторизации, возможно, стоит перенаправить пользователя
         if (err instanceof Error && err.message.includes("авторизации")) {
              navigate('/login');
         }
@@ -134,7 +129,6 @@ export default function StatsPage() {
   // 2. ЛОГИКА УПРАВЛЕНИЯ ПЕРИОДОМ
   // -----------------------------------------------------------
   const handlePeriodChange = (newPeriodType: PeriodType) => {
-    // ... (логика handlePeriodChange) ...
     setPeriodType(newPeriodType);
 
     const today = dayjs();
@@ -172,7 +166,7 @@ export default function StatsPage() {
   // Инициализация при первом рендере: Установка Года по умолчанию и загрузка имени
   React.useEffect(() => {
       handlePeriodChange("year");
-      fetchProfile(); // Загрузка имени
+      fetchProfile();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -----------------------------------------------------------
@@ -180,21 +174,21 @@ export default function StatsPage() {
   // -----------------------------------------------------------
 
   const getIndex = React.useCallback((date: dayjs.Dayjs): number => {
-    const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
-    const workoutDateClean = date.startOf('day');
+      const periodStartDayClean = dayjs(dateRange.startDate).startOf('day');
+      const workoutDateClean = date.startOf('day');
 
-    const actualAggregationType = periodType === 'year' ? 'month' : periodType;
+      const actualAggregationType = periodType === 'year' ? 'month' : periodType;
 
-    if (actualAggregationType === "day") {
-        return workoutDateClean.diff(periodStartDayClean, "day");
-    } else if (actualAggregationType === "week") {
-        const periodStartWeek = periodStartDayClean.startOf('week');
-        return workoutDateClean.diff(periodStartWeek, 'week');
-    } else if (actualAggregationType === "month") {
-        return workoutDateClean.diff(periodStartDayClean, 'month');
-    } else {
-        return workoutDateClean.diff(periodStartDayClean, 'year');
-    }
+      if (actualAggregationType === "day") {
+          return workoutDateClean.diff(periodStartDayClean, "day");
+      } else if (actualAggregationType === "week") {
+          const periodStartWeek = periodStartDayClean.startOf('week');
+          return workoutDateClean.diff(periodStartWeek, 'week');
+      } else if (actualAggregationType === "month") {
+          return workoutDateClean.diff(periodStartDayClean, 'month');
+      } else {
+          return workoutDateClean.diff(periodStartDayClean, 'year');
+      }
   }, [periodType, dateRange.startDate]);
 
   // -----------------------------------------------------------
@@ -207,7 +201,6 @@ export default function StatsPage() {
 
     const token = localStorage.getItem("token");
     if (!token) {
-        // Если нет токена, профиль должен был уже перенаправить
         setError("Нет авторизации");
         setLoading(false);
         return;
@@ -398,15 +391,16 @@ export default function StatsPage() {
     } finally {
         setLoading(false);
     }
-  }, [dateRange, periodType, getIndex, navigate]); // Добавили navigate в зависимости loadData
+  }, [dateRange, periodType, getIndex, navigate]);
 
 
-  // Запуск загрузки данных при изменении диапазона/периода
   React.useEffect(() => { loadData(); }, [loadData]);
 
   // Мемоизация и фильтрация данных для рендера
   const filteredEnduranceZones = React.useMemo(() => enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) })), [enduranceZones, columns]);
   const filteredMovementTypes = React.useMemo(() => movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) })), [movementTypes, columns]);
+
+  // Здесь мы используем исходный массив distanceByType, чтобы получить типы для графика.
   const filteredDistanceTypes = React.useMemo(() => distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) })), [distanceByType, columns]);
 
   const activeDistanceTypes = React.useMemo(() => {
@@ -434,8 +428,8 @@ export default function StatsPage() {
   /**
    * МЕТОД: Вычисление ежедневного параметра
    */
-  const getDailyParam = (param: DailyParamKey | string, index: number) => {
-    // ... (логика getDailyParam) ...
+  const getDailyParam = React.useCallback((param: DailyParamKey | string, index: number) => {
+
     const isStatusParam = STATUS_PARAMS.some(p => p.id === param);
     const periodStartDay = dayjs(dateRange.startDate).startOf("day");
     const periodEndDay = dayjs(dateRange.endDate).endOf("day");
@@ -482,7 +476,8 @@ export default function StatsPage() {
     const sum = values.reduce((s, v) => s + v, 0);
 
     return Math.round(sum / values.length);
-  };
+  }, [dateRange, dailyInfo, periodType]);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -616,8 +611,10 @@ export default function StatsPage() {
         {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
+            {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
+            {/* ТАБЛИЦА ПАРАМЕТРОВ ДНЯ */}
             <SyncedTable
               title="Параметры дня"
               rows={[
@@ -647,6 +644,7 @@ export default function StatsPage() {
               bottomRowName="Общая выносливость"
             />
 
+            {/* Тип активности — ВРЕМЯ */}
             <SyncedTable
               title="Тип активности"
               rows={filteredMovementTypes.map(m => ({
@@ -665,12 +663,15 @@ export default function StatsPage() {
 
         {reportType === "Общая дистанция" && (
           <>
+            {/* График дистанции по видам (Километры) */}
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
+
+            {/* ТАБЛИЦА: Удалено поле 'color' для удаления кружков */}
             <SyncedTable
               title="Дистанция по видам тренировок (км)"
               rows={filteredDistanceTypes.map(t => ({
                 param: t.type,
-                color: t.color,
+                // color: t.color, // УДАЛЕНО: для скрытия цветных кружков
                 months: t.months,
                 total: t.total,
               }))}
