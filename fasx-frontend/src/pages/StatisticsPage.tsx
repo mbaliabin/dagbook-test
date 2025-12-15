@@ -119,7 +119,7 @@ export default function StatsPage() {
     }
 
     try {
-      // Определение опорных точек для всего периода
+      // Определение опорных точек
       const periodStartDay = dayjs(dateRange.startDate).startOf("day");
       const periodEndDay = dayjs(dateRange.endDate).endOf("day");
 
@@ -176,7 +176,7 @@ export default function StatsPage() {
         distance: totalDistance,
       });
 
-      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА (Скорректировано для custom)
+      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА
       let cols: string[] = [];
 
       const getIndex = (date: dayjs.Dayjs): number => {
@@ -186,8 +186,11 @@ export default function StatsPage() {
           const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
           return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
         } else if (periodType === "custom") {
-          // Логика для "custom": разница в днях от начала периода (periodStartDay из внешнего скоупа)
-          return date.diff(periodStartDay, "day");
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сравниваем startOf('day'), чтобы игнорировать время
+          const periodStartDayClean = periodStartDay.startOf('day');
+          const workoutDateClean = date.startOf('day');
+
+          return workoutDateClean.diff(periodStartDayClean, "day");
         } else {
           return date.month();
         }
@@ -348,7 +351,7 @@ export default function StatsPage() {
 
 
   const getDailyParam = (param: "physical" | "mental" | "sleep_quality" | "pulse", index: number) => {
-    // Эта логика взята из исходного кода
+
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
       return dailyInfo[dateKey]?.[param] ?? "-";
