@@ -26,7 +26,7 @@ type PeriodType = "week" | "month" | "year" | "custom";
 
 // Типы для структурирования данных
 interface PeriodData {
-  months: number[];
+  months: number[]; // Время (минуты) или дистанция (км)
   total: number;
 }
 
@@ -37,13 +37,13 @@ interface EnduranceZone extends PeriodData {
 
 interface MovementType extends PeriodData {
   type: string;
-  color?: string; // Добавлено для DistanceByType
+  color?: string;
 }
 
 interface Workout {
   date: string;
-  duration: number;
-  distance: number;
+  duration: number; // Минуты
+  distance: number; // Километры
   type: string;
   zone1Min: number;
   zone2Min: number;
@@ -101,8 +101,8 @@ export default function StatsPage() {
 
   // Строгая типизация
   const [enduranceZones, setEnduranceZones] = React.useState<EnduranceZone[]>([]);
-  const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]);
-  const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]);
+  const [movementTypes, setMovementTypes] = React.useState<MovementType[]>([]); // Для Общего отчета (время)
+  const [distanceByType, setDistanceByType] = React.useState<MovementType[]>([]); // Для Общей дистанции (км)
 
   const [dailyInfo, setDailyInfo] = React.useState<Record<string, any>>({});
 
@@ -172,15 +172,16 @@ export default function StatsPage() {
         distance: totalDistance,
       });
 
-      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА (Улучшенная логика для "week")
+      // 3. ФОРМИРОВАНИЕ КОЛОНОК И ИНДЕКСАТОРА (Возвращена логика для "week")
       let cols: string[] = [];
       const periodStartDay = dayjs(dateRange.startDate).startOf("day");
 
       const getIndex = (date: dayjs.Dayjs): number => {
         if (periodType === "week") {
-          // Расчет относительно начала первой недели в dateRange
-          const startWeek = periodStartDay.startOf("week");
-          return Math.max(0, date.diff(startWeek, "week"));
+          // ИСХОДНАЯ ЛОГИКА: Расчет недели относительно начала текущего года
+          const year = dayjs().year();
+          const firstWeekStart = dayjs(`${year}-01-01`).startOf("week");
+          return Math.max(0, Math.floor(date.diff(firstWeekStart, "week")));
         } else if (periodType === "custom") {
           // Расчет относительно начала периода
           return date.diff(periodStartDay, "day");
@@ -191,14 +192,18 @@ export default function StatsPage() {
       };
 
       if (periodType === "week") {
-        const startWeek = periodStartDay.startOf("week");
-        const endWeek = dayjs(dateRange.endDate).endOf("week");
-        let current = startWeek;
-
-        while (current.isBefore(endWeek)) {
-          // Формат W<номер недели>
-          cols.push(`W${current.week()}`);
+        // ИСХОДНАЯ ЛОГИКА: Показываем все недели текущего года, независимо от dateRange
+        const year = dayjs().year();
+        const firstDayOfYear = dayjs(`${year}-01-01`);
+        const firstWeekStart = firstDayOfYear.startOf("week");
+        let current = firstWeekStart;
+        let weekNum = 1;
+        // Продолжаем, пока текущая точка не выйдет за пределы текущего года (или чуть больше)
+        while (current.year() <= year || (current.year() === year + 1 && current.week() === 1)) {
+          cols.push(`W${weekNum}`);
+          weekNum++;
           current = current.add(1, "week");
+          if (weekNum > 54) break; // Ограничение на случай бесконечного цикла
         }
       } else if (periodType === "month" || periodType === "year") {
         cols = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
@@ -237,7 +242,7 @@ export default function StatsPage() {
         };
       });
 
-      // Типы активности (Дистанция)
+      // Типы активности (ВРЕМЯ — для Общего Отчета)
       const allTypes = [...new Set(workouts.map(w => w.type))];
       const movementData = allTypes.map(t => {
         const typeName = MOVEMENT_TYPE_MAP[t] || t;
@@ -249,6 +254,31 @@ export default function StatsPage() {
             if (d.isValid()) {
               const index = getIndex(d);
               if (index >= 0 && index < numPeriods) {
+                // Используем duration (минуты)
+                months[index] += (w.duration || 0);
+              }
+            }
+          }
+        });
+
+        return {
+          type: typeName,
+          months: months,
+        };
+      });
+
+      // Дистанция по видам (КИЛОМЕТРЫ — для отчета "Общая дистанция")
+      const distanceData = allTypes.map(t => {
+        const typeName = MOVEMENT_TYPE_MAP[t] || t;
+        const months = new Array(numPeriods).fill(0);
+
+        workouts.forEach(w => {
+          if (w.type === t) {
+            const d = dayjs(w.date);
+            if (d.isValid()) {
+              const index = getIndex(d);
+              if (index >= 0 && index < numPeriods) {
+                // Используем distance (км)
                 months[index] += (w.distance || 0);
               }
             }
@@ -257,13 +287,14 @@ export default function StatsPage() {
 
         return {
           type: typeName,
-          months: months.map(v => Math.round(v)), // Округляем до целых км
+          months: months.map(v => Math.round(v)),
         };
       });
 
+
       setEnduranceZones(enduranceData.map(z => ({ ...z, total: z.months.reduce((a, b) => a + b, 0) })));
       setMovementTypes(movementData.map(m => ({ ...m, total: m.months.reduce((a, b) => a + b, 0) })));
-      setDistanceByType(movementData.map(d => ({
+      setDistanceByType(distanceData.map(d => ({
         ...d,
         total: d.months.reduce((a, b) => a + b, 0),
         color: DISTANCE_COLORS[d.type]
@@ -276,10 +307,13 @@ export default function StatsPage() {
     }
   }, [dateRange, periodType]);
 
+  // ... (Остальная часть компонента, включая useMemo, остается прежней)
+
   React.useEffect(() => { loadData(); }, [loadData]);
 
   // Используем useMemo для мемоизации данных графиков, чтобы избежать пересчетов при ререндерах
   const filteredEnduranceZones = enduranceZones.map(z => ({ ...z, months: z.months.slice(0, columns.length) }));
+  const filteredMovementTypes = movementTypes.map(m => ({ ...m, months: m.months.slice(0, columns.length) }));
   const filteredDistanceTypes = distanceByType.map(d => ({ ...d, months: d.months.slice(0, columns.length) }));
 
   const activeDistanceTypes = React.useMemo(() => {
@@ -306,11 +340,7 @@ export default function StatsPage() {
 
 
   const getDailyParam = (param: "physical" | "mental" | "sleep_quality" | "pulse", index: number) => {
-    // ВНИМАНИЕ: Логика усреднения ежедневных данных для режимов "week" / "month" / "year"
-    // не менялась и остается привязанной к dayjs().month() для месяцев, что может давать
-    // неточные результаты для кастомных периодов, охватывающих несколько лет.
-    // Для этого примера я оставил оригинальную логику.
-
+    // Эта логика осталась из исходного кода, предполагая, что она работает в рамках вашего приложения.
     if (periodType === "custom") {
       const dateKey = dayjs(dateRange.startDate).add(index, "day").format("YYYY-MM-DD");
       return dailyInfo[dateKey]?.[param] ?? "-";
@@ -318,13 +348,24 @@ export default function StatsPage() {
 
     // В оригинальной логике, для week/month/year используется dayjs().month() === index,
     // что работает, если dateRange соответствует текущему году.
-    const monthIndex = periodType === "week" ? dayjs().month() : index;
+    // Для режимов week/month/year, где столбцы - это месяцы или недели, требуется сложная
+    // логика поиска дат, принадлежащих этому столбцу, в dailyInfo.
 
-    const monthDates = Object.keys(dailyInfo).filter(d => {
-      // Это упрощенная логика из-за отсутствия точного индексатора для week/month/year
-      return dayjs(d).month() === monthIndex;
-    });
+    // Если "week" или "year/month" выбраны с помощью кнопок, то dateRange соответствует году.
+    // Здесь оставлена оригинальная упрощенная логика:
 
+    if (periodType === "week") {
+      const year = dayjs().year();
+      const weekStart = dayjs(`${year}-01-01`).startOf("week").add(index, "week");
+      const weekEnd = weekStart.endOf("week");
+      const dates = Object.keys(dailyInfo).filter(d => dayjs(d).isBetween(weekStart, weekEnd, null, "[]"));
+      if (dates.length === 0) return "-";
+      const sum = dates.reduce((s, d) => s + (dailyInfo[d][param] || 0), 0);
+      return Math.round(sum / dates.length);
+    }
+
+    // month, year
+    const monthDates = Object.keys(dailyInfo).filter(d => dayjs(d).month() === index);
     if (monthDates.length === 0) return "-";
     const sum = monthDates.reduce((s, d) => s + (dailyInfo[d][param] || 0), 0);
     return Math.round(sum / monthDates.length);
@@ -348,7 +389,7 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
-        {/* HEADER & MENU (Оставлено без изменений) */}
+        {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
             <img src="/profile.jpg" alt="Avatar" className="w-16 h-16 rounded-full object-cover"/>
@@ -364,6 +405,7 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* MENU */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -377,16 +419,16 @@ export default function StatsPage() {
           })}
         </div>
 
-        {/* FILTERS (Оставлено без изменений) */}
+        {/* FILTERS */}
         <div className="flex flex-wrap gap-4 mb-4">
           <select value={reportType} onChange={e => setReportType(e.target.value)} className="bg-[#1f1f22] text-white px-3 py-1 rounded">
             <option>Общий отчет</option>
             <option>Общая дистанция</option>
           </select>
-
-          <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("week").toDate(), endDate: dayjs().endOf("week").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Текущая неделя</button>
-          <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("month").toDate(), endDate: dayjs().endOf("month").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Текущий месяц</button>
-          <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Текущий год</button>
+          {/* Кнопки возвращают к полному году, т.к. недельная стастика за одну неделю не нужна */}
+          <button onClick={() => { setPeriodType("week"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Неделя (Год)</button>
+          <button onClick={() => { setPeriodType("month"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Месяц (Год)</button>
+          <button onClick={() => { setPeriodType("year"); setDateRange({ startDate: dayjs().startOf("year").toDate(), endDate: dayjs().endOf("year").toDate() }); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d]">Год</button>
 
           <div className="relative">
             <button onClick={() => { setTempRange(dateRange); setShowDateRangePicker(true); }} className="px-3 py-1 rounded bg-[#1f1f22] text-gray-200 hover:bg-[#2a2a2d] flex items-center">
@@ -444,6 +486,7 @@ export default function StatsPage() {
         {/* ГРАФИКИ И ТАБЛИЦЫ */}
         {reportType === "Общий отчет" && (
           <>
+            {/* График зон выносливости (Время) */}
             <EnduranceChart data={enduranceChartData} zones={filteredEnduranceZones} />
 
             <SyncedTable
@@ -468,35 +511,38 @@ export default function StatsPage() {
                 total: z.total,
               }))}
               columns={columns}
-              formatAsTime
+              formatAsTime // Форматирование как время (H:MM)
               index={1}
               showBottomTotal={true}
               bottomRowName="Общая выносливость"
             />
 
+            {/* Тип активности — теперь ВРЕМЯ (минуты) */}
             <SyncedTable
-              title="Тип активности"
-              rows={movementTypes.map(m => ({
+              title="Тип активности (Время, мин)"
+              rows={filteredMovementTypes.map(m => ({
                 param: m.type,
                 months: m.months,
                 total: m.total,
               }))}
               columns={columns}
+              formatAsTime // Форматирование как время (H:MM)
               index={2}
               showBottomTotal={true}
-              bottomRowName="Общая дистанция"
+              bottomRowName="Общее время"
             />
           </>
         )}
 
         {reportType === "Общая дистанция" && (
           <>
+            {/* График дистанции по видам (Километры) */}
             <DistanceChart data={distanceChartData} types={activeDistanceTypes} />
             <SyncedTable
-              title="Дистанция по видам тренировок"
+              title="Дистанция по видам тренировок (км)"
               rows={filteredDistanceTypes.map(t => ({
                 param: t.type,
-                color: t.color, // Теперь цвет берется из объекта
+                color: t.color,
                 months: t.months,
                 total: t.total,
               }))}
