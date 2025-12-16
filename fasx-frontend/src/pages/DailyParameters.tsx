@@ -53,8 +53,6 @@ const CompactStatusButton = ({ id, label, Icon, activeId, onClick, activeColor }
   );
 };
 
-// --- ОСНОВНОЙ КОМПОНЕНТ ---
-
 export default function DailyParameters() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,36 +138,36 @@ export default function DailyParameters() {
 
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden border border-gray-800">
+
+          {/* КЛИКАБЕЛЬНАЯ ЗОНА ПРОФИЛЯ */}
+          <div
+            onClick={() => navigate("/profile")}
+            className="flex items-center space-x-4 cursor-pointer group"
+          >
+            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden border border-gray-800 group-hover:border-blue-500 transition-all">
               {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : name.charAt(0) || "U"}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">{name}</h1>
-              <p className="text-sm text-gray-400">Личные показатели</p>
+              <h1 className="text-2xl font-bold text-white tracking-tight group-hover:text-blue-400 transition-colors">
+                {name}
+              </h1>
+              <p className="text-sm text-gray-400 flex items-center gap-1 group-hover:text-gray-300">
+                Профиль <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-all" />
+              </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* ФИКСИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДАТ (чтобы кнопки не прыгали) */}
             <div className="flex items-center bg-[#1a1a1d] border border-gray-800 rounded-xl p-1 shadow-sm overflow-hidden">
-              <button
-                onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))}
-                className="p-2.5 hover:text-blue-500 transition-colors shrink-0"
-              >
+              <button onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))} className="p-2.5 hover:text-blue-500 transition-colors shrink-0">
                 <ChevronLeft size={18}/>
               </button>
-
               <div className="w-[180px] md:w-[210px] text-center border-x border-gray-800/50">
                 <span className="text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">
                   {selectedDate.format("D MMMM, dddd")}
                 </span>
               </div>
-
-              <button
-                onClick={() => setSelectedDate(selectedDate.add(1, "day"))}
-                className="p-2.5 hover:text-blue-500 transition-colors shrink-0"
-              >
+              <button onClick={() => setSelectedDate(selectedDate.add(1, "day"))} className="p-2.5 hover:text-blue-500 transition-colors shrink-0">
                 <ChevronRight size={18}/>
               </button>
             </div>
@@ -195,7 +193,7 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* КОНТЕНТ (Узкая левая колонка + Широкая правая) */}
+        {/* GRID: 1/4 + 3/4 */}
         <div className="grid lg:grid-cols-4 gap-6 items-stretch">
 
           {/* СТАТУСЫ + АНАЛИТИКА */}
@@ -215,14 +213,12 @@ export default function DailyParameters() {
                 <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
               </div>
 
-              {/* Блок Аналитики (заполнение пустоты) */}
+              {/* Блок Анализа */}
               <div className="flex-grow flex flex-col justify-center space-y-4 py-8">
-                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl shadow-inner">
-                  <div className="flex justify-between items-end mb-2">
-                    <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Готовность</p>
-                    <span className="text-lg font-bold text-blue-500">{readinessScore > 0 ? readinessScore + '%' : '--'}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl shadow-inner text-center">
+                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Индекс готовности</p>
+                  <span className="text-xl font-bold text-blue-500">{readinessScore > 0 ? readinessScore + '%' : '--'}</span>
+                  <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-3">
                     <div className="h-full bg-blue-600 transition-all duration-700" style={{ width: `${readinessScore}%` }} />
                   </div>
                 </div>
@@ -230,25 +226,25 @@ export default function DailyParameters() {
                 <div className="bg-blue-600/5 border border-blue-500/10 p-4 rounded-xl">
                   <div className="flex items-center gap-2 mb-2 text-blue-500">
                     <Activity size={12} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Рекомендация</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Совет дня</span>
                   </div>
                   <p className="text-[11px] text-gray-400 leading-relaxed italic">
-                    {mainParam === 'syk' ? "Рекомендуется покой." :
-                     physical > 7 ? "День для рекордов." :
-                     "Держите легкий темп."}
+                    {mainParam === 'syk' ? "Полное восстановление — твой главный приоритет." :
+                     physical > 7 ? "Организм готов к интенсивным интервалам." :
+                     "Хороший день для восстановительного кросса."}
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-800/50">
                 <p className="text-[9px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
-                  Анализ факторов формы
+                  Анализ параметров формы
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ОСНОВНАЯ ФОРМА */}
+          {/* ПОКАЗАТЕЛИ */}
           <div className="lg:col-span-3">
             <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
               <div className="flex items-center gap-2 text-gray-400">
