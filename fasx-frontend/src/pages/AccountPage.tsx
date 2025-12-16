@@ -20,9 +20,20 @@ export default function AccountPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    getUserProfile()
-      .then(data => { setProfile(data); setLoading(false); })
-      .catch(() => navigate('/login'));
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error("Ошибка профиля:", err);
+        if (err instanceof Error && err.message.includes("авторизации")) {
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, [navigate]);
 
   const menuItems = [
@@ -71,15 +82,17 @@ export default function AccountPage() {
         </div>
 
         {/* MENU */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6 shadow-sm">
           {menuItems.map((item) => {
             const Icon = item.icon;
+            // Подсветка активной страницы (включая /account как часть профиля)
             const isActive = location.pathname.includes(item.path) || (item.path === "/profile" && location.pathname === "/account");
             return (
               <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500 font-semibold" : "text-gray-400 hover:text-white"}`}
+                  className={`flex flex-col items-center text-sm transition-colors py-1
+                              ${isActive ? "text-blue-500 font-semibold" : "text-gray-400 hover:text-white"}`}
               >
                 <Icon className="w-6 h-6"/>
                 <span>{item.label}</span>
@@ -98,68 +111,72 @@ export default function AccountPage() {
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Персональная информация</h2>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="absolute right-0 top-0 flex items-center gap-1.5 border border-gray-600 bg-[#1f1f22] hover:bg-[#2a2a2d] px-4 py-1 text-xs text-gray-200 transition-all"
+                className="absolute right-0 top-0 flex items-center gap-1.5 border border-gray-600 bg-[#1f1f22] hover:bg-[#2a2a2d] px-4 py-1 text-xs text-gray-200 transition-all rounded shadow-sm"
               >
                 <Edit3 size={14} /> Изменить
               </button>
             </div>
             <div className="ml-8">
               <h3 className="text-2xl font-bold text-white tracking-tight">{profile?.name}</h3>
-              <p className="text-gray-500 text-sm mt-1 italic">Дата рождения: 10.12.1995 • Мужчина</p>
+              <p className="text-gray-500 text-sm mt-1">Дата рождения: 10.12.1995 • Мужчина</p>
             </div>
           </section>
 
-          {/* 2. Спортивная информация */}
+          {/* 2. Спортивная информация (ВЫШЕ зон интенсивности) */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-6">
               <Trophy size={18} className="text-blue-500" />
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Спортивная информация</h2>
             </div>
             <div className="ml-8 grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Спорт</p>
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Вид спорта</p>
                 <p className="text-white text-sm font-semibold">беговые лыжи</p>
               </div>
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Клуб</p>
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Клуб / Команда</p>
                 <p className="text-white text-sm font-semibold">IL Aasguten ski</p>
               </div>
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Федерация</p>
+              <div className="space-y-1">
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Ассоциация</p>
                 <p className="text-white text-sm font-semibold">Норвежская ассоциация</p>
               </div>
             </div>
           </section>
 
-          {/* 3. Зоны интенсивности (НИЖЕ Спортивной информации) */}
+          {/* 3. Зоны интенсивности (НИЖЕ спортивной информации) */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-6">
               <Heart size={18} className="text-blue-500" />
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Зоны интенсивности</h2>
             </div>
-            <div className="ml-8 flex flex-wrap gap-2">
+            <div className="ml-8 flex flex-wrap gap-3">
               {hrZones.map((z) => (
-                <div key={z.label} className="flex items-center bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden">
-                  <span style={{ backgroundColor: z.color }} className="px-3 py-1 text-[10px] font-black text-black">{z.label}</span>
-                  <span className="px-4 py-1 text-xs text-gray-300 font-medium">{z.range}</span>
+                <div key={z.label} className="flex items-center bg-[#0f0f0f] border border-gray-800 rounded-lg overflow-hidden shadow-inner">
+                  <span style={{ backgroundColor: z.color }} className="px-3 py-1.5 text-[10px] font-black text-black uppercase">
+                    {z.label}
+                  </span>
+                  <span className="px-4 py-1.5 text-xs text-gray-300 font-bold">
+                    {z.range}
+                  </span>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* 4. Мои тренеры (ДОБАВЛЕНО) */}
+          {/* 4. Мои тренеры */}
           <section className="border-t border-gray-800 pt-10">
             <div className="flex justify-between items-center text-gray-500 mb-6">
               <div className="flex items-center gap-2">
                 <Users size={18} className="text-blue-500" />
                 <h2 className="text-xs font-black uppercase tracking-[0.2em]">Мои тренеры</h2>
               </div>
-              <ChevronDown size={20} />
+              <ChevronDown size={20} className="text-gray-700" />
             </div>
-            <div className="ml-8 space-y-4">
-              <p className="text-sm text-gray-600 italic">У вас пока нет привязанных тренеров.</p>
-              <button className="flex items-center gap-2 border border-gray-600 bg-[#1f1f22] hover:bg-[#2a2a2d] px-5 py-2 rounded text-xs text-gray-200 font-bold transition-all shadow-sm">
-                <Plus size={16} /> Добавить тренера
+            <div className="ml-8 space-y-5">
+              <p className="text-sm text-gray-500 italic">У вас пока нет привязанных тренеров.</p>
+              <button className="flex items-center gap-2 border border-gray-700 bg-[#1f1f22] hover:bg-[#2a2a2d] px-6 py-2.5 rounded-lg text-[11px] text-gray-200 font-bold uppercase tracking-widest transition-all shadow-md active:scale-95">
+                <Plus size={16} /> Добавить тренера / Предоставить доступ
               </button>
             </div>
           </section>
@@ -167,7 +184,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Вызов твоей модалки (здесь используй свой импорт или код модалки, который не трогаем) */}
+      {/* Вызов твоей модалки (передай свои пропсы) */}
       {/* <EditAccountModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} profile={profile} /> */}
     </div>
   );
