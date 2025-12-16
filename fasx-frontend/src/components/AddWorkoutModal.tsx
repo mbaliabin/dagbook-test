@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
-import { X, Check } from "lucide-react";
+import { X, Check, Ruler } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface AddWorkoutModalProps {
@@ -147,7 +147,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
               onChange={(e) => setType(e.target.value)}
               required
             >
-              <option value="">Выберите тип из списка...</option>
+              <option value="">Выберите тип...</option>
               <option value="Running">Бег</option>
               <option value="XC_Skiing_Classic">Лыжи, классика</option>
               <option value="XC_Skiing_Skate">Лыжи, коньковый ход</option>
@@ -159,7 +159,24 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
 
           <div className="h-px bg-gray-800 my-4" />
 
-          {/* Шкалы: Самочувствие, затем Нагрузка */}
+          {/* Дистанция — теперь отдельным блоком */}
+          {(type !== "StrengthTraining" && type !== "Other" && type !== "") && (
+            <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-2">
+                <Ruler size={14} /> Дистанция (км)
+              </label>
+              <input
+                type="number"
+                step={0.1}
+                value={distance}
+                onChange={(e) => setDistance(e.target.value)}
+                placeholder="0.0"
+                className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-blue-900/30 text-white font-bold text-lg outline-none focus:border-blue-500 transition-all no-spinner"
+              />
+            </div>
+          )}
+
+          {/* Шкалы */}
           <div className="space-y-8">
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
@@ -170,7 +187,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
                   <button
                     type="button" key={i}
                     onClick={() => setFeeling(i + 1)}
-                    className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white scale-105 shadow-lg shadow-green-900/20" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
+                    className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white scale-105 shadow-lg shadow-green-900/20 border-green-400" : "bg-[#2a2a2d] text-gray-400 border border-transparent hover:border-gray-600"}`}
                   >
                     {i + 1}
                   </button>
@@ -187,7 +204,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
                   <button
                     type="button" key={i}
                     onClick={() => setEffort(i + 1)}
-                    className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white scale-105 shadow-lg shadow-blue-900/20" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
+                    className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white scale-105 shadow-lg shadow-blue-900/20 border-blue-400" : "bg-[#2a2a2d] text-gray-400 border border-transparent hover:border-gray-600"}`}
                   >
                     {i + 1}
                   </button>
@@ -196,7 +213,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             </div>
           </div>
 
-          {/* Зоны (Стиль как в аккаунте) */}
+          {/* Зоны */}
           <div className="space-y-4">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Распределение по зонам (мин)</label>
             <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
@@ -215,28 +232,14 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Итоги */}
-          <div className="grid grid-cols-2 gap-8 bg-[#141416] p-5 rounded-2xl border border-gray-800">
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Общее время</label>
-              <div className="text-2xl font-bold text-blue-500 tracking-tight">{formattedDuration}</div>
+            {/* Итоговое время под зонами */}
+            <div className="flex justify-between items-center bg-[#141416] px-4 py-3 rounded-xl border border-gray-800/50 mt-2">
+              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Итоговое время тренировки</span>
+              <span className="text-lg font-bold text-blue-500 tracking-tight">{formattedDuration}</span>
             </div>
-            {(type !== "StrengthTraining" && type !== "Other") && (
-              <div className="space-y-1 text-right">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Дистанция (км)</label>
-                <input
-                  type="number" step={0.1}
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  placeholder="0.0"
-                  className="bg-transparent text-2xl font-bold text-white outline-none text-right w-full placeholder:text-gray-800"
-                />
-              </div>
-            )}
           </div>
 
+          {/* Комментарий */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Комментарий к тренировке</label>
             <textarea
