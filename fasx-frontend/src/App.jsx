@@ -7,6 +7,7 @@ import FasxLogin from "@/pages/FasxLogin"
 import FasxRegister from "@/pages/FasxRegister"
 import DailyParametersWrapper from "@/pages/DailyParametersWrapper";
 import StatisticsPage from "@/pages/StatisticsPage";
+import AccountPage from "@/pages/AccountPage";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/register" element={<FasxRegister />} />
       <Route path="/daily" element={<DailyParametersWrapper />} />
       <Route path="/statistics" element={<StatisticsPage />} />
+      <Route path="/account" element={<AccountPage />} />
     </Routes>
   )
 }
