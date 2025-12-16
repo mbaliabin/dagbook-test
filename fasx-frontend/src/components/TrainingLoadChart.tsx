@@ -71,7 +71,7 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
         </div>
         {!isEmpty && (
           <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest border-b border-gray-800 pb-1">
-            Километраж
+            Расстояние \км
           </span>
         )}
       </div>
