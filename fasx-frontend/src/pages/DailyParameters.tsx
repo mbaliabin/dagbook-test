@@ -39,16 +39,16 @@ const SingleSelectButton = ({ id, label, Icon, activeId, onClick, activeColor }:
   return (
     <button
       onClick={() => onClick(id === activeId ? null : id)}
-      className={`px-4 py-4 rounded-2xl flex items-center space-x-3 transition-all border w-full ${
+      className={`px-4 py-3 rounded-2xl flex items-center space-x-3 transition-all border w-full ${
         isActive
           ? `${activeColor} border-transparent shadow-lg scale-[1.02]`
           : "bg-[#0f0f0f] border-gray-800 hover:border-gray-700 text-gray-400"
       }`}
     >
       <div className={`p-2 rounded-lg ${isActive ? "bg-white/20" : "bg-gray-800"}`}>
-        <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-400"}`} />
+        <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`} />
       </div>
-      <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-white" : ""}`}>{label}</span>
+      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-white" : ""}`}>{label}</span>
     </button>
   );
 };
@@ -133,7 +133,7 @@ export default function DailyParameters() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans">
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans text-xs">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
         {/* HEADER */}
@@ -177,17 +177,17 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* СЕТКА С ВЫРАВНИВАНИЕМ ПО ВЫСОТЕ */}
-        <div className="grid lg:grid-cols-3 gap-6 items-stretch">
+        {/* СЕТКА С ИЗМЕНЕННЫМИ ПРОПОРЦИЯМИ (1/4 + 3/4) */}
+        <div className="grid lg:grid-cols-4 gap-6 items-stretch">
 
-          {/* СТАТУСЫ (Левая колонка) */}
+          {/* СТАТУСЫ (Узкая колонка - col-span-1) */}
           <div className="lg:col-span-1">
-            <div className="bg-[#1a1a1d] border border-gray-800 p-6 rounded-2xl shadow-xl h-full flex flex-col">
+            <div className="bg-[#1a1a1d] border border-gray-800 p-5 rounded-2xl shadow-xl h-full flex flex-col">
               <div className="flex items-center gap-2 mb-6 text-gray-400">
-                <AlertTriangle size={16} className="text-blue-500" />
-                <h2 className="text-xs font-black uppercase tracking-widest">Основной статус</h2>
+                <AlertTriangle size={14} className="text-blue-500" />
+                <h2 className="text-[10px] font-black uppercase tracking-widest">Основной статус</h2>
               </div>
-              <div className="grid grid-cols-1 gap-3 flex-grow">
+              <div className="grid grid-cols-1 gap-2 flex-grow">
                 <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
                 <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-orange-600" />
                 <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-600" />
@@ -196,17 +196,16 @@ export default function DailyParameters() {
                 <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
               </div>
 
-              {/* ТА САМАЯ ПОДПИСЬ ДЛЯ БАЛАНСА И СМЫСЛА */}
               <div className="mt-8 pt-6 border-t border-gray-800/50 hidden lg:block">
-                <p className="text-[10px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
+                <p className="text-[9px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
                   Выбор статуса помогает системе точнее анализировать влияние внешних факторов на твою форму.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ПОКАЗАТЕЛИ (Правая колонка) */}
-          <div className="lg:col-span-2">
+          {/* ПОКАЗАТЕЛИ (Широкая колонка - col-span-3) */}
+          <div className="lg:col-span-3">
             <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
               <div className="flex items-center gap-2 text-gray-400">
                 <Settings size={16} className="text-blue-500" />
