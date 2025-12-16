@@ -7,7 +7,7 @@ import {
   Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown
 } from "lucide-react";
 
-// Импорт модального окна по твоему исправленному пути
+// Импорт модального окна
 import EditAccountModal from "../components/AccountPage/EditAccountModal";
 
 // API
@@ -118,9 +118,18 @@ export default function AccountPage() {
                 <Edit3 size={14} /> Изменить
               </button>
             </div>
-            <div className="ml-8">
-              <h3 className="text-2xl font-bold text-white tracking-tight">{profile?.name}</h3>
-              <p className="text-gray-500 text-sm mt-1 italic">Дата рождения: 10.12.1995 • Мужчина</p>
+            <div className="ml-8 space-y-4">
+              <div>
+                <h3 className="text-2xl font-bold text-white tracking-tight">{profile?.name}</h3>
+                <p className="text-gray-500 text-sm mt-1 italic">Дата рождения: 10.12.1995 • Мужчина</p>
+              </div>
+              {/* Биография */}
+              <div className="max-w-2xl">
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Биография</p>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {profile?.bio || "Информация не заполнена. Нажмите «Изменить», чтобы добавить описание."}
+                </p>
+              </div>
             </div>
           </section>
 
@@ -133,15 +142,15 @@ export default function AccountPage() {
             <div className="ml-8 grid grid-cols-1 md:grid-cols-3 gap-10">
               <div className="space-y-1">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Вид спорта</p>
-                <p className="text-white text-sm font-semibold">беговые лыжи</p>
+                <p className="text-white text-sm font-semibold">{profile?.sportType || "Не указан"}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Клуб / Команда</p>
-                <p className="text-white text-sm font-semibold">IL Aasguten ski</p>
+                <p className="text-white text-sm font-semibold">{profile?.club || "Не указан"}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Ассоциация</p>
-                <p className="text-white text-sm font-semibold">Норвежская ассоциация</p>
+                <p className="text-white text-sm font-semibold">{profile?.association || "Не указана"}</p>
               </div>
             </div>
           </section>
@@ -186,7 +195,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Вызов импортированного компонента */}
+      {/* Модальное окно */}
       <EditAccountModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
