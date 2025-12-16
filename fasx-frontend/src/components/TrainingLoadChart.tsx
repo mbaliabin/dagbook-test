@@ -25,7 +25,7 @@ const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1a1a1d]/95 backdrop-blur-md border border-gray-800 p-2.5 rounded-lg shadow-2xl">
+      <div className="bg-[#1a1a1d]/95 backdrop-blur-md border border-gray-800 p-2 rounded-lg shadow-2xl">
         <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5">{payload[0].payload.day}</p>
         <p className="text-xs font-bold text-white">
           {payload[0].value} <span className="text-blue-500 ml-0.5">км</span>
@@ -55,24 +55,24 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-5">
+      {/* Заголовок */}
+      <div className="flex items-end justify-between mb-6">
         <div>
-          <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-blue-500/90 mb-0.5">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/80 mb-1">
             Training Load
           </h2>
-          <p className="text-lg font-bold text-white tracking-tight">Активность</p>
+          <p className="text-lg font-bold text-white tracking-tight leading-none">Активность</p>
         </div>
-        <div className="flex items-center gap-1.5 bg-[#0f0f0f] px-2.5 py-1 rounded-full border border-gray-800">
-           <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-           <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Live</span>
-        </div>
+        <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest border-b border-gray-800 pb-1">
+          Километраж
+        </span>
       </div>
 
-      <div style={{ height: 220, width: "100%" }}>
+      <div style={{ height: 210, width: "100%" }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
-            margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+            margin={{ top: 10, right: 10, left: -30, bottom: 0 }}
             onMouseMove={(state) => {
               if (state.activeTooltipIndex !== undefined) {
                 setActiveIndex(state.activeTooltipIndex);
@@ -82,23 +82,23 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
           >
             <defs>
               <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.7} />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.6} />
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
               </linearGradient>
               <linearGradient id="activeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.9} />
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.2} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#2a2a2d" opacity={0.5} />
+            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#2a2a2d" opacity={0.4} />
 
             <XAxis
               dataKey="day"
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#555", fontSize: 10, fontWeight: 600 }}
-              dy={8}
+              dy={10}
             />
 
             <YAxis
@@ -110,13 +110,14 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
             <Tooltip
               content={<CustomTooltip />}
               cursor={{ fill: "rgba(255,255,255,0.02)" }}
-              animationDuration={200}
+              animationDuration={150}
             />
 
             <Bar
               dataKey="load"
               radius={[4, 4, 0, 0]}
-              barSize={28}
+              barSize={26}
+              isAnimationActive={true}
             >
               {data.map((entry, index) => (
                 <Cell
