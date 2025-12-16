@@ -177,7 +177,7 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* СЕТКА С ВЫРАВНИВАНИЕМ ПО ВЫСОТЕ (items-stretch) */}
+        {/* СЕТКА С ВЫРАВНИВАНИЕМ ПО ВЫСОТЕ */}
         <div className="grid lg:grid-cols-3 gap-6 items-stretch">
 
           {/* СТАТУСЫ (Левая колонка) */}
@@ -187,13 +187,20 @@ export default function DailyParameters() {
                 <AlertTriangle size={16} className="text-blue-500" />
                 <h2 className="text-xs font-black uppercase tracking-widest">Основной статус</h2>
               </div>
-              <div className="grid grid-cols-1 gap-3 flex-grow text-center items-center">
+              <div className="grid grid-cols-1 gap-3 flex-grow">
                 <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
                 <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-orange-600" />
                 <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-600" />
                 <SingleSelectButton id="hoydedogn" label="Часовой пояс" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-600" />
                 <SingleSelectButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-600" />
-                <SingleSelectButton id="konkurranse" label="Старт" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
+                <SingleSelectButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
+              </div>
+
+              {/* ТА САМАЯ ПОДПИСЬ ДЛЯ БАЛАНСА И СМЫСЛА */}
+              <div className="mt-8 pt-6 border-t border-gray-800/50 hidden lg:block">
+                <p className="text-[10px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
+                  Выбор статуса помогает системе точнее анализировать влияние внешних факторов на твою форму.
+                </p>
               </div>
             </div>
           </div>
