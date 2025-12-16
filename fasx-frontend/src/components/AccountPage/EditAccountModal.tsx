@@ -31,7 +31,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
         </Dialog.Title>
 
         <form className="space-y-8">
-          {/* Блок: Имя и Фамилия */}
+          {/* Имя и Фамилия */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя</label>
@@ -51,17 +51,17 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
             </div>
           </div>
 
-          {/* Блок: Биография */}
+          {/* Биография */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Биография</label>
             <textarea
               rows={3}
-              placeholder="Расскажите немного о себе, своих целях или достижениях..."
+              placeholder="Расскажите немного о себе..."
               className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all resize-none"
             />
           </div>
 
-          {/* Блок: Дата и Пол */}
+          {/* Дата и Пол */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Дата рождения</label>
@@ -83,7 +83,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
 
           <div className="h-px bg-gray-800 my-4" />
 
-          {/* Настройки обучения */}
+          {/* Спортивные данные */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Спортивные данные</h3>
 
@@ -102,7 +102,6 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
                   <option>ФЛГР</option>
                   <option>ВФЛА</option>
                   <option>ФВСР</option>
-                  <option>Другая</option>
                 </select>
               </div>
             </div>
@@ -113,7 +112,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                 <input
                   type="text"
-                  placeholder="Введите название вашего клуба или команды"
+                  placeholder="Введите название вашего клуба"
                   className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
                 />
               </div>
@@ -135,6 +134,23 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Чекбокс уведомлений (добавлен обратно) */}
+          <div className="pt-4 border-t border-gray-800">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  defaultChecked
+                  className="peer h-6 w-6 appearance-none rounded-lg border border-gray-700 bg-[#2a2a2d] checked:bg-blue-600 checked:border-blue-600 transition-all"
+                />
+                <Check className="absolute h-6 w-6 text-white scale-0 peer-checked:scale-75 transition-transform pointer-events-none" />
+              </div>
+              <span className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
+                Уведомлять тренера о прошедших тренировках
+              </span>
+            </label>
           </div>
 
           {/* Кнопки */}
