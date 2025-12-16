@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
 import { X, Search, RotateCcw, Check } from "lucide-react";
 
@@ -6,16 +6,91 @@ interface EditAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile?: any;
+  onUpdate: () => void;
 }
 
-export default function EditAccountModal({ isOpen, onClose, profile }: EditAccountModalProps) {
-  const hrZones = [
-    { id: 'I1', color: "bg-green-500", range: '118 - 143' },
-    { id: 'I2', color: "bg-lime-400", range: '143 - 161' },
-    { id: 'I3', color: "bg-yellow-400", range: '161 - 171' },
-    { id: 'I4', color: "bg-orange-400", range: '171 - 181' },
-    { id: 'I5', color: "bg-red-500", range: '181 - 200' },
-  ];
+export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }: EditAccountModalProps) {
+  // Состояния для управления полями формы
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [bio, setBio] = useState("");
+  const [gender, setGender] = useState("Мужчина");
+  const [sportType, setSportType] = useState("Лыжные гонки");
+  const [association, setAssociation] = useState("ФЛГР");
+  const [club, setClub] = useState("");
+  const [hrZones, setHrZones] = useState({
+    I1: "", I2: "", I3: "", I4: "", I5: ""
+  });
+
+  // Синхронизация данных из БД с состоянием формы при открытии модалки
+  useEffect(() => {
+    if (profile && isOpen) {
+      const names = profile.name?.split(" ") || ["", ""];
+      setFirstName(names[0] || "");
+      setLastName(names.slice(1).join(" ") || ""); // На случай фамилий из нескольких слов
+      setBio(profile.profile?.bio || "");
+      setGender(profile.profile?.gender || "Мужчина");
+      setSportType(profile.profile?.sportType || "Лыжные гонки");
+      setAssociation(profile.profile?.association || "ФЛГР");
+      setClub(profile.profile?.club || "");
+
+      // Если зоны в базе есть, берем их, иначе пустые строки
+      if (profile.profile?.hrZones) {
+        setHrZones(profile.profile.hrZones);
+      }
+    }
+  }, [profile, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Сессия истекла. Пожалуйста, войдите снова.");
+      return;
+    }
+
+    try {
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      // Запрос на твой бэкенд (ПОРТ 4000)
+      const response = await fetch("http://localhost:4000/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: fullName,
+          bio,
+          gender,
+          sportType,
+          club,
+          association,
+          hrZones
+        })
+      });
+
+      if (response.ok) {
+        onUpdate(); // Вызываем fetchProfile на главной странице для обновления данных
+        onClose();   // Закрываем модальное окно
+      } else {
+        const errorData = await response.json();
+        alert(`Ошибка: ${errorData.error || "Не удалось сохранить изменения"}`);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Не удалось связаться с сервером (порт 4000)");
+    }
+  };
+
+  const zoneColors: Record<string, string> = {
+    I1: "bg-green-500",
+    I2: "bg-lime-400",
+    I3: "bg-yellow-400",
+    I4: "bg-orange-400",
+    I5: "bg-red-500",
+  };
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
@@ -30,39 +105,55 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
           Изменить мою информацию
         </Dialog.Title>
 
-        <form className="space-y-8">
-          {/* Имя и Фамилия */}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Секция: Имя и Фамилия */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя</label>
               <input
                 type="text"
-                defaultValue={profile?.name?.split(' ')[0] || ""}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
+                required
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Фамилия</label>
               <input
                 type="text"
-                defaultValue={profile?.name?.split(' ')[1] || ""}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
               />
             </div>
           </div>
 
-          {/* Биография */}
+          {/* Секция: Биография */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Биография</label>
             <textarea
               rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
               placeholder="Расскажите немного о себе..."
               className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all resize-none"
             />
           </div>
 
-          {/* Дата и Пол */}
+          {/* Секция: Пол и Дата рождения */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пол</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 appearance-none cursor-pointer"
+              >
+                <option value="Мужчина">Мужчина</option>
+                <option value="Женщина">Женщина</option>
+              </select>
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Дата рождения</label>
               <input
@@ -72,36 +163,39 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
                 className="w-full p-3 rounded-xl bg-[#141416] border border-gray-800 text-gray-500 cursor-not-allowed italic"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пол</label>
-              <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 appearance-none cursor-pointer">
-                <option>Мужчина</option>
-                <option>Женщина</option>
-              </select>
-            </div>
           </div>
 
           <div className="h-px bg-gray-800 my-4" />
 
-          {/* Спортивные данные */}
+          {/* Секция: Спортивные данные */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Спортивные данные</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Вид спорта</label>
-                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer">
-                  <option>Лыжные гонки</option>
-                  <option>Легкая атлетика</option>
-                  <option>Велоспорт</option>
+                <select
+                  value={sportType}
+                  onChange={(e) => setSportType(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="Лыжные гонки">Лыжные гонки</option>
+                  <option value="Легкая атлетика">Легкая атлетика</option>
+                  <option value="Велоспорт">Велоспорт</option>
+                  <option value="Плавание">Плавание</option>
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ассоциация</label>
-                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer">
-                  <option>ФЛГР</option>
-                  <option>ВФЛА</option>
-                  <option>ФВСР</option>
+                <select
+                  value={association}
+                  onChange={(e) => setAssociation(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="ФЛГР">ФЛГР</option>
+                  <option value="ВФЛА">ВФЛА</option>
+                  <option value="ФВСР">ФВСР</option>
+                  <option value="Нет">Нет</option>
                 </select>
               </div>
             </div>
@@ -112,23 +206,29 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                 <input
                   type="text"
-                  placeholder="Введите название вашего клуба"
+                  value={club}
+                  onChange={(e) => setClub(e.target.value)}
+                  placeholder="Например: Top Team"
                   className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
                 />
               </div>
             </div>
 
-            {/* Зоны ЧСС */}
+            {/* Зоны ЧСС (интерактивные инпуты) */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Зоны ЧСС</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Зоны ЧСС (уд/мин)</label>
               <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
-                {hrZones.map(z => (
-                  <div key={z.id} className="flex flex-col">
-                    <div className={`${z.color} py-1 text-center text-[10px] font-black text-[#1a1a1d]`}>{z.id}</div>
+                {Object.keys(hrZones).map((zoneKey) => (
+                  <div key={zoneKey} className="flex flex-col">
+                    <div className={`${zoneColors[zoneKey]} py-1 text-center text-[10px] font-black text-[#1a1a1d]`}>
+                      {zoneKey}
+                    </div>
                     <input
                       type="text"
-                      defaultValue={z.range}
-                      className="bg-[#2a2a2d] text-white text-center py-2 text-xs outline-none border-t border-gray-800"
+                      value={(hrZones as any)[zoneKey]}
+                      onChange={(e) => setHrZones({...hrZones, [zoneKey]: e.target.value})}
+                      placeholder="---"
+                      className="bg-[#2a2a2d] text-white text-center py-2 text-xs outline-none border-t border-gray-800 focus:bg-[#323235] transition-colors"
                     />
                   </div>
                 ))}
@@ -136,24 +236,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
             </div>
           </div>
 
-          {/* Чекбокс уведомлений (добавлен обратно) */}
-          <div className="pt-4 border-t border-gray-800">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="peer h-6 w-6 appearance-none rounded-lg border border-gray-700 bg-[#2a2a2d] checked:bg-blue-600 checked:border-blue-600 transition-all"
-                />
-                <Check className="absolute h-6 w-6 text-white scale-0 peer-checked:scale-75 transition-transform pointer-events-none" />
-              </div>
-              <span className="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
-                Уведомлять тренера о прошедших тренировках
-              </span>
-            </label>
-          </div>
-
-          {/* Кнопки */}
+          {/* Кнопки действий */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
             <button
               type="button"

@@ -22,37 +22,40 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        console.log("Загруженные данные профиля:", data); // Отладка в консоли
-        setProfile(data);
-      } catch (err) {
-        console.error("Ошибка профиля:", err);
-        if (err instanceof Error && err.message.includes("авторизации")) {
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
+  // Функция для повторной загрузки или обновления стейта после редактирования
+  const fetchProfile = async () => {
+    try {
+      const data = await getUserProfile();
+      console.log("Загруженные данные профиля:", data);
+      setProfile(data);
+    } catch (err) {
+      console.error("Ошибка профиля:", err);
+      if (err instanceof Error && err.message.includes("авторизации")) {
+        navigate('/login');
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProfile();
   }, [navigate]);
+
+  // Формируем массив зон на основе данных из БД или дефолтных значений
+  const hrZonesData = [
+    { label: 'I1', range: profile?.profile?.hrZones?.I1 || '---', color: '#4ade80' },
+    { label: 'I2', range: profile?.profile?.hrZones?.I2 || '---', color: '#22d3ee' },
+    { label: 'I3', range: profile?.profile?.hrZones?.I3 || '---', color: '#facc15' },
+    { label: 'I4', range: profile?.profile?.hrZones?.I4 || '---', color: '#fb923c' },
+    { label: 'I5', range: profile?.profile?.hrZones?.I5 || '---', color: '#ef4444' },
+  ];
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
     { label: "Тренировки", icon: BarChart3, path: "/profile" },
     { label: "Планирование", icon: ClipboardList, path: "/planning" },
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
-
-  const hrZones = [
-    { label: 'I1', range: '118 - 143', color: '#4ade80' },
-    { label: 'I2', range: '143 - 161', color: '#22d3ee' },
-    { label: 'I3', range: '161 - 171', color: '#facc15' },
-    { label: 'I4', range: '171 - 181', color: '#fb923c' },
-    { label: 'I5', range: '181 - 200', color: '#ef4444' },
   ];
 
   const handleLogout = () => {
@@ -76,7 +79,6 @@ export default function AccountPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            {/* Аватарка в хедере: фото или инициал */}
             {profile?.avatarUrl ? (
               <img src={profile.avatarUrl} className="w-12 h-12 rounded-full object-cover border border-gray-800" alt="Avatar" />
             ) : (
@@ -137,7 +139,7 @@ export default function AccountPage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-10">
-              {/* БОЛЬШОЕ ФОТО ПРОФИЛЯ */}
+              {/* ФОТО ПРОФИЛЯ */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group">
                   <div className="w-32 h-32 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-gray-800 shadow-2xl group-hover:border-blue-500 transition-all duration-300">
@@ -151,9 +153,6 @@ export default function AccountPage() {
                     </div>
                   </div>
                 </div>
-                <button className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1.5">
-                  <Edit3 size={12} /> Изменить фото
-                </button>
               </div>
 
               {/* ТЕКСТ: ИМЯ, БИО */}
@@ -163,16 +162,14 @@ export default function AccountPage() {
                     {profile?.name || "Имя не указано"}
                   </h3>
                   <p className="text-gray-500 text-sm mt-1 flex items-center justify-center md:justify-start gap-2">
-                    <span>10.12.1995</span>
-                    <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
-                    <span>Мужчина</span>
+                    <span>{profile?.profile?.gender || "Пол не указан"}</span>
                   </p>
                 </div>
 
                 <div className="max-w-2xl mx-auto md:mx-0">
                   <p className="text-[10px] text-gray-500 uppercase font-black tracking-[0.15em] mb-2">Биография</p>
                   <p className="text-gray-400 text-sm leading-relaxed italic bg-[#1f1f22]/30 p-5 rounded-xl border border-gray-800/50 min-h-[80px]">
-                    {profile?.bio || "Информация о себе еще не добавлена."}
+                    {profile?.profile?.bio || "Информация о себе еще не добавлена."}
                   </p>
                 </div>
               </div>
@@ -188,27 +185,27 @@ export default function AccountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:ml-8">
               <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Вид спорта</p>
-                <p className="text-white text-base font-semibold">{profile?.sportType || "Не указан"}</p>
+                <p className="text-white text-base font-semibold">{profile?.profile?.sportType || "Не указан"}</p>
               </div>
               <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Название клуба</p>
-                <p className="text-white text-base font-semibold">{profile?.club || "Не указан"}</p>
+                <p className="text-white text-base font-semibold">{profile?.profile?.club || "Не указан"}</p>
               </div>
               <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Ассоциация</p>
-                <p className="text-white text-base font-semibold">{profile?.association || "Не указана"}</p>
+                <p className="text-white text-base font-semibold">{profile?.profile?.association || "Не указана"}</p>
               </div>
             </div>
           </section>
 
-          {/* 3. Зоны интенсивности */}
+          {/* 3. Зоны интенсивности (ДИНАМИЧЕСКИЕ) */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-8 border-b border-gray-800 pb-4">
               <Heart size={18} className="text-blue-500" />
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Зоны интенсивности (ЧСС)</h2>
             </div>
             <div className="md:ml-8 flex flex-wrap gap-3">
-              {hrZones.map((z) => (
+              {hrZonesData.map((z) => (
                 <div key={z.label} className="flex items-center bg-[#0f0f0f] border border-gray-800 rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105 cursor-default">
                   <span style={{ backgroundColor: z.color }} className="px-4 py-2 text-[11px] font-black text-black uppercase">
                     {z.label}
@@ -234,7 +231,7 @@ export default function AccountPage() {
               <div className="bg-[#1f1f22]/30 border border-dashed border-gray-700 p-10 rounded-2xl text-center">
                 <p className="text-sm text-gray-500 italic mb-5">У вас пока нет привязанных тренеров.</p>
                 <button className="inline-flex items-center gap-2 border border-blue-600/30 bg-blue-600/10 hover:bg-blue-600/20 px-6 py-3 rounded-xl text-[11px] text-blue-400 font-bold uppercase tracking-widest transition-all">
-                  <Plus size={16} /> Добавить тренера / Предоставить доступ
+                  <Plus size={16} /> Добавить тренера
                 </button>
               </div>
             </div>
@@ -243,11 +240,12 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Модальное окно */}
+      {/* Модальное окно — передаем профиль и функцию обновления */}
       <EditAccountModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         profile={profile}
+        onUpdate={fetchProfile} // Передаем функцию перезагрузки данных
       />
     </div>
   );
