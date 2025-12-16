@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
   Home, BarChart3, ClipboardList, CalendarDays,
-  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, Camera
+  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, Camera,
+  Shield, Activity, Globe
 } from "lucide-react";
 
 // Импорт модального окна
@@ -70,7 +71,7 @@ export default function AccountPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 font-sans">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 font-sans antialiased">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
         {/* HEADER */}
@@ -99,7 +100,7 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* NAVIGATION */}
+        {/* NAVIGATION MENU */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -119,10 +120,10 @@ export default function AccountPage() {
           })}
         </div>
 
-        {/* MAIN CARD */}
-        <div className="bg-[#1a1a1d] rounded-xl border border-gray-700 p-6 md:p-10 space-y-12">
+        {/* CONTENT CARD */}
+        <div className="bg-[#1a1a1d] rounded-xl border border-gray-700 p-6 md:p-10 space-y-12 shadow-lg">
 
-          {/* 1. ПЕРСОНАЛЬНО */}
+          {/* 1. ПЕРСОНАЛЬНАЯ ИНФОРМАЦИЯ */}
           <section>
             <div className="flex items-center justify-between mb-8 border-b border-gray-700 pb-4">
               <div className="flex items-center gap-2">
@@ -139,7 +140,7 @@ export default function AccountPage() {
 
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="relative group mx-auto md:mx-0">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl overflow-hidden border border-gray-700">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl overflow-hidden border border-gray-700 bg-[#0e0e10]">
                   <img src={profile?.avatarUrl || "/profile.jpg"} alt="Avatar" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
                     <Camera className="text-white w-8 h-8" />
@@ -147,41 +148,52 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              <div className="flex-1 space-y-4 text-center md:text-left">
+              <div className="flex-1 space-y-4 text-center md:text-left w-full">
                 <h3 className="text-3xl font-bold">{profile?.name || "—"}</h3>
                 <p className="text-blue-500 text-sm font-medium">{profile?.profile?.gender || "Пол не указан"}</p>
 
-                <div className="bg-[#111113] p-4 rounded-lg border border-gray-800">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Биография</p>
+                <div className="bg-[#0e0e10] p-4 rounded-lg border border-gray-800">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-2 tracking-widest">Биография</p>
                   <p className="text-sm text-gray-300 leading-relaxed italic">
-                    {profile?.profile?.bio || "Информация отсутствует"}
+                    {profile?.profile?.bio || "Информация о себе не добавлена."}
                   </p>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* 2. СПОРТ */}
+          {/* 2. СПОРТИВНАЯ ИНФОРМАЦИЯ (В СТОЛБИК) */}
           <section>
-            <div className="flex items-center gap-2 mb-8 border-b border-gray-700 pb-4">
+            <div className="flex items-center gap-2 mb-6 border-b border-gray-700 pb-4">
               <Trophy size={18} className="text-blue-500" />
-              <h2 className="text-sm font-bold uppercase tracking-wider">Спорт</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider">Спортивная информация</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className="bg-[#1f1f22] rounded-lg border border-gray-700 overflow-hidden max-w-2xl">
               {[
-                { label: 'Вид спорта', value: profile?.profile?.sportType },
-                { label: 'Клуб', value: profile?.profile?.club },
-                { label: 'Ассоциация', value: profile?.profile?.association }
-              ].map((item, i) => (
-                <div key={i} className="bg-[#1f1f22] p-4 rounded-lg border border-gray-700">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">{item.label}</p>
-                  <p className="text-lg font-semibold">{item.value || "—"}</p>
+                { label: 'Вид спорта', value: profile?.profile?.sportType, icon: Activity },
+                { label: 'Клуб / Команда', value: profile?.profile?.club, icon: Shield },
+                { label: 'Ассоциация', value: profile?.profile?.association, icon: Globe }
+              ].map((item, i, arr) => (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between p-5 ${i !== arr.length - 1 ? 'border-b border-gray-700' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon size={16} className="text-gray-500" />
+                    <span className="text-xs text-gray-500 uppercase font-bold tracking-tight">
+                      {item.label}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">
+                    {item.value || "—"}
+                  </span>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* 3. ЗОНЫ */}
+          {/* 3. ЗОНЫ ИНТЕНСИВНОСТИ */}
           <section>
             <div className="flex items-center gap-2 mb-8 border-b border-gray-700 pb-4">
               <Heart size={18} className="text-blue-500" />
@@ -193,7 +205,7 @@ export default function AccountPage() {
                   <div style={{ backgroundColor: z.color }} className="px-3 py-2 text-xs font-bold text-black uppercase">
                     {z.label}
                   </div>
-                  <div className="px-4 py-2 text-sm font-bold border-l border-gray-700">
+                  <div className="px-4 py-2 text-sm font-bold border-l border-gray-700 min-w-[100px] text-center">
                     {z.range} <span className="text-[10px] text-gray-500 ml-1">BPM</span>
                   </div>
                 </div>
@@ -201,7 +213,7 @@ export default function AccountPage() {
             </div>
           </section>
 
-          {/* 4. ТРЕНЕРЫ */}
+          {/* 4. МОИ ТРЕНЕРЫ */}
           <section>
             <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
               <div className="flex items-center gap-2">
@@ -210,9 +222,9 @@ export default function AccountPage() {
               </div>
               <ChevronDown size={20} className="text-gray-500" />
             </div>
-            <div className="bg-[#1a1a1d] border border-dashed border-gray-700 p-8 rounded-lg text-center">
-              <p className="text-sm text-gray-500 mb-4 italic">Список тренеров пуст</p>
-              <button className="text-blue-500 text-xs font-bold uppercase border border-blue-500/30 px-4 py-2 rounded hover:bg-blue-500/10 transition-all">
+            <div className="bg-[#0e0e10] border border-dashed border-gray-700 p-8 rounded-lg text-center">
+              <p className="text-sm text-gray-500 mb-4 italic">У вас пока нет привязанных тренеров</p>
+              <button className="text-blue-500 text-[10px] font-black uppercase border border-blue-500/30 px-5 py-2 rounded hover:bg-blue-500/10 transition-all tracking-widest">
                 Добавить тренера
               </button>
             </div>
