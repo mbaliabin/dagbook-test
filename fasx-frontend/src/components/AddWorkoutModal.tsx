@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
-import { X, Trophy, Calendar, MessageSquare, Activity, Timer, Ruler, Check } from "lucide-react";
+import { X, Check } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface AddWorkoutModalProps {
@@ -54,7 +54,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
       return;
     }
 
-    const loadingToast = toast.loading("Сохранение тренировки...");
+    const loadingToast = toast.loading("Сохранение...");
 
     const workoutData = {
       name: title,
@@ -84,17 +84,16 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
         body: JSON.stringify(workoutData),
       });
 
-      if (!response.ok) {
-        toast.error("Ошибка при сохранении", { id: loadingToast });
-        return;
+      if (response.ok) {
+        const result = await response.json();
+        toast.success("Тренировка добавлена!", { id: loadingToast });
+        onAddWorkout(result);
+        onClose();
+      } else {
+        toast.error("Ошибка сохранения", { id: loadingToast });
       }
-
-      const result = await response.json();
-      toast.success("Тренировка добавлена!", { id: loadingToast });
-      onAddWorkout(result);
-      onClose();
     } catch (error) {
-      toast.error("Ошибка соединения", { id: loadingToast });
+      toast.error("Ошибка сети", { id: loadingToast });
     }
   };
 
@@ -105,33 +104,34 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
 
-      <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-8 rounded-2xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800 scrollbar-hide">
+      <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[95vh] overflow-y-auto p-6 md:p-8 rounded-2xl w-[95%] max-w-xl z-50 text-white shadow-2xl border border-gray-800 scrollbar-hide">
         <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors">
-          <X size={24} />
+          <X size={22} />
         </button>
 
-        <Dialog.Title className="text-xl font-bold mb-8 text-white tracking-tight">
+        <Dialog.Title className="text-lg font-bold mb-6 text-white tracking-tight">
           Добавить тренировку
         </Dialog.Title>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Название и Дата */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Название</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Название</label>
               <input
                 type="text"
-                className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full p-2.5 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm text-white outline-none focus:border-blue-500 transition-all"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Утренняя пробежка"
+                placeholder="Пробежка..."
                 required
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Дата</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Дата</label>
               <input
                 type="date"
-                className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full p-2.5 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm text-white outline-none focus:border-blue-500 transition-all color-scheme-dark"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -140,9 +140,9 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Тип тренировки</label>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Вид спорта</label>
             <select
-              className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 appearance-none cursor-pointer"
+              className="w-full p-2.5 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm text-white outline-none focus:border-blue-500 appearance-none cursor-pointer"
               value={type}
               onChange={(e) => setType(e.target.value)}
               required
@@ -151,25 +151,24 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
               <option value="Running">Бег</option>
               <option value="XC_Skiing_Classic">Лыжи, классика</option>
               <option value="XC_Skiing_Skate">Лыжи, свободный стиль</option>
-              <option value="RollerSki_Classic">Роллеры, классика</option>
-              <option value="RollerSki_Skate">Лыжероллеры, свободный стиль</option>
               <option value="StrengthTraining">Силовая тренировка</option>
               <option value="Bike">Велосипед</option>
               <option value="Other">Другое</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between">
-                Нагрузка <span>{effort || '-'}</span>
+          {/* Шкалы: Сначала Самочувствие, потом Нагрузка */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex justify-between">
+                Самочувствие <span className="text-green-400">{feeling || '-'}</span>
               </label>
               <div className="flex gap-1">
                 {[...Array(10)].map((_, i) => (
                   <button
                     type="button" key={i}
-                    onClick={() => setEffort(i + 1)}
-                    className={`flex-1 h-8 rounded-lg text-[10px] font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
+                    onClick={() => setFeeling(i + 1)}
+                    className={`flex-1 h-7 rounded-lg text-[10px] font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
                   >
                     {i + 1}
                   </button>
@@ -177,16 +176,16 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between">
-                Самочувствие <span>{feeling || '-'}</span>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex justify-between">
+                Нагрузка <span className="text-blue-400">{effort || '-'}</span>
               </label>
               <div className="flex gap-1">
                 {[...Array(10)].map((_, i) => (
                   <button
                     type="button" key={i}
-                    onClick={() => setFeeling(i + 1)}
-                    className={`flex-1 h-8 rounded-lg text-[10px] font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
+                    onClick={() => setEffort(i + 1)}
+                    className={`flex-1 h-7 rounded-lg text-[10px] font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white" : "bg-[#2a2a2d] text-gray-400 hover:bg-[#323235]"}`}
                   >
                     {i + 1}
                   </button>
@@ -195,12 +194,13 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Интенсивность по зонам (мин)</label>
-            <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
+          {/* Зоны (Стиль как в аккаунте) */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Зоны интенсивности (мин)</label>
+            <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800 shadow-inner">
               {zones.map((val, idx) => (
                 <div key={idx} className="flex flex-col">
-                  <div className={`${zoneColors[idx]} py-1 text-center text-[10px] font-black text-[#1a1a1d]`}>
+                  <div className={`${zoneColors[idx]} py-1 text-center text-[9px] font-black text-[#1a1a1d]`}>
                     {zoneLabels[idx]}
                   </div>
                   <input
@@ -215,47 +215,50 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#141416] p-4 rounded-xl border border-gray-800">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Общая длительность</label>
-              <div className="text-xl font-bold text-blue-500">{formattedDuration}</div>
+          {/* Итоги (компактно) */}
+          <div className="grid grid-cols-2 gap-4 bg-[#141416] p-3 rounded-xl border border-gray-800">
+            <div>
+              <label className="text-[9px] font-bold text-gray-600 uppercase">Длительность</label>
+              <div className="text-sm font-bold text-blue-400">{formattedDuration}</div>
             </div>
             {(type !== "StrengthTraining" && type !== "Other") && (
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase">Дистанция (км)</label>
+              <div className="flex flex-col">
+                <label className="text-[9px] font-bold text-gray-600 uppercase text-right">Дистанция (км)</label>
                 <input
                   type="number" step={0.1}
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
-                  className="w-full bg-transparent text-xl font-bold text-white outline-none border-b border-gray-800 focus:border-blue-500"
+                  placeholder="0.0"
+                  className="bg-transparent text-sm font-bold text-white outline-none text-right placeholder:text-gray-800"
                 />
               </div>
             )}
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Комментарий</label>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Комментарий</label>
             <textarea
               rows={2}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all resize-none"
+              className="w-full p-2.5 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm text-white outline-none focus:border-blue-500 transition-all resize-none"
+              placeholder="..."
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 bg-[#2a2a2d] text-gray-300 rounded-xl hover:bg-[#323235] transition-colors text-sm font-semibold"
+              className="px-5 py-2 bg-[#2a2a2d] text-gray-400 rounded-xl hover:bg-[#323235] transition-colors text-xs font-semibold"
             >
               Отмена
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/20 text-sm font-bold"
+              className="px-8 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/20 text-xs font-bold flex items-center gap-2"
             >
-              <Check size={18} /> Сохранить
+              <Check size={14} /> Сохранить
             </button>
           </div>
         </form>
@@ -267,6 +270,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
         .no-spinner::-webkit-inner-spin-button {
           -webkit-appearance: none; margin: 0;
         }
+        .color-scheme-dark { color-scheme: dark; }
       `}</style>
     </Dialog>
   );
