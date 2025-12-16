@@ -11,7 +11,8 @@ import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.locale("ru");
 
-// Унифицированный компонент кнопок оценки (1-10)
+// --- ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ (Твои оригинальные размеры) ---
+
 const TenButtons = ({ value, onChange, Icon }: { value: number; onChange: (val: number) => void; Icon: any }) => (
   <div className="flex flex-wrap gap-2 md:gap-3">
     {[...Array(10)].map((_, i) => {
@@ -33,13 +34,12 @@ const TenButtons = ({ value, onChange, Icon }: { value: number; onChange: (val: 
   </div>
 );
 
-// Унифицированная кнопка выбора статуса
 const SingleSelectButton = ({ id, label, Icon, activeId, onClick, activeColor }: any) => {
   const isActive = activeId === id;
   return (
     <button
       onClick={() => onClick(id === activeId ? null : id)}
-      className={`px-4 py-4 rounded-2xl flex items-center space-x-3 transition-all border ${
+      className={`px-4 py-4 rounded-2xl flex items-center space-x-3 transition-all border w-full ${
         isActive
           ? `${activeColor} border-transparent shadow-lg scale-[1.02]`
           : "bg-[#0f0f0f] border-gray-800 hover:border-gray-700 text-gray-400"
@@ -52,6 +52,8 @@ const SingleSelectButton = ({ id, label, Icon, activeId, onClick, activeColor }:
     </button>
   );
 };
+
+// --- ОСНОВНОЙ КОМПОНЕНТ ---
 
 export default function DailyParameters() {
   const navigate = useNavigate();
@@ -134,7 +136,7 @@ export default function DailyParameters() {
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
-        {/* HEADER (Как в Profile/Stats) */}
+        {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden border border-gray-800">
@@ -175,15 +177,17 @@ export default function DailyParameters() {
           })}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* СТАТУСЫ (Левая колонка или верх) */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-[#1a1a1d] border border-gray-800 p-6 rounded-2xl shadow-xl">
+        {/* СЕТКА С ВЫРАВНИВАНИЕМ ПО ВЫСОТЕ (items-stretch) */}
+        <div className="grid lg:grid-cols-3 gap-6 items-stretch">
+
+          {/* СТАТУСЫ (Левая колонка) */}
+          <div className="lg:col-span-1">
+            <div className="bg-[#1a1a1d] border border-gray-800 p-6 rounded-2xl shadow-xl h-full flex flex-col">
               <div className="flex items-center gap-2 mb-6 text-gray-400">
                 <AlertTriangle size={16} className="text-blue-500" />
                 <h2 className="text-xs font-black uppercase tracking-widest">Основной статус</h2>
               </div>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-3 flex-grow text-center items-center">
                 <SingleSelectButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
                 <SingleSelectButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-orange-600" />
                 <SingleSelectButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-600" />
@@ -195,16 +199,14 @@ export default function DailyParameters() {
           </div>
 
           {/* ПОКАЗАТЕЛИ (Правая колонка) */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Settings size={16} className="text-blue-500" />
-                  <h2 className="text-xs font-black uppercase tracking-widest">Параметры готовности</h2>
-                </div>
+          <div className="lg:col-span-2">
+            <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
+              <div className="flex items-center gap-2 text-gray-400">
+                <Settings size={16} className="text-blue-500" />
+                <h2 className="text-xs font-black uppercase tracking-widest">Параметры готовности</h2>
               </div>
 
-              <div className="grid gap-8">
+              <div className="grid gap-8 flex-grow">
                 <section className="space-y-3">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                     <User size={14}/> Физическая готовность
@@ -250,12 +252,15 @@ export default function DailyParameters() {
                 </section>
               </div>
 
-              <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/30 active:scale-[0.98]">
-                <CheckCircle2 size={20} />
-                Сохранить параметры
-              </button>
+              <div className="pt-4">
+                <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/30 active:scale-[0.98]">
+                  <CheckCircle2 size={20} />
+                  Сохранить параметры
+                </button>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
