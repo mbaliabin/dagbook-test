@@ -1,115 +1,143 @@
-import React from "react";
-import { X, Search } from "lucide-react";
+import React from 'react';
+import { X, Search, RotateCcw, Check } from 'lucide-react';
 
-export const EditProfileModal = ({ isOpen, onClose, initialData }) => {
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profile?: any;
+}
+
+const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, profile }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#1a1a1d] w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-800 shadow-2xl flex flex-col">
+  const hrZones = [
+    { id: 'I1', color: '#bbf7d0', range: '118 - 143' },
+    { id: 'I2', color: '#86efac', range: '143 - 161' },
+    { id: 'I3', color: '#fef08a', range: '161 - 171' },
+    { id: 'I4', color: '#fed7aa', range: '171 - 181' },
+    { id: 'I5', color: '#fca5a5', range: '181 - 200' },
+  ];
 
-        {/* HEADER */}
-        <div className="bg-[#2a2a2d] p-4 flex justify-between items-center border-b border-gray-800">
-          <h2 className="text-xl font-bold text-white">Изменить мою информацию</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white w-full max-w-[550px] max-h-[95vh] overflow-y-auto rounded shadow-2xl flex flex-col text-[#555555]">
+
+        {/* Шапка модалки */}
+        <div className="bg-[#333333] text-white px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-medium">Изменить мою информацию</h2>
+          <button onClick={onClose} className="hover:opacity-70 transition-opacity">
             <X size={24} />
           </button>
         </div>
 
-        {/* CONTENT */}
-        <div className="p-6 space-y-6 text-sm">
+        <div className="p-8 space-y-6">
+          {/* Имя / Фамилия */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Имя</label>
+              <input type="text" defaultValue="Maksim Igorevich" className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-blue-500" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Фамилия</label>
+              <input type="text" defaultValue="Balyabin" className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-blue-500" />
+            </div>
+          </div>
 
-          {/* ОСНОВНАЯ ИНФОРМАЦИЯ */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-gray-500 ml-1">Имя</label>
-              <input type="text" className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none" defaultValue="Maksim Igorevich" />
+          {/* Рождение / Секс */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Дата рождения</label>
+              <input type="text" value="1995-12-10" readOnly className="w-full border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-400 cursor-not-allowed" />
+              <p className="text-[10px] leading-tight text-gray-400 mt-1">Эта информация получена из регистра населения и не может быть изменена.</p>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-gray-500 ml-1">Фамилия</label>
-              <input type="text" className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none" defaultValue="Balyabin" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-gray-500 ml-1">Дата рождения</label>
-              <input type="text" className="w-full bg-[#0f0f0f]/50 border border-gray-800 rounded-lg px-3 py-2 text-gray-500 cursor-not-allowed" value="1995-12-10" readOnly />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-gray-500 ml-1">Секс</label>
-              <select className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none appearance-none">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Секс</label>
+              <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none bg-white">
                 <option>Мужчина</option>
                 <option>Женщина</option>
               </select>
             </div>
           </div>
 
-          <hr className="border-gray-800" />
+          <hr className="border-gray-100" />
 
-          {/* НАСТРОЙКИ ОБУЧЕНИЯ */}
+          {/* Настройки обучения */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">Настройки обучения</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Настройки обучения</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-gray-400 text-xs">Спорт</label>
-                <select className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-white outline-none">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Спорт</label>
+                <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white">
                   <option>беговые лыжи</option>
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-gray-400 text-xs">Специальная ассоциация</label>
-                <select className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-white outline-none">
-                  <option>Норвежская лыжная...</option>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Специальная ассоциация</label>
+                <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white">
+                  <option>Норвежская лыжная ассоциация</option>
                 </select>
               </div>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
-              <input type="text" placeholder="IL Aasguten ski" className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg pl-10 pr-3 py-2 text-white outline-none" />
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                <input type="text" defaultValue="IL Aasguten ski" className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 text-sm" />
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                <input type="text" defaultValue="Østerår ungdomskole" className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 text-sm" />
+              </div>
+            </div>
+
+            {/* Таблица пульсовых зон */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold">Мои зоны частоты сердечных сокращений</label>
+              <div className="border border-gray-300 rounded overflow-hidden">
+                <div className="grid grid-cols-5 text-center text-[11px] font-bold">
+                  {hrZones.map(z => (
+                    <div key={z.id} style={{ backgroundColor: z.color }} className="py-1.5 border-r border-gray-300 last:border-0">{z.id}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-5 text-center">
+                  {hrZones.map((z, i) => (
+                    <input key={i} type="text" defaultValue={z.range} className="w-full py-2 text-center text-xs border-r border-gray-300 last:border-0 outline-none" />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* ТАБЛИЦА ЗОН ЧСС */}
-          <div className="space-y-3">
-            <label className="text-gray-400 text-xs">Мои зоны частоты сердечных сокращений</label>
-            <div className="border border-gray-800 rounded-lg overflow-hidden">
-              <div className="grid grid-cols-5 text-center text-[10px] font-bold">
-                <div className="bg-green-500/20 text-green-400 py-1 border-r border-gray-800">I1</div>
-                <div className="bg-cyan-500/20 text-cyan-400 py-1 border-r border-gray-800">I2</div>
-                <div className="bg-yellow-500/20 text-yellow-400 py-1 border-r border-gray-800">I3</div>
-                <div className="bg-orange-500/20 text-orange-400 py-1 border-r border-gray-800">I4</div>
-                <div className="bg-red-500/20 text-red-400 py-1">I5</div>
-              </div>
-              <div className="grid grid-cols-5 text-center bg-[#0f0f0f]">
-                <input className="bg-transparent py-2 border-r border-gray-800 text-center outline-none text-xs" defaultValue="118 - 143" />
-                <input className="bg-transparent py-2 border-r border-gray-800 text-center outline-none text-xs" defaultValue="143 - 161" />
-                <input className="bg-transparent py-2 border-r border-gray-800 text-center outline-none text-xs" defaultValue="161 - 171" />
-                <input className="bg-transparent py-2 border-r border-gray-800 text-center outline-none text-xs" defaultValue="171 - 181" />
-                <input className="bg-transparent py-2 text-center outline-none text-xs" defaultValue="181 - 200" />
-              </div>
-            </div>
-          </div>
+          <hr className="border-gray-100" />
 
-          {/* ЧЕКБОКСЫ */}
-          <div className="space-y-3 pt-2">
-             <label className="flex items-start gap-3 group cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 rounded border-gray-700 bg-[#0f0f0f] checked:bg-blue-600 transition-all" />
-                <span className="text-gray-400 group-hover:text-gray-200 transition-colors">Уведомить тренера (можно изменить для каждой сессии)</span>
-             </label>
-             <label className="flex items-start gap-3 group cursor-pointer">
-                <input type="checkbox" className="mt-1 w-4 h-4 rounded border-gray-700 bg-[#0f0f0f] checked:bg-blue-600 transition-all" />
-                <span className="text-gray-400 group-hover:text-gray-200 transition-colors">Моё имя не должно быть доступно для поиска другими пользователями</span>
-             </label>
+          {/* Настройки дневника */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">Настройки дневника</h3>
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" defaultChecked className="mt-1 w-4 h-4 accent-gray-700" />
+                <span className="text-xs">Уведомить тренера (можно изменить для каждой сессии/комментария)</span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" defaultChecked className="mt-1 w-4 h-4 accent-gray-700" />
+                <span className="text-xs">Моё имя не должно быть доступно для поиска другими пользователями.</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="p-4 bg-[#141417] border-t border-gray-800 flex justify-between gap-3">
-          <button onClick={onClose} className="px-6 py-2 text-gray-400 hover:text-white transition-colors">Отмена</button>
-          <button className="px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-lg shadow-blue-900/20">
-            Сохранить
+        {/* Футер модалки */}
+        <div className="bg-gray-50 p-4 flex justify-between border-t border-gray-200">
+          <button onClick={onClose} className="flex items-center gap-2 text-sm text-gray-600 hover:text-black">
+            <RotateCcw size={16} /> Отмена
+          </button>
+          <button className="flex items-center gap-2 bg-white border border-gray-300 px-6 py-1.5 rounded text-sm font-medium hover:bg-gray-100">
+            <Check size={18} className="text-green-600" /> Сохранить
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default EditProfileModal;

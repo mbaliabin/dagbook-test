@@ -4,46 +4,16 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
   Home, BarChart3, ClipboardList, CalendarDays,
-  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, X
-} from "lucide-react";
+  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown
+} from "lucide-center";
+
+// Импорт модального окна по твоему пути
+import EditAccountModal from "./EditAccountModal";
 
 // API
 import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.locale("ru");
-
-// --- МОДАЛЬНОЕ ОКНО (ТВОЙ ГОТОВЫЙ ВАРИАНТ) ---
-const EditAccountModal = ({ isOpen, onClose, profile }: any) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#1a1a1d] w-full max-w-[600px] max-h-[90vh] overflow-y-auto rounded-xl border border-gray-700 shadow-2xl flex flex-col">
-        <div className="bg-[#1f1f22] p-5 flex justify-between items-center border-b border-gray-700">
-          <h2 className="text-lg font-bold text-white">Редактировать профиль</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={24} /></button>
-        </div>
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" defaultValue={profile?.name?.split(' ')[0] || ""} placeholder="Имя" className="bg-[#1f1f22] border border-gray-700 rounded-md px-4 py-2 text-white text-sm outline-none focus:border-blue-600" />
-            <input type="text" defaultValue={profile?.name?.split(' ')[1] || ""} placeholder="Фамилия" className="bg-[#1f1f22] border border-gray-700 rounded-md px-4 py-2 text-white text-sm outline-none focus:border-blue-600" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-             <input type="text" value="10.12.1995" readOnly className="bg-[#0f0f0f] border border-gray-800 rounded-md px-4 py-2 text-gray-500 text-sm cursor-not-allowed" />
-             <select className="bg-[#1f1f22] border border-gray-700 rounded-md px-4 py-2 text-white text-sm outline-none bg-[#1f1f22]">
-                <option>Мужчина</option>
-                <option>Женщина</option>
-             </select>
-          </div>
-          <div className="pt-4 border-t border-gray-800 flex justify-end gap-3">
-            <button onClick={onClose} className="text-gray-400 text-sm px-4 py-2">Отмена</button>
-            <button className="px-6 py-2 bg-blue-600 text-white rounded font-bold text-sm">Сохранить</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -136,6 +106,7 @@ export default function AccountPage() {
         {/* ОСНОВНОЙ КОНТЕНТ ПРОФИЛЯ */}
         <div className="bg-[#1a1a1d] rounded-xl border border-gray-700 p-10 space-y-12">
 
+          {/* 1. Персональная информация */}
           <section className="relative">
             <div className="flex items-center gap-2 text-gray-500 mb-6">
               <User size={18} className="text-blue-500" />
@@ -153,6 +124,7 @@ export default function AccountPage() {
             </div>
           </section>
 
+          {/* 2. Спортивная информация */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-6">
               <Trophy size={18} className="text-blue-500" />
@@ -174,6 +146,7 @@ export default function AccountPage() {
             </div>
           </section>
 
+          {/* 3. Зоны интенсивности */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-6">
               <Heart size={18} className="text-blue-500" />
@@ -193,6 +166,7 @@ export default function AccountPage() {
             </div>
           </section>
 
+          {/* 4. Мои тренеры */}
           <section className="border-t border-gray-800 pt-10">
             <div className="flex justify-between items-center text-gray-500 mb-6">
               <div className="flex items-center gap-2">
@@ -212,7 +186,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* ОБЯЗАТЕЛЬНО: Компонент модалки должен быть тут */}
+      {/* Используем импортированный компонент */}
       <EditAccountModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
