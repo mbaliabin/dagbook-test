@@ -8,6 +8,8 @@ import {
   Timer, BarChart3, ClipboardList, CalendarDays, CheckCircle2, Activity
 } from "lucide-react";
 import { getUserProfile } from "../api/getUserProfile";
+// 1. Импортируем toast
+import toast, { Toaster } from "react-hot-toast";
 
 dayjs.locale("ru");
 
@@ -105,7 +107,12 @@ export default function DailyParameters() {
     fetchDailyInfo();
   }, [selectedDate, API_URL]);
 
+  // 2. Обновленный обработчик сохранения с красивым уведомлением
   const handleSave = async () => {
+    const loadingToast = toast.loading("Сохранение данных...", {
+        style: { background: '#1a1a1d', color: '#fff', border: '1px solid #374151' }
+    });
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/daily-information`, {
@@ -119,8 +126,14 @@ export default function DailyParameters() {
           comment: comment || null,
         }),
       });
-      if (res.ok) alert("Данные сохранены ✅");
-    } catch (err) { alert("Ошибка при сохранении ❌"); }
+      if (res.ok) {
+          toast.success("Данные успешно сохранены ✅", { id: loadingToast });
+      } else {
+          toast.error("Ошибка при сохранении ❌", { id: loadingToast });
+      }
+    } catch (err) {
+        toast.error("Сбой сети ❌", { id: loadingToast });
+    }
   };
 
   const menuItems = [
@@ -134,12 +147,17 @@ export default function DailyParameters() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans">
+      {/* 3. Добавляем Toaster в дерево рендеринга */}
+      <Toaster
+        position="bottom-right"
+        reverseOrder={false}
+      />
+
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-          {/* КЛИКАБЕЛЬНАЯ ЗОНА ПРОФИЛЯ (Ведет на /account) */}
           <div
             onClick={() => navigate("/account")}
             className="flex items-center space-x-4 cursor-pointer group"
@@ -158,7 +176,6 @@ export default function DailyParameters() {
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* ФИКСИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДАТ */}
             <div className="flex items-center bg-[#1a1a1d] border border-gray-800 rounded-xl p-1 shadow-sm overflow-hidden">
               <button onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))} className="p-2.5 hover:text-blue-500 transition-colors shrink-0">
                 <ChevronLeft size={18}/>
@@ -214,7 +231,6 @@ export default function DailyParameters() {
                 <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
               </div>
 
-              {/* Аналитика */}
               <div className="flex-grow flex flex-col justify-center space-y-4 py-8">
                 <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl text-center">
                   <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Индекс готовности</p>
