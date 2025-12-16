@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Dialog } from "@headlessui/react";
+import { X, Check, Ruler, Activity, Edit2, Eye } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Workout {
   id: string;
@@ -33,7 +35,6 @@ export default function EditWorkoutModal({
   onClose,
   onSave,
 }: EditWorkoutModalProps) {
-  const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,25 +50,19 @@ export default function EditWorkoutModal({
   const isEditing = mode === "edit";
 
   useEffect(() => {
-    if (!workoutId) return;
+    if (!workoutId || !isOpen) return;
 
     const fetchWorkout = async () => {
       setLoading(true);
       setError(null);
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("Неавторизован");
-
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`,
-          {
-            headers: { Authorization: "Bearer " + token },
-          }
-        );
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`, {
+          headers: { Authorization: "Bearer " + token },
+        });
 
         if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
         const data: Workout = await res.json();
-        setWorkout(data);
 
         setName(data.name);
         setDate(data.date.slice(0, 10));
@@ -91,17 +86,16 @@ export default function EditWorkoutModal({
     };
 
     fetchWorkout();
-  }, [workoutId]);
+  }, [workoutId, isOpen]);
 
-  const totalDuration = zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+  const totalDuration = useMemo(() => {
+    return zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+  }, [zones]);
+
   const formattedDuration = `${Math.floor(totalDuration / 60)}ч ${totalDuration % 60}м`;
 
   const handleSave = async () => {
-    if (!name || !date || !type) {
-      alert("Заполните обязательные поля");
-      return;
-    }
-
+    const loadingToast = toast.loading("Обновление...");
     const intensityZones = {
       zone1Min: parseInt(zones[0]) || 0,
       zone2Min: parseInt(zones[1]) || 0,
@@ -111,283 +105,201 @@ export default function EditWorkoutModal({
     };
 
     const updatedWorkout = {
-      name,
-      date,
-      comment,
-      effort,
-      feeling,
-      type,
+      name, date, comment, effort, feeling, type,
       duration: totalDuration,
-      distance:
-        type !== "StrengthTraining" && type !== "Other"
-          ? Number(distance) || null
-          : null,
+      distance: type !== "StrengthTraining" && type !== "Other" ? Number(distance) || null : null,
       intensityZones,
     };
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatedWorkout),
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedWorkout),
+      });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        alert("Ошибка при обновлении: " + errData.error);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        toast.success("Изменения сохранены", { id: loadingToast });
+        onSave?.(data);
+        onClose();
+      } else {
+        toast.error("Ошибка при сохранении", { id: loadingToast });
       }
-
-      const updated = await res.json();
-      onSave?.(updated);
-      onClose();
     } catch {
-      alert("Ошибка соединения");
+      toast.error("Ошибка соединения", { id: loadingToast });
     }
   };
 
   const zoneLabels = ["I1", "I2", "I3", "I4", "I5"];
-  const zoneColors = [
-    "bg-green-500",
-    "bg-lime-400",
-    "bg-yellow-400",
-    "bg-orange-400",
-    "bg-red-500",
-  ];
+  const zoneColors = ["bg-green-500", "bg-lime-400", "bg-yellow-400", "bg-orange-400", "bg-red-500"];
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-    >
-      <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
-      <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-6 rounded-2xl w-[90%] max-w-xl z-50 text-white shadow-2xl">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
-          ✕
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" aria-hidden="true" />
+
+      <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[95vh] overflow-y-auto p-8 rounded-2xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800 scrollbar-hide">
+        <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+          <X size={24} />
         </button>
-        <Dialog.Title className="text-xl font-semibold mb-4">
-          {isEditing ? "Редактирование тренировки" : "Просмотр тренировки"}
+
+        <Dialog.Title className="text-xl font-bold mb-10 text-white tracking-tight flex items-center gap-3">
+          {isEditing ? <Edit2 className="text-blue-500" /> : <Eye className="text-green-500" />}
+          {isEditing ? "Редактировать тренировку" : "Просмотр тренировки"}
         </Dialog.Title>
 
         {loading ? (
-          <p>Загрузка...</p>
+          <div className="py-20 text-center text-gray-400 animate-pulse">Загрузка данных...</div>
         ) : error ? (
-          <p className="text-red-500">Ошибка: {error}</p>
-        ) : !workout ? (
-          <p>Тренировка не найдена</p>
+          <div className="py-20 text-center text-red-500 font-medium">Ошибка: {error}</div>
         ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (isEditing) handleSave();
-            }}
-            className="space-y-4"
-          >
-            {/* Название */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Название</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => isEditing && setName(e.target.value)}
-                disabled={!isEditing}
-                required
-                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
-                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              />
+          <form onSubmit={(e) => { e.preventDefault(); if (isEditing) handleSave(); }} className="space-y-8">
+
+            {/* Название и Дата */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Название</label>
+                <input
+                  type="text" value={name} onChange={(e) => setName(e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all ${!isEditing && "opacity-60 cursor-default"}`}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Дата</label>
+                <input
+                  type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all color-scheme-dark ${!isEditing && "opacity-60 cursor-default"}`}
+                  required
+                />
+              </div>
             </div>
 
-            {/* Дата */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Дата</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => isEditing && setDate(e.target.value)}
-                disabled={!isEditing}
-                required
-                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
-                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              />
-            </div>
+            {/* Дистанция */}
+            {type !== "StrengthTraining" && type !== "Other" && (
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-2">
+                  <Ruler size={14} /> Дистанция (км)
+                </label>
+                <input
+                  type="number" step={0.1} value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  disabled={!isEditing}
+                  className={`w-full p-3 rounded-xl bg-[#2a2a2d] border border-blue-900/30 text-white font-bold text-lg outline-none focus:border-blue-500 transition-all no-spinner ${!isEditing && "opacity-60 cursor-default"}`}
+                />
+              </div>
+            )}
 
-            {/* Комментарий */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Комментарий</label>
-              <textarea
-                value={comment}
-                onChange={(e) => isEditing && setComment(e.target.value)}
-                disabled={!isEditing}
-                rows={3}
-                className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
-                  !isEditing ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              />
-            </div>
+            {/* Шкалы */}
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                  Самочувствие <span className="text-green-500 font-black text-sm">{feeling || '-'}</span>
+                </label>
+                <div className="flex gap-1.5">
+                  {[...Array(10)].map((_, i) => (
+                    <button
+                      type="button" key={i}
+                      onClick={() => isEditing && setFeeling(i + 1)}
+                      disabled={!isEditing}
+                      className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white scale-105 shadow-lg border-green-400" : "bg-[#2a2a2d] text-gray-400 border border-transparent"} ${!isEditing && feeling !== i + 1 && "opacity-30"}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Зоны интенсивности */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">
-                Минуты по зонам интенсивности
-              </label>
-              <div className="overflow-x-auto">
-                <div className="flex gap-4 min-w-[560px]">
-                  {zones.map((val, i) => (
-                    <div key={i} className="flex flex-col items-center w-28">
-                      <span className="text-sm text-gray-300 mb-1">{zoneLabels[i]}</span>
-                      <div
-                        className={`w-full h-6 rounded-t-lg ${zoneColors[i]} border border-gray-600 shadow-md`}
-                      />
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={val}
-                        onChange={(e) => {
-                          if (!isEditing) return;
-                          const updated = [...zones];
-                          updated[i] = e.target.value;
-                          setZones(updated);
-                        }}
-                        disabled={!isEditing}
-                        className={`w-full text-center bg-[#2a2a2d] text-white py-1 rounded-b-lg no-spinner ${
-                          !isEditing
-                            ? "opacity-70 cursor-not-allowed"
-                            : "focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        }`}
-                      />
-                    </div>
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                  Нагрузка <span className="text-blue-500 font-black text-sm">{effort || '-'}</span>
+                </label>
+                <div className="flex gap-1.5">
+                  {[...Array(10)].map((_, i) => (
+                    <button
+                      type="button" key={i}
+                      onClick={() => isEditing && setEffort(i + 1)}
+                      disabled={!isEditing}
+                      className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white scale-105 shadow-lg border-blue-400" : "bg-[#2a2a2d] text-gray-400 border border-transparent"} ${!isEditing && effort !== i + 1 && "opacity-30"}`}
+                    >
+                      {i + 1}
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Общее время */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Общее время</label>
-              <input
-                type="text"
-                value={formattedDuration}
-                readOnly
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white opacity-70 cursor-not-allowed"
+            {/* Зоны */}
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Зоны интенсивности (мин)</label>
+              <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
+                {zones.map((val, idx) => (
+                  <div key={idx} className="flex flex-col">
+                    <div className={`${zoneColors[idx]} py-1.5 text-center text-[10px] font-black text-[#1a1a1d]`}>
+                      {zoneLabels[idx]}
+                    </div>
+                    <input
+                      type="number" value={val}
+                      onChange={(e) => {
+                        if (!isEditing) return;
+                        const updated = [...zones];
+                        updated[idx] = e.target.value;
+                        setZones(updated);
+                      }}
+                      disabled={!isEditing}
+                      className={`bg-[#2a2a2d] text-white text-center py-3 text-sm outline-none border-t border-gray-800 focus:bg-[#323235] no-spinner ${!isEditing && "opacity-60"}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-center bg-[#141416] px-4 py-3 rounded-xl border border-gray-800/50">
+                <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Итоговое время</span>
+                <span className="text-lg font-bold text-blue-500 tracking-tight">{formattedDuration}</span>
+              </div>
+            </div>
+
+            {/* Комментарий */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Комментарий</label>
+              <textarea
+                rows={3} value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                disabled={!isEditing}
+                className={`w-full p-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all resize-none ${!isEditing && "opacity-60"}`}
               />
             </div>
 
-            {/* Расстояние */}
-            {type !== "StrengthTraining" && type !== "Other" && (
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Расстояние (км)
-                </label>
-                <input
-                  type="number"
-                  value={distance}
-                  onChange={(e) =>
-                    isEditing &&
-                    setDistance(e.target.value === "" ? "" : Number(e.target.value))
-                  }
-                  disabled={!isEditing}
-                  min={0}
-                  step={0.01}
-                  className={`w-full p-2 rounded-lg bg-[#2a2a2d] text-white ${
-                    !isEditing ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
-                />
-              </div>
-            )}
-
-            {/* effort */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Воспринимаемая нагрузка</label>
-              <div className="flex items-center justify-between gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${
-                      effort === i + 1 ? "bg-blue-600 text-white" : "bg-[#2a2a2d] text-gray-300"
-                    }`}
-                    onClick={() => isEditing && setEffort(i + 1)}
-                    disabled={!isEditing}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Легко</span>
-                <span>Максимум</span>
-              </div>
-            </div>
-
-            {/* feeling */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Самочувствие</label>
-              <div className="flex items-center justify-between gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${
-                      feeling === i + 1 ? "bg-green-600 text-white" : "bg-[#2a2a2d] text-gray-300"
-                    }`}
-                    onClick={() => isEditing && setFeeling(i + 1)}
-                    disabled={!isEditing}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Плохо</span>
-                <span>Отлично</span>
-              </div>
-            </div>
-
             {/* Кнопки */}
-            <div className="flex justify-end gap-2 mt-6">
-              {isEditing ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700"
-                  >
-                    Сохранить
-                  </button>
-                </>
-              ) : (
+            <div className="flex justify-end gap-3 pt-8 border-t border-gray-800">
+              <button
+                type="button" onClick={onClose}
+                className="px-6 py-3 bg-[#2a2a2d] text-gray-400 rounded-xl hover:bg-[#323235] transition-colors text-sm font-semibold"
+              >
+                {isEditing ? "Отмена" : "Закрыть"}
+              </button>
+              {isEditing && (
                 <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+                  type="submit"
+                  className="flex items-center gap-2 px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/30 text-sm font-bold active:scale-95"
                 >
-                  Закрыть
+                  <Check size={18} /> Сохранить изменения
                 </button>
               )}
             </div>
           </form>
         )}
       </Dialog.Panel>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .no-spinner::-webkit-outer-spin-button, .no-spinner::-webkit-inner-spin-button {
+          -webkit-appearance: none; margin: 0;
+        }
+        .color-scheme-dark { color-scheme: dark; }
+      `}</style>
     </Dialog>
   );
 }
-
