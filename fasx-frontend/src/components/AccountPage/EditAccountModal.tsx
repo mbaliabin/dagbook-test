@@ -27,14 +27,13 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
     if (profile && isOpen) {
       const names = profile.name?.split(" ") || ["", ""];
       setFirstName(names[0] || "");
-      setLastName(names.slice(1).join(" ") || ""); // На случай фамилий из нескольких слов
+      setLastName(names.slice(1).join(" ") || "");
       setBio(profile.profile?.bio || "");
       setGender(profile.profile?.gender || "Мужчина");
       setSportType(profile.profile?.sportType || "Лыжные гонки");
       setAssociation(profile.profile?.association || "ФЛГР");
       setClub(profile.profile?.club || "");
 
-      // Если зоны в базе есть, берем их, иначе пустые строки
       if (profile.profile?.hrZones) {
         setHrZones(profile.profile.hrZones);
       }
@@ -50,37 +49,45 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
       return;
     }
 
-    try {
-      const fullName = `${firstName} ${lastName}`.trim();
+    // Собираем данные в один объект
+    const fullName = `${firstName} ${lastName}`.trim();
+    const updateData = {
+      name: fullName,
+      bio,
+      gender,
+      sportType,
+      club,
+      association,
+      hrZones
+    };
 
-      // Запрос на твой бэкенд (ПОРТ 4000)
-      const response = await fetch("http://localhost:4000/api/profile", {
+    try {
+      // Используем переменную окружения, как в AddWorkoutModal
+      // Если она не задана в .env, используем твой текущий IP
+      const baseUrl = import.meta.env.VITE_API_URL || "http://46.173.18.36:4000";
+
+      const response = await fetch(`${baseUrl}/api/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": "Bearer " + token, // Формат как в рабочей модалке
         },
-        body: JSON.stringify({
-          name: fullName,
-          bio,
-          gender,
-          sportType,
-          club,
-          association,
-          hrZones
-        })
+        body: JSON.stringify(updateData),
       });
 
       if (response.ok) {
-        onUpdate(); // Вызываем fetchProfile на главной странице для обновления данных
-        onClose();   // Закрываем модальное окно
+        const result = await response.json();
+        console.log("Профиль успешно обновлен:", result);
+        onUpdate();
+        onClose();
       } else {
         const errorData = await response.json();
+        console.error("Ошибка сервера:", errorData);
         alert(`Ошибка: ${errorData.error || "Не удалось сохранить изменения"}`);
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Не удалось связаться с сервером (порт 4000)");
+      console.error("Сетевой сбой при обновлении профиля:", error);
+      alert("Ошибка соединения с сервером");
     }
   };
 
@@ -220,7 +227,7 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
               <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
                 {Object.keys(hrZones).map((zoneKey) => (
                   <div key={zoneKey} className="flex flex-col">
-                    <div className={`${zoneColors[zoneKey]} py-1 text-center text-[10px] font-black text-[#1a1a1d]`}>
+                    <div className={`${zoneColors[zoneKey as keyof typeof zoneColors]} py-1 text-center text-[10px] font-black text-[#1a1a1d]`}>
                       {zoneKey}
                     </div>
                     <input
