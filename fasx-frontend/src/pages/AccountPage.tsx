@@ -4,8 +4,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import {
   Home, BarChart3, ClipboardList, CalendarDays,
-  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, Camera,
-  Shield, Activity, Globe, Info
+  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, Camera
 } from "lucide-react";
 
 import EditAccountModal from "../components/AccountPage/EditAccountModal";
@@ -55,132 +54,133 @@ export default function AccountPage() {
   ];
 
   if (loading && !profile) return (
-    <div className="min-h-screen bg-[#0e0e10] flex items-center justify-center text-white italic">
-       Загрузка...
+    <div className="min-h-screen bg-[#0e0e10] flex items-center justify-center text-white">
+      <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 font-sans antialiased">
-      <div className="max-w-[1200px] mx-auto space-y-8 px-4">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 font-sans">
+      <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-5">
-            <div className="w-20 h-20 rounded-full border-2 border-gray-800 p-1">
-              <div className="w-full h-full rounded-full bg-[#1a1a1d] flex items-center justify-center overflow-hidden border border-gray-700">
-                {profile?.avatarUrl ? (
-                  <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
-                ) : (
-                  <span className="text-2xl font-bold">{profile?.name?.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
+            <div className="w-16 h-16 rounded-full bg-[#1a1a1d] border border-gray-700 overflow-hidden shadow-xl">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-blue-600">
+                  {profile?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">{profile?.name || "Пользователь"}</h1>
-              <p className="text-sm text-blue-500 font-medium uppercase tracking-widest">{profile?.profile?.gender || "Пол не указан"}</p>
+              <h1 className="text-2xl font-bold">{profile?.name || "Пользователь"}</h1>
+              <p className="text-sm text-gray-400">{dayjs().format("D MMMM YYYY")}</p>
             </div>
           </div>
-
-          <div className="flex items-center space-x-3">
-            <button onClick={() => setIsModalOpen(true)} className="bg-white text-black hover:bg-gray-200 text-xs px-5 py-2.5 rounded font-bold transition-all flex items-center">
-              <Edit3 size={14} className="mr-2" /> Редактировать профиль
+          <div className="flex items-center space-x-2">
+            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded flex items-center transition-colors">
+              <Edit3 className="w-4 h-4 mr-2"/> Изменить профиль
             </button>
-            <button onClick={() => { localStorage.removeItem("token"); navigate("/login"); }} className="bg-[#1a1a1d] border border-gray-700 text-white text-xs px-5 py-2.5 rounded font-bold hover:bg-gray-800 transition-all">
+            <button onClick={() => { localStorage.removeItem("token"); navigate("/login"); }} className="bg-[#1a1a1d] border border-gray-700 hover:bg-gray-800 text-white text-sm px-4 py-2 rounded transition-colors">
               Выйти
             </button>
           </div>
         </div>
 
-        {/* NAV */}
-        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-800 py-3 rounded-xl">
+        {/* NAVIGATION */}
+        <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path || (item.path === "/profile" && location.pathname === "/account");
             return (
-              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center gap-1 transition-colors ${isActive ? "text-blue-500" : "text-gray-500 hover:text-white"}`}>
-                <Icon size={22} />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+              <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center text-sm transition-colors ${isActive ? "text-blue-500" : "text-gray-400 hover:text-white"}`}>
+                <Icon className="w-6 h-6" />
+                <span>{item.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* MAIN BODY */}
-        <div className="grid md:grid-cols-3 gap-10 pt-4">
+        {/* CONTENT */}
+        <div className="bg-[#1a1a1d] rounded-xl border border-gray-700 p-8 space-y-12">
 
-          {/* LEFT COLUMN: BIO & SPORT */}
-          <div className="md:col-span-2 space-y-12">
-
-            {/* БИОГРАФИЯ - ТЕПЕРЬ ПРОСТО ТЕКСТ */}
-            <section>
-              <h2 className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em] mb-4 flex items-center gap-2">
-                <Info size={14} className="text-blue-500" /> О себе
-              </h2>
-              <div className="text-gray-300 leading-relaxed text-base max-w-2xl">
-                {profile?.profile?.bio ? (
-                  <p>{profile.profile.bio}</p>
-                ) : (
-                  <p className="text-gray-600 italic">Биография не заполнена. Расскажите о своих спортивных целях и достижениях.</p>
-                )}
+          {/* SECTION 1: PERSONAL */}
+          <section>
+            <div className="flex items-center gap-2 mb-8 border-b border-gray-800 pb-4">
+              <User size={18} className="text-blue-500" />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Основная информация</h2>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-2 tracking-widest">Биография</p>
+                <div className="text-gray-300 text-base leading-relaxed max-w-3xl">
+                  {profile?.profile?.bio || "Информация о себе не добавлена."}
+                </div>
               </div>
-            </section>
-
-            {/* СПОРТ - ЧИСТЫЙ СПИСОК БЕЗ РАМОК */}
-            <section>
-              <h2 className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em] mb-6 flex items-center gap-2">
-                <Trophy size={14} className="text-blue-500" /> Спортивные данные
-              </h2>
-              <div className="space-y-6">
-                {[
-                  { label: 'Вид спорта', value: profile?.profile?.sportType, icon: Activity },
-                  { label: 'Команда / Клуб', value: profile?.profile?.club, icon: Shield },
-                  { label: 'Ассоциация', value: profile?.profile?.association, icon: Globe }
-                ].map((item, i) => (
-                  <div key={i} className="flex flex-col border-l-2 border-gray-800 pl-4 py-1">
-                    <span className="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-1">{item.label}</span>
-                    <div className="flex items-center gap-2 text-white font-semibold text-lg">
-                      <item.icon size={16} className="text-blue-500/50" />
-                      {item.value || "—"}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex gap-10">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-widest">Пол</p>
+                  <p className="text-blue-500 font-semibold">{profile?.profile?.gender || "—"}</p>
+                </div>
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
 
-          {/* RIGHT COLUMN: ZONES & COACHES */}
-          <div className="space-y-12">
+          {/* SECTION 2: SPORT — ЧИСТЫЙ СПИСОК */}
+          <section>
+            <div className="flex items-center gap-2 mb-8 border-b border-gray-800 pb-4">
+              <Trophy size={18} className="text-blue-500" />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Спортивные данные</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-6 max-w-xl">
+              {[
+                { label: 'Вид спорта', value: profile?.profile?.sportType },
+                { label: 'Клуб / Команда', value: profile?.profile?.club },
+                { label: 'Ассоциация', value: profile?.profile?.association }
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col border-b border-gray-800/50 pb-4">
+                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.15em] mb-1">{item.label}</span>
+                  <span className="text-lg font-semibold text-white">{item.value || "—"}</span>
+                </div>
+              ))}
+            </div>
+          </section>
 
-            {/* ЗОНЫ ЧСС */}
-            <section>
-              <h2 className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em] mb-6 flex items-center gap-2">
-                <Heart size={14} className="text-blue-500" /> Зоны (BPM)
-              </h2>
-              <div className="space-y-3">
-                {hrZonesData.map((z) => (
-                  <div key={z.label} className="flex items-center justify-between bg-[#1a1a1d]/50 p-3 rounded border border-gray-800/50">
-                    <div className="flex items-center gap-3">
-                      <div style={{ backgroundColor: z.color }} className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]"></div>
-                      <span className="text-xs font-bold text-gray-400 uppercase">{z.label}</span>
-                    </div>
-                    <span className="text-sm font-mono font-bold text-white tracking-tighter">{z.range}</span>
-                  </div>
-                ))}
+          {/* SECTION 3: HR ZONES */}
+          <section>
+            <div className="flex items-center gap-2 mb-8 border-b border-gray-800 pb-4">
+              <Heart size={18} className="text-blue-500" />
+              <h2 className="text-sm font-bold uppercase tracking-wider">Пульсовые зоны</h2>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              {hrZonesData.map((z) => (
+                <div key={z.label} className="flex flex-col bg-[#0e0e10] border border-gray-700 rounded-lg min-w-[120px] p-4">
+                   <div className="flex items-center gap-2 mb-1">
+                      <div style={{ backgroundColor: z.color }} className="w-2 h-2 rounded-full"></div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase">{z.label}</span>
+                   </div>
+                   <span className="text-xl font-bold">{z.range}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* SECTION 4: COACHES */}
+          <section>
+            <div className="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+              <div className="flex items-center gap-2">
+                <Users size={18} className="text-blue-500" />
+                <h2 className="text-sm font-bold uppercase tracking-wider">Тренеры</h2>
               </div>
-            </section>
-
-            {/* ТРЕНЕРЫ */}
-            <section>
-              <h2 className="text-[11px] font-black uppercase text-gray-500 tracking-[0.2em] mb-4 flex items-center gap-2">
-                <Users size={14} className="text-blue-500" /> Тренеры
-              </h2>
-              <div className="border border-dashed border-gray-800 rounded-lg p-6 text-center">
-                <p className="text-[11px] text-gray-600 italic">На данный момент тренеры не привязаны к аккаунту.</p>
-              </div>
-            </section>
-          </div>
-
+              <ChevronDown size={20} className="text-gray-500 cursor-pointer" />
+            </div>
+            <div className="text-gray-500 italic text-sm border border-dashed border-gray-800 p-8 rounded-lg text-center">
+              Список тренеров пуст
+            </div>
+          </section>
         </div>
       </div>
 
