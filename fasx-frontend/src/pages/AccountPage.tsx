@@ -5,10 +5,10 @@ import "dayjs/locale/ru";
 import {
   Home, BarChart3, ClipboardList, CalendarDays,
   Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown
-} from "lucide-center";
+} from "lucide-react";
 
-// Импорт модального окна по твоему пути
-import EditAccountModal from ""../components/AccountPage/EditAccountModal";
+// Импорт модального окна по твоему исправленному пути
+import EditAccountModal from "../components/AccountPage/EditAccountModal";
 
 // API
 import { getUserProfile } from "../api/getUserProfile";
@@ -59,7 +59,7 @@ export default function AccountPage() {
     navigate("/login");
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl">Загрузка...</div>;
+  if (loading) return <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl font-sans">Загрузка...</div>;
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans">
@@ -120,7 +120,7 @@ export default function AccountPage() {
             </div>
             <div className="ml-8">
               <h3 className="text-2xl font-bold text-white tracking-tight">{profile?.name}</h3>
-              <p className="text-gray-500 text-sm mt-1">Дата рождения: 10.12.1995 • Мужчина</p>
+              <p className="text-gray-500 text-sm mt-1 italic">Дата рождения: 10.12.1995 • Мужчина</p>
             </div>
           </section>
 
@@ -186,7 +186,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Используем импортированный компонент */}
+      {/* Вызов импортированного компонента */}
       <EditAccountModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
