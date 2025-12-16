@@ -92,6 +92,16 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
     return null;
   }, [distance, totalMin]);
 
+  // Форматирование даты для режима просмотра
+  const formattedFullDate = useMemo(() => {
+    if (!date) return "";
+    const d = new Date(date);
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: '2-digit', month: '2-digit' };
+    const localeDate = new Intl.DateTimeFormat('ru-RU', options).format(d);
+    // Делаем первую букву заглавной (Вторник 16.12)
+    return localeDate.charAt(0).toUpperCase() + localeDate.slice(1);
+  }, [date]);
+
   const handleSave = async () => {
     const loadingToast = toast.loading("Сохранение...");
     const intensityZones = {
@@ -129,13 +139,28 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
       <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[92vh] overflow-y-auto rounded-3xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800 scrollbar-hide">
 
         {/* Header */}
-        <div className="sticky top-0 bg-[#1a1a1d]/90 backdrop-blur-md z-10 px-8 py-5 border-b border-gray-800 flex justify-between items-center">
+        <div className="sticky top-0 bg-[#1a1a1d]/90 backdrop-blur-md z-10 px-8 py-6 border-b border-gray-800 flex justify-between items-center">
           <div>
-            <div className="flex items-center gap-2 text-blue-500 mb-0.5">
-              <Calendar size={12} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">{date}</span>
-            </div>
-            <Dialog.Title className="text-xl font-black tracking-tight">{isEditing ? "Редактирование" : name}</Dialog.Title>
+            {!isEditing ? (
+              /* --- ЗАГОЛОВОК ПРИ ПРОСМОТРЕ --- */
+              <div className="space-y-0.5">
+                <div className="text-blue-500 text-2xl font-black tracking-tight">
+                  {formattedFullDate}
+                </div>
+                <Dialog.Title className="text-gray-400 font-medium tracking-tight italic">
+                  {name || "Без названия"}
+                </Dialog.Title>
+              </div>
+            ) : (
+              /* --- ЗАГОЛОВОК ПРИ РЕДАКТИРОВАНИИ (БЕЗ ИЗМЕНЕНИЙ) --- */
+              <>
+                <div className="flex items-center gap-2 text-blue-500 mb-0.5">
+                  <Calendar size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{date}</span>
+                </div>
+                <Dialog.Title className="text-xl font-black tracking-tight">Редактирование</Dialog.Title>
+              </>
+            )}
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400"><X size={24} /></button>
         </div>
@@ -169,8 +194,8 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Интенсивность</h4>
-                <div className="flex h-10 w-full rounded-xl overflow-hidden bg-gray-900">
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Интенсивность</h4>
+                <div className="flex h-10 w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner">
                   {zones.map((val, i) => {
                     const width = totalMin > 0 ? (parseInt(val) / totalMin) * 100 : 0;
                     return width > 0 ? (
@@ -180,7 +205,7 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
                     ) : null;
                   })}
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-2 px-1">
                   {zones.map((val, i) => (
                     <div key={i} className="text-center">
                       <div className={`w-1.5 h-1.5 rounded-full ${zoneColors[i]} mx-auto mb-1`}></div>
@@ -202,7 +227,7 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
               </div>
 
               {comment && (
-                <div className="bg-[#2a2a2d]/50 p-6 rounded-2xl border border-gray-800">
+                <div className="bg-[#2a2a2d]/50 p-6 rounded-2xl border border-gray-800 border-dashed">
                   <div className="flex items-center gap-2 text-gray-500 mb-3"><MessageSquare size={14}/> <span className="text-[10px] font-bold uppercase">Комментарий</span></div>
                   <p className="text-gray-300 italic leading-relaxed text-sm">"{comment}"</p>
                 </div>
