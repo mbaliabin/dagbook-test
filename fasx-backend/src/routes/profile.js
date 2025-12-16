@@ -1,31 +1,31 @@
 import express from "express";
 import prisma from "../prisma/client.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
-import cors from 'cors';
 
 const router = express.Router();
 
-// 1. Настройка локального CORS
-const localCors = cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-});
+/**
+ * Глобальная настройка заголовков для этого роута.
+ * Это решает проблему со статусом 204 (OPTIONS), отвечая браузеру 200 OK
+ * и разрешая передачу заголовка Authorization.
+ */
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
 
-// 2. Сначала разрешаем OPTIONS для всех путей в этом роутере БЕЗ проверки токена
-// Это ответит браузеру 200 OK на предварительный запрос, и он отправит основной PUT
-router.options('*', localCors, (req, res) => {
-  res.sendStatus(200);
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
 });
-
-// 3. Применяем CORS для остальных методов
-router.use(localCors);
 
 // --- GET: ПОЛУЧЕНИЕ ПРОФИЛЯ ---
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // Проверяем оба варианта ключа, так как в разных проектах jwt payload может отличаться
+    const userId = req.user.userId || req.user.id;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -34,7 +34,6 @@ router.get("/", authenticateToken, async (req, res) => {
         name: true,
         email: true,
         avatarUrl: true,
-        createdAt: true,
         profile: true
       },
     });
@@ -49,52 +48,15 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // --- PUT: ОБНОВЛЕНИЕ ПРОФИЛЯ ---
 router.put("/", authenticateToken, async (req, res) => {
-  console.log(">>> [PUT] Запрос дошел до роута профиля");
+  console.log(">>> [PUT] Запрос получен для userId:", req.user.userId || req.user.id);
 
   try {
-    // ВАЖНО: Проверь в консоли бэкенда, что тут не undefined.
-    // Если в токене лежит просто 'id', замени userId на id.
-    const userId = req.user.userId;
+    const userId = req.user.userId || req.user.id;
     const { name, bio, gender, sportType, club, association, hrZones } = req.body;
 
+    // Выполняем обновление в базе данных
     const result = await prisma.$transaction([
+      // 1. Обновляем имя пользователя в таблице User
       prisma.user.update({
         where: { id: userId },
         data: { name }
-      }),
-      prisma.profile.upsert({
-        where: { userId: userId },
-        update: {
-          bio,
-          gender,
-          sportType,
-          club,
-          association,
-          hrZones
-        },
-        create: {
-          userId,
-          fullName: name || "",
-          bio,
-          gender,
-          sportType,
-          club,
-          association,
-          hrZones
-        }
-      })
-    ]);
-
-    console.log(">>> Данные успешно сохранены для userId:", userId);
-    res.json({ success: true, profile: result[1] });
-
-  } catch (error) {
-    console.error("!!! ОШИБКА PUT ПРОФИЛЯ:", error.message);
-    res.status(500).json({
-      error: "Failed to update profile",
-      details: error.message
-    });
-  }
-});
-
-export default router;
