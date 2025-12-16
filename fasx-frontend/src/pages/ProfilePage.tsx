@@ -1,109 +1,304 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import dayjs from "dayjs";
-import "dayjs/locale/ru";
+import React, { useEffect, useState, useCallback } from 'react'
 import {
-  Home, BarChart3, ClipboardList, CalendarDays,
-  Plus, LogOut, User, Trophy, Heart, Edit3, Users, ChevronDown, Camera
-} from "lucide-react";
+  Timer,
+  MapPin,
+  Zap,
+  Target,
+  Plus,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Calendar,
+  Home,
+  BarChart3,
+  ClipboardList,
+  CalendarDays
+} from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import dayjs from 'dayjs'
+import isBetween from 'dayjs/plugin/isBetween'
+import isoWeek from 'dayjs/plugin/isoWeek'
+import 'react-date-range/dist/styles.css'
+import 'react-date-range/dist/theme/default.css'
+import { DateRange } from 'react-date-range'
+import { ru } from 'date-fns/locale'
 
-// Импорт модального окна
-import EditAccountModal from "../components/AccountPage/EditAccountModal";
-// API
-import { getUserProfile } from "../api/getUserProfile";
+import IntensityZones from '../components/IntensityZones'
+import TrainingLoadChart from "../components/TrainingLoadChart"
+import WeeklySessions from "../components/WeeklySessions"
+import RecentWorkouts from "../components/RecentWorkouts"
+import ActivityTable from "../components/ActivityTable"
+import AddWorkoutModal from "../components/AddWorkoutModal"
+import { getUserProfile } from "../api/getUserProfile"
+import TopSessions from "../components/TopSessions"
 
-dayjs.locale("ru");
+dayjs.extend(isBetween)
+dayjs.extend(isoWeek)
 
-export default function AccountPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface Workout {
+  id: string
+  name: string
+  date: string
+  duration: number
+  type: string
+  distance?: number | null
+  zone1Min?: number
+  zone2Min?: number
+  zone3Min?: number
+  zone4Min?: number
+  zone5Min?: number
+}
 
-  const fetchProfile = useCallback(async () => {
+export default function ProfilePage() {
+  const [name, setName] = useState("")
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(dayjs())
+  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>({
+    startDate: dayjs().startOf('isoWeek').toDate(),
+    endDate: dayjs().endOf('isoWeek').toDate()
+  })
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false)
+  const [showBottomMenu, setShowBottomMenu] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const fetchWorkouts = useCallback(async () => {
     try {
-      const data = await getUserProfile();
-      setProfile(data);
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error("Ошибка загрузки тренировок")
+      const data: Workout[] = await res.json()
+      setWorkouts(data)
     } catch (err) {
-      console.error("Ошибка загрузки профиля:", err);
-      if (err instanceof Error && (err.message.includes("401"))) {
-        localStorage.removeItem("token");
-        navigate('/login');
-      }
+      console.error("Ошибка:", err)
     } finally {
-      setLoading(false);
+      setLoadingWorkouts(false)
     }
-  }, [navigate]);
+  }, [])
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    const fetchProfile = async () => {
+      try {
+        const data = await getUserProfile()
+        setName(data.name || "Пользователь")
+      } catch (err) {
+        console.error("Ошибка профиля:", err)
+      } finally {
+        setLoadingProfile(false)
+      }
+    }
+    fetchProfile()
+    fetchWorkouts()
+  }, [fetchWorkouts])
 
-  const hrZonesData = [
-    { label: 'I1', range: profile?.profile?.hrZones?.I1 || '---', color: '#4ade80' },
-    { label: 'I2', range: profile?.profile?.hrZones?.I2 || '---', color: '#22d3ee' },
-    { label: 'I3', range: profile?.profile?.hrZones?.I3 || '---', color: '#facc15' },
-    { label: 'I4', range: profile?.profile?.hrZones?.I4 || '---', color: '#fb923c' },
-    { label: 'I5', range: profile?.profile?.hrZones?.I5 || '---', color: '#ef4444' },
-  ];
+  const handleAddWorkout = (w: Workout) => {
+    setWorkouts(prev => [w, ...prev])
+  }
+
+  const handleDeleteWorkout = (id: string) => {
+    setWorkouts(prev => prev.filter(w => w.id !== id))
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    navigate('/login')
+  }
+
+  const filteredWorkouts = workouts.filter(w => {
+    const workoutDate = dayjs(w.date)
+    if (dateRange) {
+      const start = dayjs(dateRange.startDate).startOf('day')
+      const end = dayjs(dateRange.endDate).endOf('day')
+      return workoutDate.isBetween(start, end, null, '[]')
+    }
+    return workoutDate.isSame(selectedMonth, 'month')
+  })
+
+  const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0)
+  const totalDistance = filteredWorkouts.reduce((sum, w) => sum + (w.distance || 0), 0)
+  const hours = Math.floor(totalDuration / 60)
+  const minutes = totalDuration % 60
+  const totalTimeStr = `${hours}:${minutes.toString().padStart(2, '0')}`
+
+  const intensiveSessions = filteredWorkouts.filter(w => {
+    const zones = [
+      w.zone1Min || 0,
+      w.zone2Min || 0,
+      w.zone3Min || 0,
+      w.zone4Min || 0,
+      w.zone5Min || 0
+    ]
+    const maxZone = zones.indexOf(Math.max(...zones)) + 1
+    return [3, 4, 5].includes(maxZone)
+  }).length
+
+  const onPrevMonth = () => {
+    setSelectedMonth(prev => prev.subtract(1, 'month'))
+    setDateRange(null)
+  }
+
+  const onNextMonth = () => {
+    setSelectedMonth(prev => prev.add(1, 'month'))
+    setDateRange(null)
+  }
+
+  const applyDateRange = () => {
+    if (dateRange) setShowDateRangePicker(false)
+  }
 
   const menuItems = [
     { label: "Главная", icon: Home, path: "/daily" },
     { label: "Тренировки", icon: BarChart3, path: "/profile" },
     { label: "Планирование", icon: ClipboardList, path: "/planning" },
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
-  ];
+  ]
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  if (loading && !profile) return (
-    <div className="min-h-screen bg-[#0e0e10] flex items-center justify-center text-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-sm text-gray-400">Загрузка данных...</span>
-      </div>
-    </div>
-  );
+  // Появление нижнего меню при скролле
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      setShowBottomMenu(scrollY > 300)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6 font-sans">
+    <div className="min-h-screen bg-[#0e0e10] text-white px-4 py-6">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
 
-        {/* HEADER */}
+        {/* Header: фото профиля + имя + кнопки + выбор периода */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-full bg-[#1a1a1d] border border-gray-700 flex items-center justify-center overflow-hidden">
-              {profile?.avatarUrl ? (
-                <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
-              ) : (
-                <span className="text-xl font-bold">{profile?.name?.charAt(0).toUpperCase()}</span>
-              )}
-            </div>
+            <img
+              src="/profile.jpg"
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
             <div>
-              <h1 className="text-2xl font-bold">{profile?.name || "Пользователь"}</h1>
-              <p className="text-sm text-gray-400">{dayjs().format("D MMMM YYYY")}</p>
+              <h1 className="text-2xl font-bold text-white">
+                {loadingProfile ? 'Загрузка...' : name}
+              </h1>
+              <p className="text-sm text-white">
+                {!dateRange
+                  ? selectedMonth.format('MMMM YYYY')
+                  : `${dayjs(dateRange.startDate).format('DD MMM YYYY')} — ${dayjs(dateRange.endDate).format('DD MMM YYYY')}`
+                }
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded flex items-center transition-colors">
-              <Plus className="w-4 h-4 mr-1"/> Добавить тренировку
-            </button>
-            <button onClick={handleLogout} className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded flex items-center transition-colors">
-              <LogOut className="w-4 h-4 mr-1"/> Выйти
-            </button>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Выбор периода */}
+            <div className="flex items-center space-x-2 flex-wrap">
+              <button
+                className="flex items-center text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onPrevMonth}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div
+                className="relative bg-[#1f1f22] text-white px-3 py-1 rounded text-sm flex items-center gap-1 cursor-pointer select-none"
+                onClick={() => { setShowDateRangePicker(false); setDateRange(null) }}
+                title="Показать текущий месяц"
+              >
+                {selectedMonth.format('MMMM YYYY')}
+              </div>
+
+              <button
+                className="text-sm text-gray-300 bg-[#1f1f22] px-3 py-1 rounded hover:bg-[#2a2a2d]"
+                onClick={onNextMonth}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setDateRange({ startDate: dayjs().startOf('isoWeek').toDate(), endDate: dayjs().endOf('isoWeek').toDate() })
+                  setShowDateRangePicker(false)
+                }}
+                className="text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d]"
+              >
+                Текущая неделя
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowDateRangePicker(prev => !prev)}
+                  className="ml-2 text-sm px-3 py-1 rounded border border-gray-600 bg-[#1f1f22] text-gray-300 hover:bg-[#2a2a2d] flex items-center"
+                >
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Произвольный период
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {showDateRangePicker && (
+                  <div className="absolute z-50 mt-2 bg-[#1a1a1d] rounded shadow-lg p-2">
+                    <DateRange
+                      onChange={item => setDateRange({ startDate: item.selection.startDate, endDate: item.selection.endDate })}
+                      showSelectionPreview={true}
+                      moveRangeOnFirstSelection={false}
+                      months={1}
+                      ranges={[{ startDate: dateRange?.startDate || new Date(), endDate: dateRange?.endDate || new Date(), key: 'selection' }]}
+                      direction="horizontal"
+                      rangeColors={['#3b82f6']}
+                      className="text-white"
+                      locale={ru}
+                      weekStartsOn={1}
+                    />
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        onClick={() => setShowDateRangePicker(false)}
+                        className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 text-gray-300"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={applyDateRange}
+                        className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Применить
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Добавить тренировку
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-1" /> Выйти
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* NAVIGATION */}
+        {/* Верхнее меню */}
         <div className="flex justify-around bg-[#1a1a1d] border-b border-gray-700 py-2 px-4 rounded-xl mb-6">
           {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path || (item.path === "/profile" && location.pathname === "/account");
+            const Icon = item.icon
+            const isActive =
+              (item.path === "/daily" && location.pathname === "/daily") ||
+              (item.path === "/profile" && location.pathname === "/profile") ||
+              (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
             return (
               <button
                 key={item.path}
@@ -115,119 +310,102 @@ export default function AccountPage() {
                 <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </button>
-            );
+            )
           })}
         </div>
 
-        {/* MAIN CARD */}
-        <div className="bg-[#1a1a1d] rounded-xl border border-gray-700 p-6 md:p-10 space-y-12">
+        {/* Статистика */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Timer className="w-4 h-4 mr-1" /> Total Training
+            </p>
+            <h2 className="text-xl font-semibold">{totalTimeStr}</h2>
+            <p className="text-xs text-gray-500">{filteredWorkouts.length} Sessions</p>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" /> Distance
+            </p>
+            <h2 className="text-xl font-semibold">{totalDistance.toFixed(1)} km</h2>
+            <p className="text-xs text-gray-500">
+              {filteredWorkouts.filter(w => w.distance).length} Sessions
+            </p>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Zap className="w-4 h-4 mr-1" /> Intensive
+            </p>
+            <h2 className="text-xl font-semibold">{intensiveSessions}</h2>
+          </div>
+          <div className="bg-[#1a1a1d] p-4 rounded-xl">
+            <p className="text-sm text-gray-400 flex items-center">
+              <Target className="w-4 h-4 mr-1" /> Specific
+            </p>
+            <h2 className="text-xl font-semibold">1</h2>
+          </div>
+        </div>
 
-          {/* 1. ПЕРСОНАЛЬНО */}
-          <section>
-            <div className="flex items-center justify-between mb-8 border-b border-gray-700 pb-4">
-              <div className="flex items-center gap-2">
-                <User size={18} className="text-blue-500" />
-                <h2 className="text-sm font-bold uppercase tracking-wider">Личные данные</h2>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 bg-[#1f1f22] border border-gray-600 hover:bg-[#2a2a2d] px-3 py-1.5 text-xs text-white rounded transition-colors"
-              >
-                <Edit3 size={14} /> Изменить
-              </button>
-            </div>
+        {/* Графики и таблицы */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <TrainingLoadChart workouts={filteredWorkouts} />
+            <IntensityZones workouts={filteredWorkouts} />
+          </div>
+          <div className="space-y-6">
+            <TopSessions workouts={filteredWorkouts} />
+            <ActivityTable workouts={filteredWorkouts} />
+          </div>
+        </div>
 
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="relative group mx-auto md:mx-0">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl overflow-hidden border border-gray-700">
-                  <img src={profile?.avatarUrl || "/profile.jpg"} alt="Avatar" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                    <Camera className="text-white w-8 h-8" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <h3 className="text-3xl font-bold">{profile?.name || "—"}</h3>
-                <p className="text-blue-500 text-sm font-medium">{profile?.profile?.gender || "Пол не указан"}</p>
-
-                <div className="bg-[#111113] p-4 rounded-lg border border-gray-800">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Биография</p>
-                  <p className="text-sm text-gray-300 leading-relaxed italic">
-                    {profile?.profile?.bio || "Информация отсутствует"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* 2. СПОРТ */}
-          <section>
-            <div className="flex items-center gap-2 mb-8 border-b border-gray-700 pb-4">
-              <Trophy size={18} className="text-blue-500" />
-              <h2 className="text-sm font-bold uppercase tracking-wider">Спорт</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { label: 'Вид спорта', value: profile?.profile?.sportType },
-                { label: 'Клуб', value: profile?.profile?.club },
-                { label: 'Ассоциация', value: profile?.profile?.association }
-              ].map((item, i) => (
-                <div key={i} className="bg-[#1f1f22] p-4 rounded-lg border border-gray-700">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">{item.label}</p>
-                  <p className="text-lg font-semibold">{item.value || "—"}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 3. ЗОНЫ */}
-          <section>
-            <div className="flex items-center gap-2 mb-8 border-b border-gray-700 pb-4">
-              <Heart size={18} className="text-blue-500" />
-              <h2 className="text-sm font-bold uppercase tracking-wider">Пульсовые зоны</h2>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {hrZonesData.map((z) => (
-                <div key={z.label} className="flex items-center bg-[#0e0e10] border border-gray-700 rounded overflow-hidden">
-                  <div style={{ backgroundColor: z.color }} className="px-3 py-2 text-xs font-bold text-black uppercase">
-                    {z.label}
-                  </div>
-                  <div className="px-4 py-2 text-sm font-bold border-l border-gray-700">
-                    {z.range} <span className="text-[10px] text-gray-500 ml-1">BPM</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 4. ТРЕНЕРЫ */}
-          <section>
-            <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-blue-500" />
-                <h2 className="text-sm font-bold uppercase tracking-wider">Мои тренеры</h2>
-              </div>
-              <ChevronDown size={20} className="text-gray-500" />
-            </div>
-            <div className="bg-[#1a1a1d] border border-dashed border-gray-700 p-8 rounded-lg text-center">
-              <p className="text-sm text-gray-500 mb-4 italic">Список тренеров пуст</p>
-              <button className="text-blue-500 text-xs font-bold uppercase border border-blue-500/30 px-4 py-2 rounded hover:bg-blue-500/10 transition-all">
-                Добавить тренера
-              </button>
-            </div>
-          </section>
+        {/* Список тренировок */}
+        <div>
+          {loadingWorkouts ? (
+            <p className="text-gray-400">Загрузка тренировок...</p>
+          ) : (
+            <RecentWorkouts
+              workouts={filteredWorkouts}
+              onDeleteWorkout={handleDeleteWorkout}
+              onUpdateWorkout={fetchWorkouts}
+            />
+          )}
         </div>
       </div>
 
-      {isModalOpen && (
-        <EditAccountModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          profile={profile}
-          onUpdate={fetchProfile}
-        />
-      )}
+      {/* Модалка */}
+      <AddWorkoutModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddWorkout={handleAddWorkout}
+      />
+
+      {/* Нижняя навигация */}
+      <div
+        className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-7xl bg-[#1a1a1d] border-t border-gray-700 flex justify-around py-2 px-4 transition-all duration-300 ${
+          showBottomMenu ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
+        }`}
+      >
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive =
+            (item.path === "/daily" && location.pathname === "/daily") ||
+            (item.path === "/profile" && location.pathname === "/profile") ||
+            (item.path !== "/daily" && item.path !== "/profile" && location.pathname === item.path)
+
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center text-sm transition-colors ${
+                isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
-  );
+  )
 }
