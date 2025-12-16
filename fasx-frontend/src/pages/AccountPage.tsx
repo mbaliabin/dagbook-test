@@ -26,6 +26,7 @@ export default function AccountPage() {
     const fetchProfile = async () => {
       try {
         const data = await getUserProfile();
+        console.log("Загруженные данные профиля:", data); // Отладка в консоли
         setProfile(data);
       } catch (err) {
         console.error("Ошибка профиля:", err);
@@ -61,7 +62,10 @@ export default function AccountPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl font-sans">
-      Загрузка...
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <span>Загрузка профиля...</span>
+      </div>
     </div>
   );
 
@@ -72,25 +76,32 @@ export default function AccountPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white">
-              {profile?.name?.charAt(0) || "U"}
-            </div>
+            {/* Аватарка в хедере: фото или инициал */}
+            {profile?.avatarUrl ? (
+              <img src={profile.avatarUrl} className="w-12 h-12 rounded-full object-cover border border-gray-800" alt="Avatar" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg">
+                {profile?.name ? profile.name.charAt(0).toUpperCase() : "U"}
+              </div>
+            )}
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Мой профиль</h1>
+              <h1 className="text-2xl font-bold text-white tracking-tight">
+                {profile?.name || "Пользователь"}
+              </h1>
               <p className="text-sm text-gray-400">{dayjs().format("D MMMM YYYY [г]")}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2 flex-wrap">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1.5 rounded-lg flex items-center transition-colors font-semibold">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg flex items-center transition-colors font-semibold shadow-lg shadow-blue-900/20">
               <Plus className="w-4 h-4 mr-1"/> Добавить тренировку
             </button>
-            <button onClick={handleLogout} className="bg-[#1f1f22] border border-gray-700 hover:bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg flex items-center transition-colors">
+            <button onClick={handleLogout} className="bg-[#1f1f22] border border-gray-700 hover:bg-gray-800 text-white text-sm px-4 py-2 rounded-lg flex items-center transition-colors">
               <LogOut className="w-4 h-4 mr-1"/> Выйти
             </button>
           </div>
         </div>
 
-        {/* MENU */}
+        {/* NAVIGATION MENU */}
         <div className="flex justify-around bg-[#1a1a1d] border border-gray-800 py-2 px-4 rounded-xl mb-6 shadow-sm">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -119,23 +130,23 @@ export default function AccountPage() {
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Персональная информация</h2>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="ml-auto flex items-center gap-1.5 border border-gray-700 bg-[#1f1f22] hover:bg-[#2a2a2d] px-4 py-1.5 text-[10px] text-gray-200 transition-all rounded-lg font-bold uppercase tracking-wider shadow-sm"
+                className="ml-auto flex items-center gap-1.5 border border-gray-700 bg-[#1f1f22] hover:bg-[#2a2a2d] px-4 py-1.5 text-[10px] text-gray-200 transition-all rounded-lg font-bold uppercase tracking-wider"
               >
                 <Edit3 size={14} /> Изменить
               </button>
             </div>
 
             <div className="flex flex-col md:flex-row gap-10">
-              {/* ФОТО ПОЛЬЗОВАТЕЛЯ */}
+              {/* БОЛЬШОЕ ФОТО ПРОФИЛЯ */}
               <div className="flex flex-col items-center space-y-4">
-                <div className="relative group cursor-pointer">
+                <div className="relative group">
                   <div className="w-32 h-32 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-gray-800 shadow-2xl group-hover:border-blue-500 transition-all duration-300">
                     <img
                       src={profile?.avatarUrl || "/profile.jpg"}
                       alt="Avatar"
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                        <Camera className="text-white w-8 h-8" />
                     </div>
                   </div>
@@ -145,21 +156,23 @@ export default function AccountPage() {
                 </button>
               </div>
 
-              {/* ТЕКСТОВАЯ ИНФОРМАЦИЯ */}
-              <div className="flex-1 space-y-6">
+              {/* ТЕКСТ: ИМЯ, БИО */}
+              <div className="flex-1 space-y-6 text-center md:text-left">
                 <div>
-                  <h3 className="text-3xl font-bold text-white tracking-tight">{profile?.name || "Имя не указано"}</h3>
-                  <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
+                  <h3 className="text-3xl font-bold text-white tracking-tight">
+                    {profile?.name || "Имя не указано"}
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-1 flex items-center justify-center md:justify-start gap-2">
                     <span>10.12.1995</span>
                     <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
                     <span>Мужчина</span>
                   </p>
                 </div>
 
-                <div className="max-w-2xl">
+                <div className="max-w-2xl mx-auto md:mx-0">
                   <p className="text-[10px] text-gray-500 uppercase font-black tracking-[0.15em] mb-2">Биография</p>
-                  <p className="text-gray-400 text-sm leading-relaxed italic bg-[#1f1f22]/30 p-4 rounded-xl border border-gray-800/50">
-                    {profile?.bio || "Добавьте информацию о себе, своих спортивных целях и достижениях в меню редактирования."}
+                  <p className="text-gray-400 text-sm leading-relaxed italic bg-[#1f1f22]/30 p-5 rounded-xl border border-gray-800/50 min-h-[80px]">
+                    {profile?.bio || "Информация о себе еще не добавлена."}
                   </p>
                 </div>
               </div>
@@ -173,17 +186,17 @@ export default function AccountPage() {
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">Спортивная информация</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:ml-8">
-              <div className="bg-[#1f1f22]/50 p-4 rounded-xl border border-gray-800">
+              <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Вид спорта</p>
-                <p className="text-white text-base font-semibold">{profile?.sportType || "Лыжные гонки"}</p>
+                <p className="text-white text-base font-semibold">{profile?.sportType || "Не указан"}</p>
               </div>
-              <div className="bg-[#1f1f22]/50 p-4 rounded-xl border border-gray-800">
+              <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Название клуба</p>
-                <p className="text-white text-base font-semibold">{profile?.club || "IL Aasguten ski"}</p>
+                <p className="text-white text-base font-semibold">{profile?.club || "Не указан"}</p>
               </div>
-              <div className="bg-[#1f1f22]/50 p-4 rounded-xl border border-gray-800">
+              <div className="bg-[#1f1f22]/50 p-5 rounded-xl border border-gray-800">
                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Ассоциация</p>
-                <p className="text-white text-base font-semibold">{profile?.association || "ФЛГР"}</p>
+                <p className="text-white text-base font-semibold">{profile?.association || "Не указана"}</p>
               </div>
             </div>
           </section>
@@ -196,7 +209,7 @@ export default function AccountPage() {
             </div>
             <div className="md:ml-8 flex flex-wrap gap-3">
               {hrZones.map((z) => (
-                <div key={z.label} className="flex items-center bg-[#0f0f0f] border border-gray-800 rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105">
+                <div key={z.label} className="flex items-center bg-[#0f0f0f] border border-gray-800 rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105 cursor-default">
                   <span style={{ backgroundColor: z.color }} className="px-4 py-2 text-[11px] font-black text-black uppercase">
                     {z.label}
                   </span>
@@ -217,10 +230,10 @@ export default function AccountPage() {
               </div>
               <ChevronDown size={20} className="text-gray-700 cursor-pointer hover:text-white" />
             </div>
-            <div className="md:ml-8 space-y-6">
-              <div className="bg-[#1f1f22]/30 border border-dashed border-gray-700 p-8 rounded-2xl text-center">
-                <p className="text-sm text-gray-500 italic mb-4">У вас пока нет активных связей с тренерами.</p>
-                <button className="inline-flex items-center gap-2 border border-blue-600/30 bg-blue-600/10 hover:bg-blue-600/20 px-6 py-3 rounded-xl text-[11px] text-blue-400 font-bold uppercase tracking-widest transition-all active:scale-95">
+            <div className="md:ml-8">
+              <div className="bg-[#1f1f22]/30 border border-dashed border-gray-700 p-10 rounded-2xl text-center">
+                <p className="text-sm text-gray-500 italic mb-5">У вас пока нет привязанных тренеров.</p>
+                <button className="inline-flex items-center gap-2 border border-blue-600/30 bg-blue-600/10 hover:bg-blue-600/20 px-6 py-3 rounded-xl text-[11px] text-blue-400 font-bold uppercase tracking-widest transition-all">
                   <Plus size={16} /> Добавить тренера / Предоставить доступ
                 </button>
               </div>
@@ -230,7 +243,7 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Модальное окно редактирования */}
+      {/* Модальное окно */}
       <EditAccountModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
