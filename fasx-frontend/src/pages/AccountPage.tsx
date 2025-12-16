@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -22,27 +22,29 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Функция для повторной загрузки или обновления стейта после редактирования
-  const fetchProfile = async () => {
+  // Используем useCallback, чтобы ссылка на функцию не менялась при ререндерах
+  const fetchProfile = useCallback(async () => {
     try {
+      // Убираем setLoading(true), чтобы страница не "мигала" при каждом обновлении данных
       const data = await getUserProfile();
-      console.log("Загруженные данные профиля:", data);
+      console.log("Данные профиля обновлены:", data);
       setProfile(data);
     } catch (err) {
-      console.error("Ошибка профиля:", err);
-      if (err instanceof Error && err.message.includes("авторизации")) {
+      console.error("Ошибка загрузки профиля:", err);
+      if (err instanceof Error && (err.message.includes("401") || err.message.includes("авторизации"))) {
+        localStorage.removeItem("token");
         navigate('/login');
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchProfile();
-  }, [navigate]);
+  }, [fetchProfile]);
 
-  // Формируем массив зон на основе данных из БД или дефолтных значений
+  // Формируем массив зон (теперь безопасно проверяем вложенность)
   const hrZonesData = [
     { label: 'I1', range: profile?.profile?.hrZones?.I1 || '---', color: '#4ade80' },
     { label: 'I2', range: profile?.profile?.hrZones?.I2 || '---', color: '#22d3ee' },
@@ -63,7 +65,7 @@ export default function AccountPage() {
     navigate("/login");
   };
 
-  if (loading) return (
+  if (loading && !profile) return (
     <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center text-white text-2xl font-sans">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -79,16 +81,16 @@ export default function AccountPage() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 w-full">
           <div className="flex items-center space-x-4">
-            {profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} className="w-12 h-12 rounded-full object-cover border border-gray-800" alt="Avatar" />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg">
-                {profile?.name ? profile.name.charAt(0).toUpperCase() : "U"}
-              </div>
-            )}
+            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Avatar" />
+              ) : (
+                profile?.name?.charAt(0).toUpperCase() || "U"
+              )}
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">
-                {profile?.name || "Пользователь"}
+                {profile?.name || "Загрузка..."}
               </h1>
               <p className="text-sm text-gray-400">{dayjs().format("D MMMM YYYY [г]")}</p>
             </div>
@@ -107,7 +109,7 @@ export default function AccountPage() {
         <div className="flex justify-around bg-[#1a1a1d] border border-gray-800 py-2 px-4 rounded-xl mb-6 shadow-sm">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname.includes(item.path) || (item.path === "/profile" && location.pathname === "/account");
+            const isActive = location.pathname === item.path || (item.path === "/profile" && location.pathname === "/account");
             return (
               <button
                   key={item.path}
@@ -122,9 +124,7 @@ export default function AccountPage() {
           })}
         </div>
 
-        {/* ОСНОВНОЙ КОНТЕНТ ПРОФИЛЯ */}
         <div className="bg-[#1a1a1d] rounded-2xl border border-gray-800 p-8 md:p-12 space-y-12 shadow-xl">
-
           {/* 1. Персональная информация */}
           <section className="relative">
             <div className="flex items-center gap-2 text-gray-500 mb-8 border-b border-gray-800 pb-4">
@@ -139,7 +139,6 @@ export default function AccountPage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-10">
-              {/* ФОТО ПРОФИЛЯ */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group">
                   <div className="w-32 h-32 md:w-44 md:h-44 rounded-2xl overflow-hidden border-2 border-gray-800 shadow-2xl group-hover:border-blue-500 transition-all duration-300">
@@ -155,7 +154,6 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              {/* ТЕКСТ: ИМЯ, БИО */}
               <div className="flex-1 space-y-6 text-center md:text-left">
                 <div>
                   <h3 className="text-3xl font-bold text-white tracking-tight">
@@ -198,7 +196,7 @@ export default function AccountPage() {
             </div>
           </section>
 
-          {/* 3. Зоны интенсивности (ДИНАМИЧЕСКИЕ) */}
+          {/* 3. Зоны интенсивности */}
           <section>
             <div className="flex items-center gap-2 text-gray-500 mb-8 border-b border-gray-800 pb-4">
               <Heart size={18} className="text-blue-500" />
@@ -236,17 +234,18 @@ export default function AccountPage() {
               </div>
             </div>
           </section>
-
         </div>
       </div>
 
-      {/* Модальное окно — передаем профиль и функцию обновления */}
-      <EditAccountModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        profile={profile}
-        onUpdate={fetchProfile} // Передаем функцию перезагрузки данных
-      />
+      {/* Передаем profile и функцию fetchProfile */}
+      {isModalOpen && (
+        <EditAccountModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          profile={profile}
+          onUpdate={fetchProfile}
+        />
+      )}
     </div>
   );
 }

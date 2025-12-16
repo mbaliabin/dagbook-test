@@ -10,7 +10,6 @@ interface EditAccountModalProps {
 }
 
 export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }: EditAccountModalProps) {
-  // Состояния для управления полями формы
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
@@ -22,7 +21,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
     I1: "", I2: "", I3: "", I4: "", I5: ""
   });
 
-  // Синхронизация данных из БД с состоянием формы при открытии модалки
   useEffect(() => {
     if (profile && isOpen) {
       const names = profile.name?.split(" ") || ["", ""];
@@ -49,8 +47,8 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
       return;
     }
 
-    // Собираем данные в один объект
-    const fullName = `${firstName} ${lastName}`.trim();
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+
     const updateData = {
       name: fullName,
       bio,
@@ -62,23 +60,21 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
     };
 
     try {
-      // Используем переменную окружения, как в AddWorkoutModal
-      // Если она не задана в .env, используем твой текущий IP
       const baseUrl = import.meta.env.VITE_API_URL || "http://46.173.18.36:4000";
 
       const response = await fetch(`${baseUrl}/api/profile`, {
         method: "PUT",
         headers: {
+          "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token, // Формат как в рабочей модалке
+          "Authorization": "Bearer " + token // Формат 1 в 1 как в AddWorkoutModal
         },
         body: JSON.stringify(updateData),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("Профиль успешно обновлен:", result);
-        onUpdate();
+        console.log("Профиль успешно обновлен");
+        await onUpdate(); // Ждем завершения обновления данных в AccountPage
         onClose();
       } else {
         const errorData = await response.json();
@@ -104,7 +100,7 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
 
       <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-8 rounded-2xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800">
-        <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors">
+        <button onClick={onClose} type="button" className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors">
           <X size={24} />
         </button>
 
@@ -113,7 +109,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
         </Dialog.Title>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Секция: Имя и Фамилия */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя</label>
@@ -136,7 +131,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
             </div>
           </div>
 
-          {/* Секция: Биография */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Биография</label>
             <textarea
@@ -148,7 +142,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
             />
           </div>
 
-          {/* Секция: Пол и Дата рождения */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пол</label>
@@ -174,7 +167,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
 
           <div className="h-px bg-gray-800 my-4" />
 
-          {/* Секция: Спортивные данные */}
           <div className="space-y-6">
             <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Спортивные данные</h3>
 
@@ -221,7 +213,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
               </div>
             </div>
 
-            {/* Зоны ЧСС (интерактивные инпуты) */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Зоны ЧСС (уд/мин)</label>
               <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
@@ -243,7 +234,6 @@ export default function EditAccountModal({ isOpen, onClose, profile, onUpdate }:
             </div>
           </div>
 
-          {/* Кнопки действий */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
             <button
               type="button"
