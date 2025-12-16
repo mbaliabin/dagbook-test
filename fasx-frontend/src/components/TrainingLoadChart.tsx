@@ -64,7 +64,7 @@ const TrainingLoadChart: React.FC<Props> = ({ workouts }) => {
           <p className="text-lg font-bold text-white tracking-tight leading-none">Активность</p>
         </div>
         <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest border-b border-gray-800 pb-1">
-          Километраж
+          Расстояние /км
         </span>
       </div>
 
