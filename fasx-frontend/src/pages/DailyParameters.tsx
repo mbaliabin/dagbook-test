@@ -139,25 +139,26 @@ export default function DailyParameters() {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-          {/* КЛИКАБЕЛЬНАЯ ЗОНА ПРОФИЛЯ */}
+          {/* КЛИКАБЕЛЬНАЯ ЗОНА ПРОФИЛЯ (Ведет на /account) */}
           <div
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/account")}
             className="flex items-center space-x-4 cursor-pointer group"
           >
             <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden border border-gray-800 group-hover:border-blue-500 transition-all">
-              {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : name.charAt(0) || "U"}
+              {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="avatar" /> : name.charAt(0) || "U"}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight group-hover:text-blue-400 transition-colors">
                 {name}
               </h1>
               <p className="text-sm text-gray-400 flex items-center gap-1 group-hover:text-gray-300">
-                Профиль <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-all" />
+                Аккаунт <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-all" />
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* ФИКСИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДАТ */}
             <div className="flex items-center bg-[#1a1a1d] border border-gray-800 rounded-xl p-1 shadow-sm overflow-hidden">
               <button onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))} className="p-2.5 hover:text-blue-500 transition-colors shrink-0">
                 <ChevronLeft size={18}/>
@@ -193,7 +194,7 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* GRID: 1/4 + 3/4 */}
+        {/* ОСНОВНОЙ КОНТЕНТ */}
         <div className="grid lg:grid-cols-4 gap-6 items-stretch">
 
           {/* СТАТУСЫ + АНАЛИТИКА */}
@@ -213,9 +214,9 @@ export default function DailyParameters() {
                 <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
               </div>
 
-              {/* Блок Анализа */}
+              {/* Аналитика */}
               <div className="flex-grow flex flex-col justify-center space-y-4 py-8">
-                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl shadow-inner text-center">
+                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl text-center">
                   <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Индекс готовности</p>
                   <span className="text-xl font-bold text-blue-500">{readinessScore > 0 ? readinessScore + '%' : '--'}</span>
                   <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mt-3">
@@ -228,7 +229,7 @@ export default function DailyParameters() {
                     <Activity size={12} />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Совет дня</span>
                   </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                  <p className="text-[11px] text-gray-400 leading-relaxed italic text-center md:text-left">
                     {mainParam === 'syk' ? "Полное восстановление — твой главный приоритет." :
                      physical > 7 ? "Организм готов к интенсивным интервалам." :
                      "Хороший день для восстановительного кросса."}
@@ -244,7 +245,7 @@ export default function DailyParameters() {
             </div>
           </div>
 
-          {/* ПОКАЗАТЕЛИ */}
+          {/* ФОРМА ПАРАМЕТРОВ */}
           <div className="lg:col-span-3">
             <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
               <div className="flex items-center gap-2 text-gray-400">
