@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
-import { X } from "lucide-react";
+import { X, Trophy, Calendar, MessageSquare, Activity, Timer, Ruler, CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface AddWorkoutModalProps {
   isOpen: boolean;
@@ -18,11 +19,10 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
   const [zones, setZones] = useState<string[]>(["", "", "", "", ""]);
   const [distance, setDistance] = useState<number | "">("");
 
-  // Сбрасываем форму при открытии модалки
   useEffect(() => {
     if (isOpen) {
       setTitle("");
-      setDate("");
+      setDate(new Date().toISOString().split('T')[0]); // По умолчанию сегодня
       setComment("");
       setEffort(null);
       setFeeling(null);
@@ -48,12 +48,13 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Вы не авторизованы");
+      toast.error("Вы не авторизованы");
       return;
     }
+
+    const loadingToast = toast.loading("Создание тренировки...");
 
     const workoutData = {
       name: title,
@@ -84,19 +85,16 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Ошибка при создании тренировки:", errorData);
-        alert("Ошибка при создании тренировки");
+        toast.error("Ошибка при создании", { id: loadingToast });
         return;
       }
 
       const result = await response.json();
-      console.log("Создана тренировка:", result);
-      onAddWorkout(result); // Передаём тренировку в родительский компонент
+      toast.success("Тренировка добавлена! 🏆", { id: loadingToast });
+      onAddWorkout(result);
       onClose();
     } catch (error) {
-      console.error("Сетевой сбой:", error);
-      alert("Ошибка соединения с сервером");
+      toast.error("Ошибка соединения", { id: loadingToast });
     }
   };
 
@@ -104,184 +102,200 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
   const zoneLabels = ["I1", "I2", "I3", "I4", "I5"];
 
   return (
-    <>
-      <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
-        <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-6 rounded-2xl w-[90%] max-w-xl z-50 text-white shadow-2xl">
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-            <X />
-          </button>
-          <Dialog.Title className="text-xl font-semibold mb-4">Добавить тренировку</Dialog.Title>
+    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" aria-hidden="true" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Название тренировки</label>
-              <input
-                type="text"
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Например: Утренняя пробежка"
-                required
-              />
-            </div>
+      <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto rounded-3xl w-full max-w-2xl z-50 text-gray-200 shadow-2xl border border-gray-800 scrollbar-hide">
+        {/* Кнопка закрытия */}
+        <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+          <X size={24} />
+        </button>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Дата</label>
-              <input
-                type="date"
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
+        <div className="p-8">
+          <Dialog.Title className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+            <Trophy className="text-blue-500" /> Добавить тренировку
+          </Dialog.Title>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Комментарий</label>
-              <textarea
-                rows={3}
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Воспринимаемая нагрузка</label>
-              <div className="flex items-center justify-between gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${effort === i + 1 ? "bg-blue-600 text-white" : "bg-[#2a2a2d] text-gray-300"}`}
-                    onClick={() => setEffort(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Название и Дата */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                  <Activity size={12}/> Название
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-[#0f0f0f] border border-gray-800 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-white"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Бег, Силовая..."
+                  required
+                />
               </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Легко</span>
-                <span>Максимум</span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                  <Calendar size={12}/> Дата
+                </label>
+                <input
+                  type="date"
+                  className="w-full bg-[#0f0f0f] border border-gray-800 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-white color-scheme-dark"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Самочувствие</label>
-              <div className="flex items-center justify-between gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${feeling === i + 1 ? "bg-green-600 text-white" : "bg-[#2a2a2d] text-gray-300"}`}
-                    onClick={() => setFeeling(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>Плохо</span>
-                <span>Отлично</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Тип тренировки</label>
+            {/* Тип тренировки */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Вид активности</label>
               <select
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white"
+                className="w-full bg-[#0f0f0f] border border-gray-800 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-white appearance-none cursor-pointer"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
                 required
               >
-                <option value="">Выбери тип</option>
-                <option value="Running">Бег</option>
-                <option value="XC_Skiing_Classic">Лыжи, классика</option>
-                <option value="XC_Skiing_Skate">Лыжи, свободный стиль</option>
-                <option value="RollerSki_Classic">Роллеры, классика</option>
-                <option value="RollerSki_Skate">Лыжероллеры, свободный стиль</option>
-                <option value="StrengthTraining">Силовая тренировка</option>
-                <option value="Other">Другое</option>
-                <option value="Bike">Велосипед</option>
+                <option value="">Выберите тип...</option>
+                <option value="Running">🏃 Бег</option>
+                <option value="XC_Skiing_Classic">🎿 Лыжи (Классика)</option>
+                <option value="XC_Skiing_Skate">🎿 Лыжи (Конёк)</option>
+                <option value="RollerSki_Classic">🛼 Роллеры (Классика)</option>
+                <option value="RollerSki_Skate">🛼 Лыжероллеры (Конёк)</option>
+                <option value="StrengthTraining">💪 Силовая</option>
+                <option value="Bike">🚲 Велосипед</option>
+                <option value="Other">🔘 Другое</option>
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Минуты по зонам интенсивности</label>
-              <div className="overflow-x-auto">
-                <div className="flex gap-3 min-w-[500px]">
-                  {[1, 2, 3, 4, 5].map((_, idx) => (
-                    <div key={idx} className="flex flex-col items-center w-24">
-                      <span className="text-sm text-gray-300 mb-1">{zoneLabels[idx]}</span>
-                      <div className={`w-full h-6 rounded-t ${zoneColors[idx]} border border-gray-600`} />
-                      <input
-                        type="number"
-                        min={0}
-                        className="w-full text-center bg-[#2a2a2d] text-white py-1 rounded-b no-spinner"
-                        value={zones[idx]}
-                        onChange={(e) => handleZoneChange(idx, e.target.value)}
-                      />
-                    </div>
+            {/* Нагрузка и Самочувствие (Стиль как на главной) */}
+            <div className="grid gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex justify-between">
+                  <span>Воспринимаемая нагрузка</span>
+                  <span className="text-blue-500 font-bold">{effort || 0}/10</span>
+                </label>
+                <div className="flex justify-between gap-1.5">
+                  {[...Array(10)].map((_, i) => (
+                    <button
+                      type="button" key={i}
+                      className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all border ${effort === i + 1 ? "bg-blue-600 border-blue-500 text-white" : "bg-[#0f0f0f] border-gray-800 text-gray-500 hover:border-gray-600"}`}
+                      onClick={() => setEffort(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex justify-between">
+                  <span>Самочувствие</span>
+                  <span className="text-green-500 font-bold">{feeling || 0}/10</span>
+                </label>
+                <div className="flex justify-between gap-1.5">
+                  {[...Array(10)].map((_, i) => (
+                    <button
+                      type="button" key={i}
+                      className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all border ${feeling === i + 1 ? "bg-green-600 border-green-500 text-white" : "bg-[#0f0f0f] border-gray-800 text-gray-500 hover:border-gray-600"}`}
+                      onClick={() => setFeeling(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Время тренировки</label>
-              <input
-                type="text"
-                value={formattedDuration}
-                disabled
-                className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white opacity-70 cursor-not-allowed"
+            {/* Зоны интенсивности */}
+            <div className="space-y-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                <Timer size={12}/> Интенсивность (мин)
+              </label>
+              <div className="grid grid-cols-5 gap-3">
+                {zones.map((_, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className={`h-1.5 w-full rounded-full ${zoneColors[idx]} opacity-80`} />
+                    <input
+                      type="number"
+                      placeholder={zoneLabels[idx]}
+                      className="w-full text-center bg-[#0f0f0f] border border-gray-800 py-3 rounded-xl text-white text-sm focus:border-blue-500 outline-none transition-all no-spinner"
+                      value={zones[idx]}
+                      onChange={(e) => handleZoneChange(idx, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Время и Дистанция */}
+            <div className="grid md:grid-cols-2 gap-6 bg-[#0f0f0f] p-4 rounded-2xl border border-gray-800/50">
+              <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase text-gray-600 tracking-tighter">Общее время</p>
+                <p className="text-xl font-bold text-white tracking-tight">{formattedDuration}</p>
+              </div>
+
+              {(type !== "StrengthTraining" && type !== "Other") && (
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase text-gray-600 tracking-tighter flex items-center gap-1">
+                    <Ruler size={10}/> Дистанция (км)
+                  </label>
+                  <input
+                    type="number" step={0.1}
+                    className="w-full bg-[#1a1a1d] border border-gray-800 p-2 rounded-lg focus:border-blue-500 outline-none transition-all text-white font-bold"
+                    value={distance}
+                    onChange={(e) => setDistance(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Комментарий */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                <MessageSquare size={12}/> Комментарий
+              </label>
+              <textarea
+                rows={2}
+                className="w-full bg-[#0f0f0f] border border-gray-800 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-white resize-none"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Как прошла тренировка?..."
               />
             </div>
 
-            {(type !== "StrengthTraining" && type !== "Other") && (
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Расстояние (км)</label>
-                <input
-                  type="number"
-                  min={0}
-                  step={0.1}
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  className="w-full p-2 rounded-lg bg-[#2a2a2d] text-white"
-                />
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-4">
+            {/* Кнопки */}
+            <div className="flex gap-4 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
+                className="flex-1 px-6 py-4 bg-transparent border border-gray-800 text-gray-400 font-bold rounded-2xl hover:bg-gray-800 transition-all"
               >
                 Отмена
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+                className="flex-2 px-12 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 active:scale-95"
               >
-                Сохранить
+                <CheckCircle2 size={18} /> Сохранить
               </button>
             </div>
           </form>
-        </Dialog.Panel>
-      </Dialog>
+        </div>
+      </Dialog.Panel>
 
       <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+        }
         input.no-spinner::-webkit-outer-spin-button,
         input.no-spinner::-webkit-inner-spin-button {
           -webkit-appearance: none;
           margin: 0;
         }
-        input.no-spinner {
-          -moz-appearance: textfield;
-        }
       `}</style>
-    </>
+    </Dialog>
   );
 }
-
