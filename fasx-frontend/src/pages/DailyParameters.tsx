@@ -5,13 +5,13 @@ import "dayjs/locale/ru";
 import {
   User, Brain, Moon, AlertTriangle, Thermometer, Send, Clock,
   Sun, Award, Settings, LogOut, ChevronLeft, ChevronRight,
-  Timer, BarChart3, ClipboardList, CalendarDays, CheckCircle2
+  Timer, BarChart3, ClipboardList, CalendarDays, CheckCircle2, Activity
 } from "lucide-react";
 import { getUserProfile } from "../api/getUserProfile";
 
 dayjs.locale("ru");
 
-// --- КОМПОНЕНТЫ (Компактные размеры) ---
+// --- ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ---
 
 const TenButtons = ({ value, onChange, Icon }: { value: number; onChange: (val: number) => void; Icon: any }) => (
   <div className="flex flex-wrap gap-2 md:gap-3">
@@ -52,6 +52,8 @@ const CompactStatusButton = ({ id, label, Icon, activeId, onClick, activeColor }
     </button>
   );
 };
+
+// --- ОСНОВНОЙ КОМПОНЕНТ ---
 
 export default function DailyParameters() {
   const navigate = useNavigate();
@@ -130,6 +132,9 @@ export default function DailyParameters() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
+  // Расчет индекса готовности (0-100)
+  const readinessScore = Math.round(((physical + mental + sleepQuality) / 30) * 100);
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-gray-200 p-6 w-full font-sans">
       <div className="max-w-[1600px] mx-auto space-y-6 px-4">
@@ -175,37 +180,60 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* СЕТКА С ВЫРАВНИВАНИЕМ (items-stretch) */}
+        {/* ГЛАВНЫЙ КОНТЕНТ (4 колонки: 1 под статусы, 3 под форму) */}
         <div className="grid lg:grid-cols-4 gap-6 items-stretch">
 
-          {/* СТАТУСЫ (Узкая колонка col-span-1) */}
+          {/* ЛЕВАЯ КОЛОНКА: СТАТУСЫ И АНАЛИТИКА */}
           <div className="lg:col-span-1">
-            <div className="bg-[#1a1a1d] border border-gray-800 p-5 rounded-2xl shadow-xl h-full flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-6 text-gray-400">
-                  <AlertTriangle size={14} className="text-blue-500" />
-                  <h2 className="text-[10px] font-black uppercase tracking-widest">Основной статус</h2>
+            <div className="bg-[#1a1a1d] border border-gray-800 p-5 rounded-2xl shadow-xl h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4 text-gray-400">
+                <AlertTriangle size={14} className="text-blue-500" />
+                <h2 className="text-[10px] font-black uppercase tracking-widest">Основной статус</h2>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <CompactStatusButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
+                <CompactStatusButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-orange-600" />
+                <CompactStatusButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-600" />
+                <CompactStatusButton id="hoydedogn" label="Часовой пояс" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-600" />
+                <CompactStatusButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-600" />
+                <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
+              </div>
+
+              {/* ЗАПОЛНЕНИЕ ПУСТОТЫ: ВИДЖЕТ ГОТОВНОСТИ */}
+              <div className="flex-grow flex flex-col justify-center space-y-4 py-8">
+                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl">
+                  <div className="flex justify-between items-end mb-2">
+                    <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Готовность</p>
+                    <span className="text-lg font-bold text-blue-500">{readinessScore > 0 ? readinessScore + '%' : '--'}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-600 transition-all duration-700" style={{ width: `${readinessScore}%` }} />
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <CompactStatusButton id="skadet" label="Травма" Icon={AlertTriangle} activeId={mainParam} onClick={setMainParam} activeColor="bg-red-600" />
-                  <CompactStatusButton id="syk" label="Болезнь" Icon={Thermometer} activeId={mainParam} onClick={setMainParam} activeColor="bg-orange-600" />
-                  <CompactStatusButton id="paReise" label="В пути" Icon={Send} activeId={mainParam} onClick={setMainParam} activeColor="bg-blue-600" />
-                  <CompactStatusButton id="hoydedogn" label="Часовой пояс" Icon={Clock} activeId={mainParam} onClick={setMainParam} activeColor="bg-purple-600" />
-                  <CompactStatusButton id="fridag" label="Выходной" Icon={Sun} activeId={mainParam} onClick={setMainParam} activeColor="bg-green-600" />
-                  <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
+
+                <div className="bg-blue-600/5 border border-blue-500/10 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2 text-blue-500">
+                    <Activity size={12} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">AI Анализ</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed italic">
+                    {mainParam === 'syk' ? "Приоритет: восстановление и сон." :
+                     physical > 7 ? "Оптимально для высокой нагрузки." :
+                     "Рекомендуется умеренный темп."}
+                  </p>
                 </div>
               </div>
 
-              {/* ПОДПИСЬ В САМОМ НИЗУ */}
-              <div className="mt-8 pt-6 border-t border-gray-800/50 hidden lg:block">
+              <div className="pt-4 border-t border-gray-800/50">
                 <p className="text-[9px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
-                  Анализ внешних факторов формы.
+                  Анализ внешних факторов формы
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ПОКАЗАТЕЛИ (Широкая колонка col-span-3) */}
+          {/* ПРАВАЯ КОЛОНКА: ОСНОВНЫЕ ПАРАМЕТРЫ */}
           <div className="lg:col-span-3">
             <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
               <div className="flex items-center gap-2 text-gray-400">
@@ -215,38 +243,28 @@ export default function DailyParameters() {
 
               <div className="grid gap-8 flex-grow">
                 <section className="space-y-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <User size={14}/> Физическая готовность
-                  </label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><User size={14}/> Физическая готовность</label>
                   <TenButtons value={physical} onChange={setPhysical} Icon={User} />
                 </section>
 
                 <section className="space-y-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <Brain size={14}/> Ментальная готовность
-                  </label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Brain size={14}/> Ментальная готовность</label>
                   <TenButtons value={mental} onChange={setMental} Icon={Brain} />
                 </section>
 
                 <section className="space-y-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <Moon size={14}/> Качество сна
-                  </label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Moon size={14}/> Качество сна</label>
                   <TenButtons value={sleepQuality} onChange={setSleepQuality} Icon={Moon} />
                 </section>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <section className="space-y-3">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                      <Timer size={14}/> Пульс (уд/мин)
-                    </label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Timer size={14}/> Пульс (уд/мин)</label>
                     <input type="number" value={pulse} onChange={(e) => setPulse(e.target.value)} placeholder="60"
                       className="w-full bg-[#0f0f0f] border border-gray-800 p-4 rounded-xl focus:border-blue-500 outline-none transition-all text-white font-bold" />
                   </section>
                   <section className="space-y-3">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                      <Clock size={14}/> Длительность сна
-                    </label>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Clock size={14}/> Длительность сна</label>
                     <input type="text" value={sleepDuration} onChange={(e) => setSleepDuration(e.target.value)} placeholder="07:30"
                       className="w-full bg-[#0f0f0f] border border-gray-800 p-4 rounded-xl focus:border-blue-500 outline-none transition-all text-white font-bold" />
                   </section>
@@ -261,13 +279,11 @@ export default function DailyParameters() {
 
               <div className="pt-4">
                 <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/30 active:scale-[0.98]">
-                  <CheckCircle2 size={20} />
-                  Сохранить параметры
+                  <CheckCircle2 size={20} /> Сохранить параметры
                 </button>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
