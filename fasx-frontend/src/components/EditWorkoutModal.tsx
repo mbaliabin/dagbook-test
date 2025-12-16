@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Dialog } from "@headlessui/react";
-import { X, Check, Calendar, MessageSquare } from "lucide-react";
+import { X, Check, Ruler, Calendar, MessageSquare, Edit2, Eye, Activity } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Workout {
@@ -30,8 +30,9 @@ interface EditWorkoutModalProps {
 
 export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onSave }: EditWorkoutModalProps) {
   const [loading, setLoading] = useState(false);
+  const [workout, setWorkout] = useState<Workout | null>(null);
 
-  // Состояния для данных
+  // Состояния для формы
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [comment, setComment] = useState("");
@@ -53,8 +54,8 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`, {
           headers: { Authorization: "Bearer " + token },
         });
-        const data: Workout = await res.json();
-
+        const data = await res.json();
+        setWorkout(data);
         setName(data.name);
         setDate(data.date.slice(0, 10));
         setComment(data.comment || "");
@@ -78,7 +79,6 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
     fetchWorkout();
   }, [workoutId, isOpen]);
 
-  // Расчеты для обзора
   const totalMin = useMemo(() => zones.reduce((sum, val) => sum + (parseInt(val) || 0), 0), [zones]);
 
   const pace = useMemo(() => {
@@ -92,23 +92,11 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
     return null;
   }, [distance, totalMin]);
 
-  const formattedFullDate = useMemo(() => {
-    if (!date) return "";
-    const d = new Date(date);
-    return new Intl.DateTimeFormat('ru-RU', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit'
-    }).format(d).replace(/^\w/, (c) => c.toUpperCase());
-  }, [date]);
-
   const handleSave = async () => {
     const loadingToast = toast.loading("Сохранение...");
     const intensityZones = {
-      zone1Min: parseInt(zones[0]) || 0,
-      zone2Min: parseInt(zones[1]) || 0,
-      zone3Min: parseInt(zones[2]) || 0,
-      zone4Min: parseInt(zones[3]) || 0,
+      zone1Min: parseInt(zones[0]) || 0, zone2Min: parseInt(zones[1]) || 0,
+      zone3Min: parseInt(zones[2]) || 0, zone4Min: parseInt(zones[3]) || 0,
       zone5Min: parseInt(zones[4]) || 0,
     };
 
@@ -117,12 +105,7 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${workoutId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name, date, comment, effort, feeling, type,
-          duration: totalMin,
-          distance: Number(distance) || null,
-          ...intensityZones
-        }),
+        body: JSON.stringify({ name, date, comment, effort, feeling, type, duration: totalMin, distance: Number(distance) || null, intensityZones }),
       });
 
       if (res.ok) {
@@ -130,11 +113,9 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
         toast.success("Обновлено", { id: loadingToast });
         onSave?.(updated);
         onClose();
-      } else {
-        throw new Error();
       }
     } catch {
-      toast.error("Ошибка при сохранении", { id: loadingToast });
+      toast.error("Ошибка сети", { id: loadingToast });
     }
   };
 
@@ -148,78 +129,52 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
       <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[92vh] overflow-y-auto rounded-3xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800 scrollbar-hide">
 
         {/* Header */}
-        <div className="sticky top-0 bg-[#1a1a1d]/95 backdrop-blur-md z-10 px-8 py-7 border-b border-gray-800 flex justify-between items-start">
-          <div className="space-y-1">
-            {!isEditing ? (
-              <>
-                <div className="text-blue-500 font-black text-3xl tracking-tight leading-none mb-1">
-                  {formattedFullDate}
-                </div>
-                <Dialog.Title className="text-lg font-medium text-gray-400 tracking-tight italic">
-                  {name || "Без названия"}
-                </Dialog.Title>
-              </>
-            ) : (
-              <>
-                <div className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
-                  Редактирование тренировки
-                </div>
-                <Dialog.Title className="text-2xl font-black tracking-tight uppercase">
-                  {name || "Запись"}
-                </Dialog.Title>
-              </>
-            )}
+        <div className="sticky top-0 bg-[#1a1a1d]/90 backdrop-blur-md z-10 px-8 py-5 border-b border-gray-800 flex justify-between items-center">
+          <div>
+            <div className="flex items-center gap-2 text-blue-500 mb-0.5">
+              <Calendar size={12} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{date}</span>
+            </div>
+            <Dialog.Title className="text-xl font-black tracking-tight">{isEditing ? "Редактирование" : name}</Dialog.Title>
           </div>
-          <button onClick={onClose} className="p-2 -mr-2 hover:bg-gray-800 rounded-full transition-colors text-gray-500">
-            <X size={28} />
-          </button>
+          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400"><X size={24} /></button>
         </div>
 
         <div className="p-8">
           {loading ? (
-            <div className="h-64 flex items-center justify-center text-gray-500 animate-pulse font-medium uppercase tracking-widest">Загрузка данных...</div>
+            <div className="h-64 flex items-center justify-center text-gray-500 animate-pulse font-medium">Загрузка данных...</div>
           ) : !isEditing ? (
-            /* --- РЕЖИМ ОБЗОРА (VIEW SUMMARY) --- */
+            /* --- ОБЗОР (VIEW) --- */
             <div className="space-y-10">
-              {/* Главные показатели */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-[#2a2a2d] p-5 rounded-2xl border border-gray-800 shadow-sm">
+                <div className="bg-[#2a2a2d] p-5 rounded-2xl border border-gray-800">
                   <span className="text-gray-500 text-[10px] font-bold uppercase block mb-2">Дистанция</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-white">{distance || "0"}</span>
-                    <span className="text-gray-400 font-bold text-sm uppercase">км</span>
+                    <span className="text-gray-400 font-bold text-sm">км</span>
                   </div>
                 </div>
-                <div className="bg-[#2a2a2d] p-5 rounded-2xl border border-gray-800 shadow-sm">
+                <div className="bg-[#2a2a2d] p-5 rounded-2xl border border-gray-800">
                   <span className="text-gray-500 text-[10px] font-bold uppercase block mb-2">Время</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-white">
-                      {totalMin >= 60 ? `${Math.floor(totalMin/60)}ч ` : ""}{totalMin%60}м
-                    </span>
+                    <span className="text-3xl font-black text-white">{Math.floor(totalMin/60)}ч {totalMin%60}м</span>
                   </div>
                 </div>
                 {pace && (
-                  <div className="bg-blue-600/10 p-5 rounded-2xl border border-blue-500/20 shadow-sm">
-                    <span className="text-blue-500 text-[10px] font-bold uppercase block mb-2 tracking-wider">Темп</span>
+                  <div className="bg-blue-600/10 p-5 rounded-2xl border border-blue-500/20">
+                    <span className="text-blue-500 text-[10px] font-bold uppercase block mb-2">Средний темп</span>
                     <span className="text-2xl font-black text-blue-400">{pace}</span>
                   </div>
                 )}
               </div>
 
-              {/* Визуализация интенсивности */}
               <div className="space-y-4">
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1 h-3 bg-blue-500 rounded-full"></div> Распределение зон
-                </h4>
-                <div className="flex h-12 w-full rounded-xl overflow-hidden bg-gray-900/50 p-1 border border-gray-800">
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Интенсивность</h4>
+                <div className="flex h-10 w-full rounded-xl overflow-hidden bg-gray-900">
                   {zones.map((val, i) => {
                     const width = totalMin > 0 ? (parseInt(val) / totalMin) * 100 : 0;
                     return width > 0 ? (
-                      <div
-                        key={i}
-                        style={{ width: `${width}%` }}
-                        className={`${zoneColors[i]} h-full first:rounded-l-lg last:rounded-r-lg transition-all duration-700 flex items-center justify-center text-[10px] font-black text-black/40`}
-                      >
+                      <div key={i} style={{ width: `${width}%` }} className={`${zoneColors[i]} h-full transition-all flex items-center justify-center text-[9px] font-black text-black/50`}>
                         {parseInt(val) > 5 ? zoneLabels[i] : ""}
                       </div>
                     ) : null;
@@ -227,157 +182,94 @@ export default function EditWorkoutModal({ workoutId, mode, isOpen, onClose, onS
                 </div>
                 <div className="grid grid-cols-5 gap-2">
                   {zones.map((val, i) => (
-                    <div key={i} className="text-center group">
-                      <div className={`w-1.5 h-1.5 rounded-full ${zoneColors[i]} mx-auto mb-1 shadow-sm`}></div>
-                      <div className="text-[10px] font-bold text-gray-400 group-hover:text-white transition-colors">{val} мин</div>
+                    <div key={i} className="text-center">
+                      <div className={`w-1.5 h-1.5 rounded-full ${zoneColors[i]} mx-auto mb-1`}></div>
+                      <div className="text-[10px] font-bold text-gray-300">{val}м</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Состояние и Нагрузка */}
-              <div className="grid grid-cols-2 gap-8 py-6 border-y border-gray-800/50">
+              <div className="grid grid-cols-2 gap-8 py-6 border-y border-gray-800">
                 <div className="flex items-center gap-4">
-                   <div className="w-14 h-14 rounded-full border-2 border-green-500 flex items-center justify-center text-xl font-black text-green-500 bg-green-500/5">{feeling || '-'}</div>
-                   <div>
-                     <span className="text-[10px] font-bold text-gray-500 uppercase block">Состояние</span>
-                     <span className="text-sm font-bold text-gray-200">Самочувствие</span>
-                   </div>
+                   <div className="w-12 h-12 rounded-full border-2 border-green-500 flex items-center justify-center text-lg font-black text-green-500">{feeling || '-'}</div>
+                   <span className="text-[10px] font-bold text-gray-500 uppercase">Самочувствие</span>
                 </div>
                 <div className="flex items-center gap-4">
-                   <div className="w-14 h-14 rounded-full border-2 border-blue-500 flex items-center justify-center text-xl font-black text-blue-500 bg-blue-500/5">{effort || '-'}</div>
-                   <div>
-                     <span className="text-[10px] font-bold text-gray-500 uppercase block">Нагрузка</span>
-                     <span className="text-sm font-bold text-gray-200">RPE шкала</span>
-                   </div>
+                   <div className="w-12 h-12 rounded-full border-2 border-blue-500 flex items-center justify-center text-lg font-black text-blue-500">{effort || '-'}</div>
+                   <span className="text-[10px] font-bold text-gray-500 uppercase">Нагрузка</span>
                 </div>
               </div>
 
-              {/* Комментарий */}
               {comment && (
-                <div className="bg-[#2a2a2d]/30 p-6 rounded-2xl border border-gray-800 border-dashed">
-                  <div className="flex items-center gap-2 text-gray-500 mb-3 text-[10px] font-bold uppercase tracking-widest">
-                    <MessageSquare size={14}/> Заметки
-                  </div>
-                  <p className="text-gray-300 italic leading-relaxed text-base">"{comment}"</p>
+                <div className="bg-[#2a2a2d]/50 p-6 rounded-2xl border border-gray-800">
+                  <div className="flex items-center gap-2 text-gray-500 mb-3"><MessageSquare size={14}/> <span className="text-[10px] font-bold uppercase">Комментарий</span></div>
+                  <p className="text-gray-300 italic leading-relaxed text-sm">"{comment}"</p>
                 </div>
               )}
             </div>
           ) : (
-            /* --- РЕЖИМ РЕДАКТИРОВАНИЯ (FORM) --- */
-            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6 animate-in fade-in duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Название тренировки</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                    placeholder="Напр: Легкий бег"
-                    required
-                  />
+            /* --- ФОРМА РЕДАКТИРОВАНИЯ --- */
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Название</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full h-11 px-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 transition-all" required />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Дата</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 transition-all color-scheme-dark"
-                    required
-                  />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Дата</label>
+                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full h-11 px-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 color-scheme-dark" required />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Дистанция (км)</label>
-                <input
-                  type="number"
-                  step={0.1}
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  className="w-full h-14 px-4 rounded-xl bg-[#2a2a2d] border border-blue-900/30 text-2xl font-black outline-none focus:border-blue-500 no-spinner shadow-inner"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-blue-500 uppercase">Дистанция (км)</label>
+                <input type="number" step={0.1} value={distance} onChange={(e) => setDistance(e.target.value)} className="w-full h-11 px-4 rounded-xl bg-[#2a2a2d] border border-blue-900/30 text-lg font-black outline-none focus:border-blue-500 no-spinner" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase flex justify-between px-1">Самочувствие <span className="text-green-500 text-sm">{feeling || 0}/10</span></label>
-                  <div className="flex gap-1 bg-[#2a2a2d] p-1 rounded-xl">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase flex justify-between">Самочувствие <span className="text-green-500">{feeling}</span></label>
+                  <div className="flex gap-1">
                     {[...Array(10)].map((_, i) => (
-                      <button
-                        type="button"
-                        key={i}
-                        onClick={() => setFeeling(i + 1)}
-                        className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white shadow-lg scale-110 z-10" : "text-gray-500 hover:bg-gray-700"}`}
-                      >
-                        {i + 1}
-                      </button>
+                      <button type="button" key={i} onClick={() => setFeeling(i + 1)} className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all ${feeling === i + 1 ? "bg-green-600 text-white" : "bg-[#2a2a2d] text-gray-500 hover:bg-[#323235]"}`}>{i + 1}</button>
                     ))}
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase flex justify-between px-1">Нагрузка (RPE) <span className="text-blue-500 text-sm">{effort || 0}/10</span></label>
-                  <div className="flex gap-1 bg-[#2a2a2d] p-1 rounded-xl">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase flex justify-between">Нагрузка <span className="text-blue-500">{effort}</span></label>
+                  <div className="flex gap-1">
                     {[...Array(10)].map((_, i) => (
-                      <button
-                        type="button"
-                        key={i}
-                        onClick={() => setEffort(i + 1)}
-                        className={`flex-1 h-9 rounded-lg text-xs font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white shadow-lg scale-110 z-10" : "text-gray-500 hover:bg-gray-700"}`}
-                      >
-                        {i + 1}
-                      </button>
+                      <button type="button" key={i} onClick={() => setEffort(i + 1)} className={`flex-1 h-8 rounded-lg text-xs font-bold transition-all ${effort === i + 1 ? "bg-blue-600 text-white" : "bg-[#2a2a2d] text-gray-500 hover:bg-[#323235]"}`}>{i + 1}</button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Интенсивность по зонам (минуты)</label>
-                <div className="grid grid-cols-5 gap-1 rounded-2xl overflow-hidden border border-gray-800 bg-gray-900/20">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-gray-500 uppercase">Зоны (минуты)</label>
+                <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
                   {zones.map((val, idx) => (
                     <div key={idx} className="flex flex-col">
-                      <div className={`${zoneColors[idx]} py-1.5 text-center text-[10px] font-black text-[#1a1a1d] uppercase`}>{zoneLabels[idx]}</div>
-                      <input
-                        type="number"
-                        value={val}
-                        onChange={(e) => { const u = [...zones]; u[idx] = e.target.value; setZones(u); }}
-                        className="bg-[#2a2a2d] text-white text-center py-3.5 text-base font-bold outline-none border-t border-gray-800 focus:bg-[#323235] transition-colors no-spinner"
-                      />
+                      <div className={`${zoneColors[idx]} py-1 text-center text-[9px] font-black text-[#1a1a1d]`}>{zoneLabels[idx]}</div>
+                      <input type="number" value={val} onChange={(e) => { const u = [...zones]; u[idx] = e.target.value; setZones(u); }} className="bg-[#2a2a2d] text-white text-center py-2.5 text-sm outline-none border-t border-gray-800 no-spinner" />
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Комментарий к тренировке</label>
-                <textarea
-                  rows={3}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  className="w-full p-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 transition-all resize-none"
-                  placeholder="Как прошла тренировка? Какие были ощущения?"
-                />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase">Комментарий</label>
+                <textarea rows={3} value={comment} onChange={(e) => setComment(e.target.value)} className="w-full p-4 rounded-xl bg-[#2a2a2d] border border-gray-700 text-sm outline-none focus:border-blue-500 transition-all resize-none" />
               </div>
             </form>
           )}
 
-          {/* Footer */}
-          <div className="flex justify-end gap-3 mt-12 pt-8 border-t border-gray-800">
-             <button
-               onClick={onClose}
-               className="px-8 py-4 bg-[#2a2a2d] text-gray-400 rounded-2xl hover:bg-[#323235] font-bold text-xs uppercase tracking-[0.2em] transition-all"
-             >
-               {isEditing ? "Отмена" : "Закрыть"}
-             </button>
+          <div className="flex justify-end gap-3 mt-10 pt-6 border-t border-gray-800">
+             <button onClick={onClose} className="px-6 py-3 bg-[#2a2a2d] text-gray-400 rounded-xl hover:bg-[#323235] font-bold text-xs uppercase tracking-widest">Закрыть</button>
              {isEditing && (
-               <button
-                 onClick={handleSave}
-                 className="bg-blue-600 px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-blue-500 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-blue-900/20"
-               >
-                 <Check size={18} strokeWidth={3}/> Сохранить
+               <button onClick={handleSave} className="bg-blue-600 px-10 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                 <Check size={16}/> Сохранить
                </button>
              )}
           </div>
