@@ -8,7 +8,7 @@ import {
 } from "lucide-center";
 
 // Импорт модального окна по твоему пути
-import EditAccountModal from "./EditAccountModal";
+import EditAccountModal from ""../components/AccountPage/EditAccountModal";
 
 // API
 import { getUserProfile } from "../api/getUserProfile";
