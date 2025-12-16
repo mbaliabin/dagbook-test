@@ -239,7 +239,7 @@ export default function DailyParameters() {
 
               <div className="pt-4 border-t border-gray-800/50">
                 <p className="text-[9px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
-                  Анализ параметров формы
+                  Выбор статуса помогает точнее анализировать влияние внешних факторов на твою форму
                 </p>
               </div>
             </div>
