@@ -132,7 +132,6 @@ export default function DailyParameters() {
     { label: "Статистика", icon: CalendarDays, path: "/statistics" },
   ];
 
-  // Расчет индекса готовности (0-100)
   const readinessScore = Math.round(((physical + mental + sleepQuality) / 30) * 100);
 
   return (
@@ -152,13 +151,29 @@ export default function DailyParameters() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <div className="flex items-center bg-[#1a1a1d] border border-gray-800 rounded-xl p-1 shadow-sm">
-              <button onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))} className="p-2 hover:text-blue-500 transition-colors"><ChevronLeft size={18}/></button>
-              <span className="px-4 text-[10px] font-black uppercase tracking-widest min-w-[140px] text-center">
-                {selectedDate.format("D MMMM, dddd")}
-              </span>
-              <button onClick={() => setSelectedDate(selectedDate.add(1, "day"))} className="p-2 hover:text-blue-500 transition-colors"><ChevronRight size={18}/></button>
+            {/* ФИКСИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ДАТ (чтобы кнопки не прыгали) */}
+            <div className="flex items-center bg-[#1a1a1d] border border-gray-800 rounded-xl p-1 shadow-sm overflow-hidden">
+              <button
+                onClick={() => setSelectedDate(selectedDate.subtract(1, "day"))}
+                className="p-2.5 hover:text-blue-500 transition-colors shrink-0"
+              >
+                <ChevronLeft size={18}/>
+              </button>
+
+              <div className="w-[180px] md:w-[210px] text-center border-x border-gray-800/50">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">
+                  {selectedDate.format("D MMMM, dddd")}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setSelectedDate(selectedDate.add(1, "day"))}
+                className="p-2.5 hover:text-blue-500 transition-colors shrink-0"
+              >
+                <ChevronRight size={18}/>
+              </button>
             </div>
+
             <button onClick={() => { localStorage.removeItem("token"); navigate("/login"); }} className="p-2.5 rounded-xl bg-[#1a1a1d] border border-gray-800 hover:bg-gray-800 text-gray-400 transition-colors">
               <LogOut size={20} />
             </button>
@@ -180,10 +195,10 @@ export default function DailyParameters() {
           })}
         </div>
 
-        {/* ГЛАВНЫЙ КОНТЕНТ (4 колонки: 1 под статусы, 3 под форму) */}
+        {/* КОНТЕНТ (Узкая левая колонка + Широкая правая) */}
         <div className="grid lg:grid-cols-4 gap-6 items-stretch">
 
-          {/* ЛЕВАЯ КОЛОНКА: СТАТУСЫ И АНАЛИТИКА */}
+          {/* СТАТУСЫ + АНАЛИТИКА */}
           <div className="lg:col-span-1">
             <div className="bg-[#1a1a1d] border border-gray-800 p-5 rounded-2xl shadow-xl h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4 text-gray-400">
@@ -200,9 +215,9 @@ export default function DailyParameters() {
                 <CompactStatusButton id="konkurranse" label="Соревнование" Icon={Award} activeId={mainParam} onClick={setMainParam} activeColor="bg-yellow-600" />
               </div>
 
-              {/* ЗАПОЛНЕНИЕ ПУСТОТЫ: ВИДЖЕТ ГОТОВНОСТИ */}
+              {/* Блок Аналитики (заполнение пустоты) */}
               <div className="flex-grow flex flex-col justify-center space-y-4 py-8">
-                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl">
+                <div className="bg-[#0f0f0f] border border-gray-800 p-4 rounded-2xl shadow-inner">
                   <div className="flex justify-between items-end mb-2">
                     <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Готовность</p>
                     <span className="text-lg font-bold text-blue-500">{readinessScore > 0 ? readinessScore + '%' : '--'}</span>
@@ -215,25 +230,25 @@ export default function DailyParameters() {
                 <div className="bg-blue-600/5 border border-blue-500/10 p-4 rounded-xl">
                   <div className="flex items-center gap-2 mb-2 text-blue-500">
                     <Activity size={12} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">AI Анализ</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Рекомендация</span>
                   </div>
                   <p className="text-[11px] text-gray-400 leading-relaxed italic">
-                    {mainParam === 'syk' ? "Приоритет: восстановление и сон." :
-                     physical > 7 ? "Оптимально для высокой нагрузки." :
-                     "Рекомендуется умеренный темп."}
+                    {mainParam === 'syk' ? "Рекомендуется покой." :
+                     physical > 7 ? "День для рекордов." :
+                     "Держите легкий темп."}
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-800/50">
                 <p className="text-[9px] text-gray-500 leading-relaxed uppercase font-bold tracking-tighter text-center">
-                  Анализ внешних факторов формы
+                  Анализ факторов формы
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ПРАВАЯ КОЛОНКА: ОСНОВНЫЕ ПАРАМЕТРЫ */}
+          {/* ОСНОВНАЯ ФОРМА */}
           <div className="lg:col-span-3">
             <div className="bg-[#1a1a1d] border border-gray-800 p-8 rounded-2xl shadow-xl h-full flex flex-col space-y-8">
               <div className="flex items-center gap-2 text-gray-400">
