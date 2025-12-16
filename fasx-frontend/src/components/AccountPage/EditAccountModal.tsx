@@ -19,11 +19,9 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay - затемнение как в тренировках */}
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
 
       <Dialog.Panel className="relative bg-[#1a1a1d] max-h-[90vh] overflow-y-auto p-8 rounded-2xl w-[95%] max-w-2xl z-50 text-white shadow-2xl border border-gray-800">
-        {/* Кнопка закрытия */}
         <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors">
           <X size={24} />
         </button>
@@ -39,7 +37,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя</label>
               <input
                 type="text"
-                defaultValue={profile?.name?.split(' ')[0] || "Maksim Igorevich"}
+                defaultValue={profile?.name?.split(' ')[0] || ""}
                 className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
               />
             </div>
@@ -47,10 +45,20 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Фамилия</label>
               <input
                 type="text"
-                defaultValue={profile?.name?.split(' ')[1] || "Balyabin"}
+                defaultValue={profile?.name?.split(' ')[1] || ""}
                 className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
               />
             </div>
+          </div>
+
+          {/* Блок: Биография */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Биография</label>
+            <textarea
+              rows={3}
+              placeholder="Расскажите немного о себе, своих целях или достижениях..."
+              className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all resize-none"
+            />
           </div>
 
           {/* Блок: Дата и Пол */}
@@ -59,11 +67,10 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Дата рождения</label>
               <input
                 type="text"
-                value="1995-12-10"
+                value="10.12.1995"
                 readOnly
                 className="w-full p-3 rounded-xl bg-[#141416] border border-gray-800 text-gray-500 cursor-not-allowed italic"
               />
-              <p className="text-[10px] text-gray-600 mt-1 px-1">Получено из регистра, не подлежит изменению.</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пол</label>
@@ -78,35 +85,41 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
 
           {/* Настройки обучения */}
           <div className="space-y-6">
-            <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Настройки обучения</h3>
+            <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Спортивные данные</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Спорт</label>
-                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500">
-                  <option>беговые лыжи</option>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Вид спорта</label>
+                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer">
+                  <option>Лыжные гонки</option>
+                  <option>Легкая атлетика</option>
+                  <option>Велоспорт</option>
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ассоциация</label>
-                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500">
-                  <option>Норвежская лыжная...</option>
+                <select className="w-full p-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 cursor-pointer">
+                  <option>ФЛГР</option>
+                  <option>ВФЛА</option>
+                  <option>ФВСР</option>
+                  <option>Другая</option>
                 </select>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Название клуба</label>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                 <input
                   type="text"
-                  defaultValue="IL Aasguten ski"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500"
+                  placeholder="Введите название вашего клуба или команды"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#2a2a2d] border border-gray-700 text-white outline-none focus:border-blue-500 transition-all"
                 />
               </div>
             </div>
 
-            {/* Зоны (в стиле тренировок) */}
+            {/* Зоны ЧСС */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Зоны ЧСС</label>
               <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
@@ -124,20 +137,7 @@ export default function EditAccountModal({ isOpen, onClose, profile }: EditAccou
             </div>
           </div>
 
-          {/* Чекбоксы в стиле темной темы */}
-          <div className="space-y-4 pt-4 border-t border-gray-800">
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <div className="mt-1 relative flex items-center">
-                <input type="checkbox" defaultChecked className="peer h-5 w-5 appearance-none rounded border border-gray-700 bg-[#2a2a2d] checked:bg-blue-600 checked:border-blue-600 transition-all" />
-                <Check className="absolute h-5 w-5 text-white scale-0 peer-checked:scale-75 transition-transform pointer-events-none" />
-              </div>
-              <span className="text-xs text-gray-400 leading-relaxed group-hover:text-gray-200 transition-colors">
-                Уведомлять тренера об активности автоматически
-              </span>
-            </label>
-          </div>
-
-          {/* Кнопки в стиле тренировок */}
+          {/* Кнопки */}
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
             <button
               type="button"
