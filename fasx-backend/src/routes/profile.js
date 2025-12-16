@@ -1,10 +1,24 @@
 import express from "express";
 import prisma from "../prisma/client.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import cors from 'cors';
 
 const router = express.Router();
 
-// --- ПОЛУЧЕНИЕ ПРОФИЛЯ ---
+// --- ЛОКАЛЬНАЯ НАСТРОЙКА CORS ТОЛЬКО ДЛЯ ЭТОГО РОУТА ---
+// Это гарантирует, что PUT и OPTIONS запросы не будут блокироваться браузером
+const localCors = cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+});
+
+// Применяем CORS ко всем запросам в этом файле
+router.use(localCors);
+router.options('*', localCors);
+
+// --- GET: ПОЛУЧЕНИЕ ПРОФИЛЯ ---
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -17,11 +31,14 @@ router.get("/", authenticateToken, async (req, res) => {
         email: true,
         avatarUrl: true,
         createdAt: true,
-        profile: true
+        profile: true // Подтягиваем данные из связанной таблицы Profile
       },
     });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     res.json(user);
   } catch (error) {
     console.error("GET Profile Error:", error);
@@ -29,27 +46,23 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// --- ОБНОВЛЕНИЕ ПРОФИЛЯ (С ЛОГАМИ) ---
+// --- PUT: ОБНОВЛЕНИЕ ПРОФИЛЯ ---
 router.put("/", authenticateToken, async (req, res) => {
-  console.log(">>> [PUT] Запрос на обновление получен");
-  console.log(">>> UserID из токена:", req.user.userId);
-  console.log(">>> Тело запроса (body):", JSON.stringify(req.body, null, 2));
+  console.log(">>> [PUT] Запрос дошел до роута профиля");
 
   try {
     const userId = req.user.userId;
     const { name, bio, gender, sportType, club, association, hrZones } = req.body;
 
-    // Выполняем транзакцию
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Обновляем имя пользователя
-      const userUpdate = await tx.user.update({
+    // Используем транзакцию, чтобы обновить и User (имя), и Profile (остальное)
+    const result = await prisma.$transaction([
+      // 1. Обновляем имя в основной таблице User
+      prisma.user.update({
         where: { id: userId },
         data: { name }
-      });
-      console.log(">>> 1/2 Успешно обновлен User:", userUpdate.id);
-
-      // 2. Обновляем или создаем профиль
-      const profileUpsert = await tx.profile.upsert({
+      }),
+      // 2. Создаем или обновляем запись в таблице Profile
+      prisma.profile.upsert({
         where: { userId: userId },
         update: {
           bio,
@@ -57,11 +70,11 @@ router.put("/", authenticateToken, async (req, res) => {
           sportType,
           club,
           association,
-          hrZones // Убедись, что это объект
+          hrZones
         },
         create: {
           userId,
-          fullName: name || "Не указано",
+          fullName: name || "",
           bio,
           gender,
           sportType,
@@ -69,23 +82,16 @@ router.put("/", authenticateToken, async (req, res) => {
           association,
           hrZones
         }
-      });
-      console.log(">>> 2/2 Успешно выполнен Upsert профиля:", profileUpsert.id);
+      })
+    ]);
 
-      return { userUpdate, profileUpsert };
-    });
+    console.log(">>> Данные успешно сохранены для userId:", userId);
 
-    console.log(">>> Транзакция завершена успешно!");
-    res.json({ success: true, profile: result.profileUpsert });
+    // Возвращаем обновленный профиль (результат второй операции в транзакции)
+    res.json({ success: true, profile: result[1] });
 
   } catch (error) {
-    console.error("!!! ОШИБКА ОБНОВЛЕНИЯ ПРОФИЛЯ !!!");
-    console.error("Тип ошибки:", error.constructor.name);
-    console.error("Сообщение:", error.message);
-
-    // Если ошибка в Prisma, она даст код (например, P2002)
-    if (error.code) console.error("Код ошибки Prisma:", error.code);
-
+    console.error("!!! ОШИБКА PUT ПРОФИЛЯ:", error.message);
     res.status(500).json({
       error: "Failed to update profile",
       details: error.message
