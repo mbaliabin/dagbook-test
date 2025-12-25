@@ -64,7 +64,8 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
       feeling,
       type,
       duration,
-      distance: type !== "StrengthTraining" && type !== "Other" ? Number(distance) || null : null,
+      // Дистанция отправляется только для циклических видов спорта
+      distance: (type !== "StrengthTraining" && type !== "Other" && type !== "") ? Number(distance) || null : null,
       intensityZones: {
         zone1Min: parseInt(zones[0]) || 0,
         zone2Min: parseInt(zones[1]) || 0,
@@ -114,7 +115,6 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
         </Dialog.Title>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Название и Дата */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Название</label>
@@ -148,18 +148,24 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
               required
             >
               <option value="">Выберите тип...</option>
-              <option value="Running">Бег</option>
-              <option value="XC_Skiing_Classic">Лыжи, классика</option>
-              <option value="XC_Skiing_Skate">Лыжи, коньковый ход</option>
-              <option value="StrengthTraining">Силовая тренировка</option>
-              <option value="Bike">Велосипед</option>
-              <option value="Other">Другое</option>
+              <optgroup label="Циклические">
+                <option value="Running">Бег</option>
+                <option value="Bike">Велосипед</option>
+                <option value="XC_Skiing_Classic">Лыжи (Классика)</option>
+                <option value="XC_Skiing_Skate">Лыжи (Конёк)</option>
+                <option value="RollerSki_Classic">Лыжероллеры (Классика)</option>
+                <option value="RollerSki_Skate">Лыжероллеры (Конёк)</option>
+              </optgroup>
+              <optgroup label="Другое">
+                <option value="StrengthTraining">Силовая тренировка</option>
+                <option value="Other">Другое</option>
+              </optgroup>
             </select>
           </div>
 
           <div className="h-px bg-gray-800 my-4" />
 
-          {/* Дистанция — теперь отдельным блоком */}
+          {/* Дистанция показывается для всех типов, кроме Силовой и Другого */}
           {(type !== "StrengthTraining" && type !== "Other" && type !== "") && (
             <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
               <label className="text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-2">
@@ -176,7 +182,6 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             </div>
           )}
 
-          {/* Шкалы */}
           <div className="space-y-8">
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
@@ -197,7 +202,7 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
 
             <div className="space-y-3">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
-                Воспринимаемая нагрузка <span className="text-blue-500 font-black text-sm">{effort || '-'}</span>
+                Воспринимаемая нагрузка (RPE) <span className="text-blue-500 font-black text-sm">{effort || '-'}</span>
               </label>
               <div className="flex gap-1.5">
                 {[...Array(10)].map((_, i) => (
@@ -213,7 +218,6 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
             </div>
           </div>
 
-          {/* Зоны */}
           <div className="space-y-4">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Распределение по зонам (мин)</label>
             <div className="grid grid-cols-5 gap-1 rounded-xl overflow-hidden border border-gray-800">
@@ -232,14 +236,12 @@ export default function AddWorkoutModal({ isOpen, onClose, onAddWorkout }: AddWo
                 </div>
               ))}
             </div>
-            {/* Итоговое время под зонами */}
             <div className="flex justify-between items-center bg-[#141416] px-4 py-3 rounded-xl border border-gray-800/50 mt-2">
               <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Итоговое время тренировки</span>
               <span className="text-lg font-bold text-blue-500 tracking-tight">{formattedDuration}</span>
             </div>
           </div>
 
-          {/* Комментарий */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Комментарий к тренировке</label>
             <textarea

@@ -1,21 +1,23 @@
 import express from 'express';
-import prisma from '../prisma/client.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+// Импортируем контроллеры и настройку multer (upload)
+import { getMe, uploadAvatar, upload } from '../controllers/userController.js';
 
 const router = express.Router();
 
-router.get('/me', authenticateToken, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { id: true, email: true, name: true } // убираем пароль
-    });
+/**
+ * @route   GET /api/users/me
+ * @desc    Получить данные текущего авторизованного пользователя
+ * @access  Private
+ */
+router.get('/me', authenticateToken, getMe);
 
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: 'Ошибка при получении данных пользователя' });
-  }
-});
+/**
+ * @route   POST /api/users/upload-avatar
+ * @desc    Загрузка фотографии профиля в S3 (Timeweb)
+ * @access  Private
+ * @note    Использует multer для обработки multipart/form-data
+ */
+router.post('/upload-avatar', authenticateToken, upload.single('avatar'), uploadAvatar);
 
 export default router;
-

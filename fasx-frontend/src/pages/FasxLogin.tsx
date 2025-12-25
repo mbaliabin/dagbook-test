@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "@/api/loginUser";
+import { Activity, ShieldCheck, BarChart3, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 
 export default function FasxLogin() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function FasxLogin() {
     try {
       const { token } = await loginUser(email, password);
       localStorage.setItem("token", token);
-      navigate("/daily"); // редирект после успешного входа
+      navigate("/daily");
     } catch (err: any) {
       setError(err.message || "Ошибка входа");
     } finally {
@@ -27,85 +28,124 @@ export default function FasxLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl flex flex-col md:flex-row bg-[#111] rounded-2xl shadow-lg overflow-hidden">
-        {/* Левая часть с описанием */}
-        <div className="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Welcome to <span className="text-blue-500">Fasx</span> Training Log
+    <div className="min-h-screen bg-[#0f0f0f] text-gray-200 flex flex-col items-center justify-center px-4 py-6 font-sans selection:bg-blue-500/30">
+
+      {/* Главный контейнер */}
+      <div className="w-full max-w-5xl flex flex-col md:flex-row bg-[#131316] rounded-3xl md:rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden border border-white/[0.03]">
+
+        {/* Левая часть: Приветствие (Адаптировано под мобильные) */}
+        <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-gradient-to-br from-blue-600/10 to-transparent border-b md:border-b-0 md:border-r border-white/[0.05]">
+          <div className="mb-6 md:mb-8 inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-600 shadow-xl shadow-blue-500/20 border border-white/10">
+            <Activity size={28} className="text-white stroke-[2.5px]" />
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 md:mb-6 tracking-tighter leading-tight">
+            Добро пожаловать в <br />
+            <span className="text-blue-500">Fasx</span> Training
           </h1>
-          <p className="text-gray-400 text-base sm:text-lg">
-            A modern tool for planning and logging and analyzing your training — with precision.
+          <p className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-md font-medium">
+            Профессиональный инструмент для планирования и анализа вашей подготовки.
           </p>
         </div>
 
-        {/* Правая часть — иконки + форма */}
-        <div className="w-full md:w-1/2 p-6 sm:p-10 border-t md:border-t-0 md:border-l border-gray-800">
-          {/* Иконки сверху */}
-          <div className="flex justify-around mb-8 text-sm sm:text-base">
-            <div className="text-center hover:text-blue-500 cursor-pointer">
-              <div className="text-xl sm:text-2xl mb-1">🏃</div>
-              <div>Activities</div>
-            </div>
-            <div className="text-center hover:text-blue-500 cursor-pointer">
-              <div className="text-xl sm:text-2xl mb-1">🤮</div>
-              <div>Coach</div>
-            </div>
-            <div className="text-center hover:text-blue-500 cursor-pointer">
-              <div className="text-xl sm:text-2xl mb-1">📊</div>
-              <div>Knowledge</div>
-            </div>
+        {/* Правая часть: Форма */}
+        <div className="w-full md:w-1/2 p-6 md:p-16">
+
+          {/* Иконки преимуществ (Сделаны компактнее для мобильных) */}
+          <div className="grid grid-cols-3 gap-3 mb-8 md:mb-12">
+            {[
+              { icon: Activity, label: "Анализ" },
+              { icon: ShieldCheck, label: "Контроль" },
+              { icon: BarChart3, label: "Прогресс" },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 group cursor-default">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center group-hover:border-blue-500/50 transition-colors">
+                  <item.icon size={16} className="text-gray-500 group-hover:text-blue-500 transition-colors" />
+                </div>
+                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-500">{item.label}</span>
+              </div>
+            ))}
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Email or username</label>
-              <input
-                type="text"
-                className="w-full p-3 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Password</label>
-              <input
-                type="password"
-                className="w-full p-3 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+          <form className="space-y-4 md:space-y-5" onSubmit={handleSubmit}>
+            <div className="space-y-1.5">
+              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">
+                Email или логин
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+                <input
+                  type="email"
+                  inputMode="email" // Вызывает правильную клавиатуру на мобилках
+                  placeholder="name@example.com"
+                  className="w-full pl-12 pr-4 py-3 md:py-3.5 rounded-xl bg-black/40 border border-white/[0.05] text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-700 text-sm md:text-base"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div className="space-y-1.5">
+              <label className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-1">
+                Пароль
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-4 py-3 md:py-3.5 rounded-xl bg-black/40 border border-white/[0.05] text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-700 text-sm md:text-base"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-blue-500 text-black py-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-200"
               disabled={loading}
+              className="w-full group bg-blue-600 hover:bg-blue-500 text-white py-3.5 md:py-4 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-500/20 active:scale-[0.96] disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
-              {loading ? "Logging in..." : "Log in"}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Войти в систему
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="text-center mt-6 text-sm text-gray-400">
-            Нет аккаунта?{" "}
-            <Link to="/register" className="text-blue-500 hover:underline">
-              Зарегистрироваться
+          <div className="text-center mt-8 md:mt-10">
+            <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-2">Нет аккаунта?</p>
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-400 text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors"
+            >
+              Создать профиль
             </Link>
           </div>
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 mt-6 text-center px-4">
-        Experiencing issues with Fasx? Contact us via{" "}
-        <a href="mailto:support@fasx.no" className="text-blue-500">
-          support@fasx.no
+      {/* Footer */}
+      <div className="mt-8 md:mt-10 text-center px-4">
+        <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+          Experiencing issues? Contact us at
+        </p>
+        <a href="mailto:support@fasx.pro" className="text-blue-500/80 hover:text-blue-500 transition-colors text-[10px] md:text-xs font-medium">
+          support@fasx.pro
         </a>
-      </p>
+      </div>
     </div>
   );
 }
-

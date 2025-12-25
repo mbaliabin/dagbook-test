@@ -1,0 +1,51 @@
+services:
+  # 1. База данных
+  db:
+    image: postgres:17
+    container_name: dagbook-db
+    restart: always
+    environment:
+      POSTGRES_USER: fasx_user
+      POSTGRES_PASSWORD: 199510Ma%
+      POSTGRES_DB: fasx
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. Бэкенд
+  backend:
+    build: ./fasx-backend
+    restart: always
+    container_name: dagbook-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./fasx-backend/.env
+    environment:
+      DATABASE_URL: "postgresql://fasx_user:199510Ma%@db:5432/dagbook_db"
+    # Добавляем вот эти строки:
+    volumes:
+      - ./fasx-backend:/app
+      - /app/node_modules
+    # Команда запуска (чтобы точно использовался nodemon)
+    command: npm run dev
+    depends_on:
+      - db
+
+  # 3. Фронтенд
+  frontend:
+    build: ./fasx-frontend
+    container_name: dagbook-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./fasx-frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

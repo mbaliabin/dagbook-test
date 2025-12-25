@@ -1,39 +1,33 @@
 import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { FaRunning, FaSkiingNordic, FaDumbbell } from "react-icons/fa";
+import "dayjs/locale/ru";
+import { Activity, Plus, Loader2, Zap, Dumbbell, BarChart3, Clock } from "lucide-react";
 import CalendarModalAdd from "./CalendarModalAdd";
-import CalendarModalReader from "./CalendarModalReader"; // Импорт модалки просмотра/редактирования
+import CalendarWorkoutDetails from "./CalendarWorkoutDetails";
 
 dayjs.extend(isoWeek);
+dayjs.locale("ru");
 
-interface Workout {
-  id: string;
-  name: string;
-  date: string;
-  duration: number;
-  type: string;
-  distance?: number | null;
-}
-
-const activityStyles = {
-  run: { icon: <FaRunning />, bg: "bg-blue-600/30", text: "text-blue-300" },
-  ski: { icon: <FaSkiingNordic />, bg: "bg-blue-400/30", text: "text-blue-200" },
-  strength: { icon: <FaDumbbell />, bg: "bg-blue-500/30", text: "text-blue-100" },
+const activityStyles: any = {
+  run: { dot: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" },
+  ski: { dot: "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" },
+  strength: { dot: "bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" },
 };
 
-const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-export default function TrainingCalendar() {
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+interface TrainingCalendarProps {
+  currentMonth: dayjs.Dayjs;
+  isMaximized?: boolean;
+}
+
+export default function TrainingCalendar({ currentMonth, isMaximized }: TrainingCalendarProps) {
+  const [workouts, setWorkouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(dayjs().year());
-  const [month, setMonth] = useState(dayjs().month());
 
-  // Состояния для модалок
   const [modalAddOpen, setModalAddOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
   const [viewWorkoutId, setViewWorkoutId] = useState<string | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
 
@@ -44,210 +38,184 @@ export default function TrainingCalendar() {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/user`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error("Failed to load workouts");
         const data = await res.json();
         setWorkouts(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetchWorkouts();
   }, []);
 
-  const startOfMonth = dayjs(new Date(year, month, 1));
+  const startOfMonth = currentMonth.startOf("month");
+  const monthValue = currentMonth.month();
   const startCalendar = startOfMonth.startOf("isoWeek");
-  const days = Array.from({ length: 35 }, (_, i) => startCalendar.add(i, "day"));
 
-  // Группировка тренировок по дате
-  const trainings: Record<string, Workout[]> = {};
-  for (const w of workouts) {
-    const dateKey = w.date.split("T")[0];
-    if (!trainings[dateKey]) trainings[dateKey] = [];
-    trainings[dateKey].push(w);
-  }
+  const days = Array.from({ length: 42 }, (_, i) => startCalendar.add(i, "day"));
 
-  type WeekStat = { hours: number; sessions: number; distance: number };
-  const stats: Record<number, WeekStat> = {};
+  const trainings: Record<string, any[]> = {};
+  workouts.forEach(w => {
+    if (!w) return;
+    const key = dayjs(w.date).format("YYYY-MM-DD");
+    if (!trainings[key]) trainings[key] = [];
+    trainings[key].push(w);
+  });
 
-  workouts.forEach((w) => {
-    const d = dayjs(w.date);
-    const wNum = d.isoWeek();
-    if (!stats[wNum]) stats[wNum] = { hours: 0, sessions: 0, distance: 0 };
-    stats[wNum].hours += w.duration / 60;
-    stats[wNum].sessions += 1;
+  const stats: Record<number, any> = {};
+  workouts.forEach(w => {
+    if (!w) return;
+    const wNum = dayjs(w.date).isoWeek();
+    if (!stats[wNum]) {
+      stats[wNum] = { distance: 0, sessions: 0, intense: 0, strength: 0, totalDuration: 0 };
+    }
+    const type = (w.type || "").toLowerCase();
+    const isStrength = type.includes("strength") || type.includes("сила");
+    const intenseMinutes = (w.zone3Min || 0) + (w.zone4Min || 0) + (w.zone5Min || 0);
+    const isIntense = intenseMinutes > 0 && !isStrength;
+
     stats[wNum].distance += w.distance ?? 0;
+    stats[wNum].sessions += 1;
+    stats[wNum].totalDuration += w.duration || 0;
+    if (isStrength) stats[wNum].strength += 1;
+    if (isIntense) stats[wNum].intense += 1;
   });
 
-  const weeksInCalendar = Array.from(new Set(days.map((d) => d.isoWeek())));
-  const weeksDays = weeksInCalendar.map((wNum) =>
-    days.filter((d) => d.isoWeek() === wNum)
+  const weeksInCalendar = Array.from(new Set(days.map(d => d.isoWeek()))).slice(0, 6);
+
+  if (loading) return (
+    <div className="h-96 flex flex-col items-center justify-center gap-4 bg-[#1c1c1f] rounded-[1.5rem] border border-white/[0.05]">
+      <Loader2 className="animate-spin text-blue-500" size={40} />
+      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Загрузка данных...</span>
+    </div>
   );
-  weeksInCalendar.forEach((w) => {
-    if (!stats[w]) stats[w] = { hours: 0, sessions: 0, distance: 0 };
-  });
-
-  const prevMonth = () => {
-    const prev = dayjs(new Date(year, month, 1)).subtract(1, "month");
-    setYear(prev.year());
-    setMonth(prev.month());
-  };
-  const nextMonth = () => {
-    const next = dayjs(new Date(year, month, 1)).add(1, "month");
-    setYear(next.year());
-    setMonth(next.month());
-  };
-
-  if (loading) {
-    return <div className="text-center p-4 text-gray-400">Loading...</div>;
-  }
 
   return (
-    <div className="max-w-[1200px] mx-auto p-4 bg-[#0e0e10] text-sm text-gray-100">
-      <div className="flex justify-center items-center gap-4 mb-4 text-gray-300 text-sm select-none">
-        <button
-          onClick={prevMonth}
-          className="px-2 py-1 rounded hover:bg-[#1a1b1e]"
-          aria-label="Previous month"
-        >
-          &lt;
-        </button>
-        <div>{startOfMonth.format("MMMM YYYY")}</div>
-        <button
-          onClick={nextMonth}
-          className="px-2 py-1 rounded hover:bg-[#1a1b1e]"
-          aria-label="Next month"
-        >
-          &gt;
-        </button>
+    <div className={`w-full bg-[#1c1c1f] transition-all duration-500 flex flex-col border border-white/[0.05] shadow-2xl ${
+      isMaximized ? "h-full rounded-2xl" : "rounded-[1.5rem] overflow-hidden"
+    }`}>
+
+      {/* ГРИД КОНТЕЙНЕР */}
+      <div
+        className="grid grid-cols-[135px_repeat(7,1fr)] bg-[#1c1c1f] flex-grow overflow-hidden"
+        style={isMaximized ? { gridTemplateRows: 'auto repeat(6, 1fr)' } : {}}
+      >
+        {/* ЗАГОЛОВКИ */}
+        <div className="py-3 text-center text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] border-b border-r border-white/[0.05] bg-black/10 shrink-0">Аналитика</div>
+        {weekdays.map(d => (
+          <div key={d} className="py-3 text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] border-b border-r border-white/[0.05] bg-black/10 shrink-0">{d}</div>
+        ))}
+
+        {weeksInCalendar.map(weekNum => {
+          const s = stats[weekNum] || { distance: 0, sessions: 0, intense: 0, strength: 0, totalDuration: 0 };
+          const weekDays = days.filter(d => d.isoWeek() === weekNum);
+
+          return (
+            <React.Fragment key={weekNum}>
+              {/* ПАНЕЛЬ АНАЛИТИКИ НЕДЕЛИ */}
+              <div className={`border-r border-b border-white/[0.08] p-4 flex flex-col justify-center gap-2 transition-colors ${
+                isMaximized ? "bg-[#161619] h-full" : "bg-[#1e1e22] min-h-[140px]"
+              }`}>
+                <div className="flex items-center justify-between border-b border-white/[0.05] pb-1 mb-1">
+                    <span className="text-[10px] text-blue-500 font-black tracking-widest uppercase">Нед {weekNum}</span>
+                    <BarChart3 size={12} className="text-gray-600" />
+                </div>
+                <div className={isMaximized ? "space-y-3" : "space-y-2"}>
+                    <div className="flex flex-col">
+                        <span className={`font-black text-white tracking-tighter tabular-nums leading-none transition-all ${isMaximized ? "text-xl" : "text-lg"}`}>
+                            {s.distance > 0 ? s.distance.toFixed(1) : "0"}<span className="text-[9px] ml-0.5 text-gray-500 font-normal tracking-normal">КМ</span>
+                        </span>
+                        <span className="text-[7px] text-gray-600 font-black uppercase tracking-widest">Дистанция</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className={`font-black text-blue-400 tracking-tighter tabular-nums leading-none transition-all ${isMaximized ? "text-xl" : "text-lg"}`}>
+                            {Math.floor(s.totalDuration / 60)}<span className="text-[9px] font-normal text-gray-500 mx-0.5">ч</span>{s.totalDuration % 60}<span className="text-[9px] font-normal text-gray-500">м</span>
+                        </span>
+                        <span className="text-[7px] text-gray-600 font-black uppercase tracking-widest">Время</span>
+                    </div>
+                </div>
+              </div>
+
+              {/* ЯЧЕЙКИ ДНЕЙ */}
+              {weekDays.map(d => {
+                const dateStr = d.format("YYYY-MM-DD");
+                const items = trainings[dateStr] || [];
+                const isCurrentMonth = d.month() === monthValue;
+                const isToday = d.isSame(dayjs(), 'day');
+
+                return (
+                  <div key={dateStr} className={`
+                    group relative transition-all duration-300 border-r border-b border-white/[0.05] p-2 flex flex-col
+                    ${isMaximized ? "h-full overflow-hidden" : "min-h-[140px]"}
+                    ${!isCurrentMonth ? "bg-black/20 opacity-30" : "bg-[#1c1c1f] hover:bg-white/[0.01]"}
+                  `}>
+                    <div className="flex justify-between items-center mb-2 text-[11px] font-black shrink-0">
+                        <span className={isToday ? "text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-md" : isCurrentMonth ? "text-gray-400" : "text-gray-700"}>
+                          {d.date()}
+                        </span>
+                    </div>
+
+                    {/* КОНТЕЙНЕР ТРЕНИРОВОК СО СКРОЛЛОМ */}
+                    <div className="flex-grow overflow-y-auto space-y-1.5 pr-1 custom-scrollbar-mini h-0 min-h-0">
+                      {items.map(e => {
+                        const type = (e.type || "").toLowerCase();
+                        let mode = "run";
+                        if (type.includes("strength") || type.includes("сила")) mode = "strength";
+                        if (type.includes("ski") || type.includes("лыжи")) mode = "ski";
+                        const st = activityStyles[mode] || activityStyles.run;
+                        const intenseMin = (e.zone3Min || 0) + (e.zone4Min || 0) + (e.zone5Min || 0);
+
+                        return (
+                          <button key={e.id} onClick={() => { setViewWorkoutId(e.id); setViewModalOpen(true); }}
+                            className="w-full flex flex-col p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.08] transition-all text-left relative overflow-hidden group/item">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />
+                                <span className="text-[9px] text-gray-100 font-black truncate uppercase tracking-tight leading-tight">
+                                  {e.name || "Тренировка"}
+                                </span>
+                                {intenseMin > 0 && mode !== "strength" && (
+                                    <Zap size={8} className="text-orange-500 fill-orange-500 shrink-0 ml-auto" />
+                                )}
+                            </div>
+
+                            <div className="text-[8px] text-gray-500 font-bold flex items-center gap-1 uppercase tracking-tighter">
+                                {Math.floor(e.duration / 60)}ч {e.duration % 60}м {e.distance ? `• ${e.distance}км` : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button onClick={() => { setSelectedDate(dateStr); setModalAddOpen(true); }}
+                      className="absolute bottom-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg bg-[#2a2a2e] text-gray-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-600 hover:text-white border border-white/10 shadow-xl scale-90 group-hover:scale-100 cursor-pointer z-10">
+                      <Plus size={14} strokeWidth={3} />
+                    </button>
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
       </div>
 
-      <table className="w-full border-collapse border border-[#2a2b2e] text-xs select-none">
-        <thead>
-          <tr>
-            <th
-              className="border border-[#2a2b2e] bg-[#1a1b1e] text-center px-3 py-3"
-              style={{ width: 140 }}
-            >
-              Statistics
-            </th>
-            {weekdays.map((d) => (
-              <th
-                key={d}
-                className="border border-[#2a2b2e] bg-[#1a1b1e] text-center px-3 py-3"
-                style={{ width: 140 }}
-              >
-                {d}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {weeksInCalendar.map((weekNum, i) => {
-            const s = stats[weekNum];
-            const weekDays = weeksDays[i];
-            return (
-              <tr key={weekNum} className="h-36 align-top">
-                <td
-                  className="border border-[#2a2b2e] bg-[#1a1b1e] px-4 py-3 text-gray-300 align-top"
-                  style={{ width: 140, minWidth: 140 }}
-                >
-                  <div className="font-medium mb-1">Week {weekNum}</div>
-                  <div>Hours: {s.hours.toFixed(1)}</div>
-                  <div>Sessions: {s.sessions}</div>
-                  <div>Distance: {s.distance.toFixed(1)} km</div>
-                </td>
-
-                {weekDays.map((d) => {
-                  const dateStr = d.format("YYYY-MM-DD");
-                  const day = d.date();
-                  const items = trainings[dateStr] || [];
-                  return (
-                    <td
-                      key={dateStr}
-                      className={`group relative border border-[#2a2b2e] bg-[#1a1b1e] px-3 py-3 align-top text-gray-100 ${
-                        d.month() !== month ? "opacity-40" : ""
-                      }`}
-                      style={{ width: 140, maxWidth: 140, minWidth: 140 }}
-                    >
-                      <div className="text-xs text-gray-500 font-semibold mb-2">{day}</div>
-
-                      <div className="flex flex-col gap-1 overflow-hidden text-xs max-h-[90px] mb-10">
-                        {items.map((e) => {
-                          const mode = e.type.toLowerCase().includes("styrke")
-                            ? "strength"
-                            : e.type.toLowerCase().includes("ski")
-                            ? "ski"
-                            : "run";
-                          const st = activityStyles[mode] || {};
-                          return (
-                            <button
-                              key={e.id}
-                              onClick={() => {
-                                setViewWorkoutId(e.id);
-                                setViewModalOpen(true);
-                              }}
-                              className={`flex items-center gap-1 p-1 rounded ${st.bg} w-full text-left hover:bg-[#2a2b2e] transition`}
-                              title={`${e.name} — ${Math.floor(e.duration / 60)}h ${e.duration % 60}m`}
-                            >
-                              <span className={`text-xs ${st.text}`}>{st.icon}</span>
-                              <span className="whitespace-nowrap overflow-hidden max-w-[40px] text-ellipsis">
-                                {Math.floor(e.duration / 60)}h {e.duration % 60}m
-                              </span>
-                              <span className="truncate max-w-[calc(100%-50px)]">{e.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setSelectedDate(dateStr);
-                          setModalAddOpen(true);
-                        }}
-                        className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-100 bg-[#1a1b1e] rounded px-3 py-1 text-lg"
-                        aria-label={`Добавить тренировку на ${dateStr}`}
-                        title="Добавить тренировку"
-                      >
-                        +
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {/* Модалка добавления */}
       <CalendarModalAdd
         isOpen={modalAddOpen}
         onClose={() => setModalAddOpen(false)}
-        onAddWorkout={(newWorkout) => {
-          setWorkouts((prev) => [...prev, newWorkout]);
-        }}
-        initialDate={selectedDate || undefined}
+        onAddWorkout={(nw) => setWorkouts(p => [...p, nw])}
+        initialDate={selectedDate}
       />
 
-      {/* Модалка просмотра/редактирования */}
       {viewWorkoutId && (
-        <CalendarModalReader
+        <CalendarWorkoutDetails
           workoutId={viewWorkoutId}
-          mode="view"
           isOpen={viewModalOpen}
           onClose={() => setViewModalOpen(false)}
           onSave={(updatedWorkout) => {
-            setWorkouts((prev) =>
-              prev.map((w) => (w.id === updatedWorkout.id ? updatedWorkout : w))
-            );
+            if (updatedWorkout === null) {
+              setWorkouts(prev => prev.filter(w => w?.id !== viewWorkoutId));
+            } else {
+              setWorkouts(prev => prev.map(w => (w?.id === updatedWorkout.id ? updatedWorkout : w)));
+            }
           }}
         />
       )}
     </div>
   );
 }
-
-
-

@@ -1,16 +1,14 @@
-// src/pages/StatisticsPage/components/SyncedTable.tsx
-import { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 
 interface Row {
   param?: string;
   type?: string;
   color?: string;
-  months: number[];
+  months: (number | string)[];
   total: number | string;
 }
 
 interface Props {
-  title: string;
   rows: Row[];
   columns: string[];
   index: number;
@@ -19,130 +17,172 @@ interface Props {
   bottomRowName?: string;
 }
 
+// 1. ВЫНОСИМ РЕФЫ НАРУЖУ (Shared State для синхронизации)
+// Либо создаем их в родительском компоненте и передаем списком.
+// Но самый простой и надежный способ для "Synced" таблиц - использовать один общий обработчик.
+const tableRefs: (HTMLDivElement | null)[] = [null, null, null, null];
+
 export const SyncedTable = ({
-  title,
   rows,
   columns,
   index,
   formatAsTime = false,
   showBottomTotal = false,
-  bottomRowName = "Итого",
+  bottomRowName = "ИТОГО ЗА ПЕРИОД",
 }: Props) => {
-  const colWidth = 98;
+  const colWidth = 100;
   const leftWidth = 220;
-  const totalWidth = 90;
+  const totalWidth = 110;
 
-  const scrollRefs = [
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-  ];
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>, i: number) => {
-    const left = e.currentTarget.scrollLeft;
-    scrollRefs.forEach((ref, idx) => {
-      if (idx !== i && ref.current) {
-        ref.current.scrollLeft = left;
+  // Сохраняем ссылку на текущую таблицу в общий массив при монтировании
+  useEffect(() => {
+    tableRefs[index] = containerRef.current;
+    return () => {
+      tableRefs[index] = null;
+    };
+  }, [index]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    tableRefs.forEach((ref, idx) => {
+      // Синхронизируем все таблицы КРОМЕ той, которую скроллим сейчас
+      if (idx !== index && ref) {
+        if (ref.scrollLeft !== scrollLeft) {
+          ref.scrollLeft = scrollLeft;
+        }
       }
     });
   };
 
   const formatValue = (v: number | string) => {
-    if (!formatAsTime || typeof v !== "number") return v;
-    const h = Math.floor(v / 60);
-    const m = v % 60;
-    return `${h}:${m.toString().padStart(2, "0")}`;
+    if (v === "-" || v === "" || v === undefined || v === 0) return <span className="text-white/10">–</span>;
+
+    if (!formatAsTime) {
+      const num = Number(v);
+      if (!isNaN(num)) {
+        return <span className="text-white">{Number(num.toFixed(1))}</span>;
+      }
+      return <span className="text-white">{v}</span>;
+    }
+
+    if (typeof v === "number") {
+      const h = Math.floor(v / 60);
+      const m = v % 60;
+      return <span className="text-white">{`${h}:${m.toString().padStart(2, "0")}`}</span>;
+    }
+    return <span className="text-white">{v}</span>;
   };
 
-  const columnTotals = columns.map((_, colIndex) =>
-    rows.reduce(
-      (sum, row) =>
-        sum + (typeof row.months[colIndex] === "number" ? row.months[colIndex] : 0),
+  const columnTotals = columns.map((_, colIndex) => {
+    const sum = rows.reduce(
+      (acc, row) =>
+        acc + (typeof row.months[colIndex] === "number" ? (row.months[colIndex] as number) : 0),
       0
-    )
-  );
+    );
+    return Number(sum.toFixed(1));
+  });
 
-  const grandTotal = columnTotals.reduce((s, v) => s + v, 0);
+  const grandTotal = Number(columnTotals.reduce((s, v) => s + v, 0).toFixed(1));
 
   return (
-    <div className="bg-[#1a1a1d] p-5 rounded-2xl shadow-lg mt-6">
-      <h2 className="text-lg font-semibold text-gray-100 mb-4">{title}</h2>
-
+    <div className="w-full">
       <div
-        ref={scrollRefs[index]}
-        className="overflow-x-auto"
-        onScroll={(e) => handleScroll(e, index)}
+        ref={containerRef}
+        className="overflow-x-auto scrollbar-hide select-none"
+        onScroll={handleScroll}
       >
         <div style={{ minWidth: columns.length * colWidth + leftWidth + totalWidth }}>
-          {/* Заголовок */}
-          <div className="flex text-gray-300 font-semibold">
+          {/* HEADER ROW */}
+          <div className="flex bg-white/[0.02] border-b border-white/[0.05]">
             <div
               style={{
                 width: leftWidth,
                 position: "sticky",
                 left: 0,
-                backgroundColor: "#1a1a1d",
-                zIndex: 3,
+                backgroundColor: "#131316",
+                zIndex: 10,
               }}
-              className="px-2"
+              className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500"
             >
               Параметр
             </div>
             {columns.map((c, i) => (
-              <div key={i} style={{ width: colWidth }} className="px-2 text-center">
+              <div
+                key={i}
+                style={{ width: colWidth }}
+                className="px-2 py-4 text-center text-[9px] font-black uppercase tracking-[0.2em] text-gray-500"
+              >
                 {c}
               </div>
             ))}
-            <div style={{ width: totalWidth }} className="px-2 text-center">
+            <div
+              style={{ width: totalWidth }}
+              className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-[0.2em] text-blue-500"
+            >
               Итого
             </div>
           </div>
 
-          {/* Строки */}
+          {/* DATA ROWS */}
           {rows.map((row, rIndex) => (
-            <div key={rIndex} className="flex items-center border-t border-gray-700 py-2">
+            <div
+              key={rIndex}
+              className="flex items-center border-b border-white/[0.02] hover:bg-white/[0.03] transition-colors group"
+            >
               <div
                 style={{
                   width: leftWidth,
                   position: "sticky",
                   left: 0,
-                  backgroundColor: "#1a1a1d",
-                  zIndex: 2,
+                  backgroundColor: "#131316",
+                  zIndex: 9,
                 }}
-                className="px-2 text-gray-200 flex items-center"
+                className="px-6 py-4 flex items-center group-hover:bg-[#1a1a1e] transition-colors"
               >
                 {row.color && (
                   <div
-                    className="w-3 h-3 rounded-full mr-2"
+                    className="w-1.5 h-1.5 rounded-full mr-3 shadow-sm"
                     style={{ backgroundColor: row.color }}
                   />
                 )}
-                {row.param}
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-300 group-hover:text-white transition-colors">
+                   {row.param}
+                </span>
               </div>
+
               {row.months.map((v, i) => (
-                <div key={i} style={{ width: colWidth }} className="px-2 text-center text-gray-300">
-                  {v ? formatValue(v) : <span className="text-gray-500">–</span>}
+                <div
+                  key={i}
+                  style={{ width: colWidth }}
+                  className="px-2 py-4 text-center text-[10px] font-bold"
+                >
+                  {formatValue(v)}
                 </div>
               ))}
-              <div style={{ width: totalWidth }} className="px-2 text-center font-semibold text-gray-100">
-                {row.total ? formatValue(row.total) : <span className="text-gray-500">–</span>}
+
+              <div
+                style={{ width: totalWidth }}
+                className="px-6 py-4 text-right text-[10px] font-black group-hover:text-blue-400 transition-colors"
+              >
+                {row.total !== undefined ? formatValue(row.total) : formatValue("-")}
               </div>
             </div>
           ))}
 
-          {/* Итоговая строка */}
+          {/* FOOTER TOTAL ROW */}
           {showBottomTotal && (
-            <div className="flex items-center border-t-2 border-gray-500 py-3 bg-[#222226] mt-2">
+            <div className="flex items-center bg-blue-500/[0.03] mt-px">
               <div
                 style={{
                   width: leftWidth,
                   position: "sticky",
                   left: 0,
-                  backgroundColor: "#222226",
-                  zIndex: 3,
+                  backgroundColor: "#131316",
+                  zIndex: 10,
                 }}
-                className="px-2 font-bold text-gray-100"
+                className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-blue-500 border-t border-blue-500/20"
               >
                 {bottomRowName}
               </div>
@@ -150,13 +190,16 @@ export const SyncedTable = ({
                 <div
                   key={i}
                   style={{ width: colWidth }}
-                  className="px-2 text-center font-semibold text-gray-200"
+                  className="px-2 py-5 text-center text-[10px] font-black text-blue-400/80 border-t border-blue-500/20"
                 >
-                  {v ? formatValue(v) : <span className="text-gray-500">–</span>}
+                  {formatValue(v)}
                 </div>
               ))}
-              <div style={{ width: totalWidth }} className="px-2 text-center font-bold text-gray-100">
-                {grandTotal ? formatValue(grandTotal) : <span className="text-gray-500">–</span>}
+              <div
+                style={{ width: totalWidth }}
+                className="px-6 py-5 text-right text-[11px] font-black text-blue-500 border-t border-blue-500/20 bg-blue-500/5"
+              >
+                {formatValue(grandTotal)}
               </div>
             </div>
           )}

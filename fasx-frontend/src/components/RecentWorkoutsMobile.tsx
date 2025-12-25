@@ -1,7 +1,19 @@
 import React, { useState } from "react";
-import { Calendar, Clock, Activity, Trash2, Edit2 } from "lucide-react";
-import ActivityTable from "../components/ActivityTable";
-import EditWorkoutModal from "./EditWorkoutModalMobile";
+import {
+  Calendar, Clock, Activity, Trash2, Edit2,
+  ChevronDown, Bike, Footprints, Dumbbell, MapPin
+} from "lucide-react";
+// УДАЛЯЕМ импорт модалки отсюда, она нам тут больше не нужна
+import dayjs from "dayjs";
+import 'dayjs/locale/ru';
+
+dayjs.locale('ru');
+
+const SkiIcon = ({ size = 24, color = "currentColor" }: { size?: number, color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m16 21-4-4-4 4" /><path d="M4.5 7L12 14.5L19.5 7" /><circle cx="12" cy="5" r="1" /><path d="M12 6v6" /><path d="M6 22l12-12" /><path d="M18 22L6 10" />
+  </svg>
+);
 
 interface Workout {
   id: string;
@@ -10,54 +22,46 @@ interface Workout {
   duration: number;
   type: string;
   distance?: number | null;
-  zone1Min?: number;
-  zone2Min?: number;
-  zone3Min?: number;
-  zone4Min?: number;
-  zone5Min?: number;
 }
 
 interface Props {
   workouts?: Workout[];
   onDeleteWorkout?: (id: string) => void;
   onUpdateWorkout?: () => void;
+  // ДОБАВЛЯЕМ новые пропсы для связи с ProfilePage
+  onEditClick: (id: string) => void;
+  onViewClick: (id: string) => void;
 }
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "short" });
+function getTypeInfo(type: string) {
+  const lowerType = type.toLowerCase();
+  if (lowerType.includes("ski") || lowerType.includes("лыжи")) return { icon: SkiIcon, label: "Лыжи", color: "#06b6d4", bg: "bg-cyan-500/10" };
+  if (lowerType.includes("run") || lowerType.includes("бег")) return { icon: Footprints, label: "Бег", color: "#3b82f6", bg: "bg-blue-500/10" };
+  if (lowerType.includes("strength") || lowerType.includes("силовая")) return { icon: Dumbbell, label: "Зал", color: "#f59e0b", bg: "bg-orange-500/10" };
+  if (lowerType.includes("bike") || lowerType.includes("вело")) return { icon: Bike, label: "Вело", color: "#10b981", bg: "bg-emerald-500/10" };
+  return { icon: MapPin, label: "Тренировка", color: "#6366f1", bg: "bg-indigo-500/10" };
 }
 
 function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return `${h > 0 ? `${h}ч ` : ""}${m}м`;
+  return h > 0 ? `${h}ч ${m}м` : `${m}м`;
 }
 
-function groupByDate(workouts: Workout[]) {
-  return workouts.reduce((acc, w) => {
-    const date = formatDate(w.date);
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(w);
-    return acc;
-  }, {} as Record<string, Workout[]>);
-}
-
-export default function RecentWorkoutsMobile({
-  workouts = [],
+export default function RecentWorkouts({
+  workouts,
   onDeleteWorkout,
   onUpdateWorkout,
+  onEditClick,
+  onViewClick
 }: Props) {
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [visibleDays, setVisibleDays] = useState(7); // показываем 7 дней
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     if (!confirm("Удалить тренировку?")) return;
     setDeletingId(id);
-
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/workouts/${id}`, {
@@ -65,126 +69,99 @@ export default function RecentWorkoutsMobile({
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) onDeleteWorkout?.(id);
-      else alert("Ошибка при удалении");
-    } catch {
-      alert("Ошибка соединения");
-    } finally {
-      setDeletingId(null);
-    }
+    } finally { setDeletingId(null); }
   };
 
-  // Сортировка и группировка
-  const grouped = Object.entries(
-    groupByDate([...workouts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
-  );
+  if (!workouts) return <div className="text-gray-600 p-4 text-[10px] font-black uppercase tracking-widest animate-pulse">Загрузка...</div>;
 
-  // Ограничиваем количество видимых дней
-  const visibleGrouped = grouped.slice(0, visibleDays);
+  const sorted = [...workouts].sort((a, b) => dayjs(b.date).unix() - dayjs(a.date).unix());
+  const limited = sorted.slice(0, visibleCount);
+
+  const grouped = limited.reduce((acc, w) => {
+    const date = dayjs(w.date).format("D MMMM");
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(w);
+    return acc;
+  }, {} as Record<string, Workout[]>);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <ActivityTable
-        workouts={workouts.map((w) => ({ id: w.id, type: w.type, duration: w.duration }))}
-      />
+    <div className="w-full font-sans text-white">
+      <div className="space-y-6">
+        {Object.entries(grouped).map(([date, dayWorkouts]) => (
+          <div key={date} className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] whitespace-nowrap">
+                {date === dayjs().format("D MMMM") ? "Сегодня" : date}
+              </span>
+              <div className="h-[1px] flex-1 bg-white/5" />
+            </div>
 
-      <div className="bg-[#1a1a1d] p-3 rounded-xl w-full">
-        <h2 className="text-base font-semibold mb-3">Последние тренировки</h2>
-        <div className="space-y-3">
-          {!workouts.length ? (
-            <p className="text-gray-500 text-sm">Пока нет тренировок</p>
-          ) : (
-            <>
-              {visibleGrouped.map(([date, dayWorkouts]) => (
-                <div key={date} className="space-y-2">
-                  <div className="flex items-center gap-1 text-gray-400 text-xs">
-                    <Calendar className="w-3 h-3" />
-                    <span>{date}</span>
-                  </div>
+            <div className="space-y-2.5">
+              {dayWorkouts.map((w) => {
+                const info = getTypeInfo(w.type);
+                return (
+                  <div
+                    key={w.id}
+                    // ВМЕСТО локального стейта — вызываем onViewClick
+                    onClick={() => onViewClick(w.id)}
+                    className="relative bg-[#131316] border border-white/[0.03] rounded-2xl p-3.5 active:scale-[0.98] transition-all flex items-center justify-between gap-3 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`shrink-0 w-10 h-10 rounded-xl ${info.bg} flex items-center justify-center border border-white/[0.03]`}>
+                        <info.icon size={18} color={info.color} />
+                      </div>
 
-                  <div className="space-y-2">
-                    {dayWorkouts.map((w) => (
-                      <div
-                        key={w.id}
-                        className="bg-[#2a2a2d] rounded-lg p-2 flex justify-between items-center"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <button
-                            onClick={() => {
-                              setSelectedWorkoutId(w.id);
-                              setIsEditing(false);
-                              setIsModalOpen(true);
-                            }}
-                            className="text-sm font-medium text-left truncate"
-                            title="Просмотреть тренировку"
-                          >
-                            {w.name}
-                          </button>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mt-1">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatDuration(w.duration)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Activity className="w-3 h-3" />
-                              {w.type}
-                            </span>
-                            {w.distance ? <span>{w.distance} км</span> : null}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 ml-2 shrink-0">
-                          <button
-                            onClick={() => {
-                              setSelectedWorkoutId(w.id);
-                              setIsEditing(true);
-                              setIsModalOpen(true);
-                            }}
-                            title="Редактировать"
-                            className="text-blue-400 hover:text-blue-600"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(w.id)}
-                            disabled={deletingId === w.id}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      <div className="overflow-hidden">
+                        <h4 className="text-[11px] font-bold text-gray-200 truncate leading-tight mb-0.5 uppercase tracking-tight">
+                          {w.name || info.label}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{info.label}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                    </div>
 
-              {/* Кнопка "Показать ещё" */}
-              {visibleDays < grouped.length && (
-                <button
-                  onClick={() => setVisibleDays(visibleDays + 7)}
-                  className="mt-3 w-full py-2 text-sm font-medium text-center text-blue-400 hover:text-blue-600 border border-blue-400 rounded-lg"
-                >
-                  Показать ещё
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                        <div className="text-right">
+                            <div className="text-[12px] font-black text-white leading-none">
+                                {w.distance ? `${w.distance} км` : formatDuration(w.duration)}
+                            </div>
+                            {w.distance && (
+                                <div className="text-[8px] font-bold text-gray-600 mt-1 uppercase tracking-tighter">
+                                    {formatDuration(w.duration)}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-1 border-l border-white/5 pl-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onEditClick(w.id); }}
+                              className="p-1 text-gray-700 active:text-blue-500"
+                            >
+                                <Edit2 size={12} />
+                            </button>
+                            <button onClick={(e) => handleDelete(e, w.id)} className="p-1 text-gray-700 active:text-red-500">
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {isModalOpen && selectedWorkoutId && (
-        <EditWorkoutModal
-          workoutId={selectedWorkoutId}
-          mode={isEditing ? "edit" : "view"}
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedWorkoutId(null);
-            setIsEditing(false);
-          }}
-          onSave={onUpdateWorkout}
-        />
+      {visibleCount < sorted.length && (
+        <button
+          onClick={() => setVisibleCount(prev => prev + 10)}
+          className="w-full mt-6 py-4 bg-white/5 border border-white/5 rounded-2xl text-[8px] font-black uppercase tracking-[0.3em] text-gray-500 active:bg-white/10 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronDown size={14} /> Загрузить еще
+        </button>
       )}
+      {/* ТУТ ПУСТО — МОДАЛКИ БОЛЬШЕ НЕТ */}
     </div>
   );
 }

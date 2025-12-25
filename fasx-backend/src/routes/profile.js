@@ -1,6 +1,7 @@
 import express from "express";
 import prisma from "../prisma/client.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import { deleteAvatar } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -17,29 +18,33 @@ router.use((req, res, next) => {
   next();
 });
 
-// --- GET: Получение профиля ---
-router.get("/", authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId || req.user.id;
+/// --- GET: Получение профиля ---
+ router.get("/", authenticateToken, async (req, res) => {
+   try {
+     const userId = req.user.userId || req.user.id;
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatarUrl: true,
-        profile: true
-      },
-    });
+     const user = await prisma.user.findUnique({
+       where: { id: userId },
+       // ДОБАВЛЯЕМ originalAvatarUrl В ВЫБОРКУ
+       select: {
+         id: true,
+         name: true,
+         email: true,
+         avatarUrl: true,
+         originalAvatarUrl: true, // <-- ОБЯЗАТЕЛЬНО ДОБАВИТЬ ЭТО
+         profile: true
+       },
+     });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json(user);
-  } catch (error) {
-    console.error("GET Profile Error:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
+     if (!user) return res.status(404).json({ error: "User not found" });
+
+     // Возвращаем объект пользователя, который теперь содержит всё необходимое
+     res.json(user);
+   } catch (error) {
+     console.error("GET Profile Error:", error);
+     res.status(500).json({ error: "Server error" });
+   }
+ });
 
 // --- PUT: Обновление профиля ---
 router.put("/", authenticateToken, async (req, res) => {
@@ -75,4 +80,5 @@ router.put("/", authenticateToken, async (req, res) => {
   }
 });
 
+router.delete("/delete-avatar", authenticateToken, deleteAvatar);
 export default router;

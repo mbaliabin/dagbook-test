@@ -1,42 +1,208 @@
+/* 1. Исправляем ограничения Vite, чтобы дашборд был на весь экран */
+html {
+  /* Резервирует место под скроллбар, даже если его нет */
+  scrollbar-gutter: stable;
+}
+
+/* Для старых браузеров или если первое не сработало */
+body {
+  overflow-y: scroll;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  max-width: 100% !important; /* Убираем 1280px */
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important; /* Убираем центрирование текста */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* 2. ТЕМНЫЕ СТИЛИ ДЛЯ КАЛЕНДАРЯ (react-date-range) */
+
+/* Главный контейнер */
+.rdrCalendarWrapper {
+  background-color: #0f0f11 !important;
+  color: #fff !important;
+  font-family: inherit !important;
+  border-radius: 20px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Полоса выбора дат сверху (если включена) */
+.rdrDateDisplayWrapper {
+  background-color: #1a1a1d !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Месяц */
+.rdrMonth {
+  width: 100% !important;
+  padding: 0 0.5rem 1rem 0.5rem !important;
 }
 
-.card {
-  padding: 2em;
+/* Название месяца и года */
+.rdrMonthAndYearPickers select {
+  color: #fff !important;
+  background: transparent !important;
+  font-weight: bold;
 }
 
-.read-the-docs {
-  color: #888;
+/* Дни недели (Пн, Вт...) */
+.rdrWeekDay {
+  color: #4b5563 !important; /* серый */
+  font-weight: 800 !important;
+  text-transform: uppercase;
+}
+
+/* Числа месяца */
+.rdrDayNumber span {
+  color: #ddd !important;
+}
+
+/* Неактивные дни */
+.rdrDayPassive .rdrDayNumber span {
+  color: #374151 !important;
+}
+
+/* Выделение диапазона */
+.rdrSelected,
+.rdrInRange,
+.rdrStartEdge,
+.rdrEndEdge {
+  background: #3b82f6 !important; /* Твой синий акцент */
+}
+
+/* Цвет превью при наведении */
+.rdrDayInPreview {
+  border: 1px solid #3b82f6 !important;
+}
+
+/* Кнопки "Вперед/Назад" */
+.rdrNextPrevButton {
+  background: #1f1f22 !important;
+  border-radius: 8px !important;
+}
+
+.rdrNextPrevButton:hover {
+  background: #2d2d30 !important;
+}
+
+/* Боковая панель быстрых выборов (если включена) */
+.rdrStaticRange {
+  background-color: #0a0a0b !important;
+  border-bottom: 1px solid #1f1f22 !important;
+}
+
+.rdrStaticRange:hover .rdrStaticRangeLabel {
+  background: #1a1a1d !important;
+}
+
+.rdrStaticRangeLabel {
+  color: #9ca3af !important;
+  background: transparent !important;
+}
+
+/* Кастомизация календаря react-date-range под темную тему */
+
+/* Основной фон календаря */
+.rdrCalendarWrapper {
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Выпадающие списки (Месяц и Год) — исправляем твой баг */
+.rdrMonthAndYearPickers select {
+  background-color: #131316 !important; /* Цвет фона твоих карточек */
+  color: #ffffff !important;           /* Белый текст */
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none; /* Убираем стандартную стрелочку браузера для чистоты */
+}
+
+/* Стиль опций внутри выпадающего списка (для некоторых браузеров) */
+.rdrMonthAndYearPickers select option {
+  background-color: #131316 !important;
+  color: white !important;
+}
+
+/* Наведение на селекторы */
+.rdrMonthAndYearPickers select:hover {
+  border-color: #3b82f6 !important; /* Твой синий акцент */
+  background-color: #1a1a1e !important;
+}
+
+/* Кнопки Назад/Вперед */
+.rdrNextPrevButton {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+}
+
+.rdrNextPrevButton:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Названия дней недели */
+.rdrWeekDay {
+  color: #6b7280 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+}
+
+/* Числа месяца */
+.rdrDayNumber span {
+  color: #e5e7eb !important;
+  font-weight: 600 !important;
+}
+
+/* Неактивные дни (другого месяца) */
+.rdrDayPassive .rdrDayNumber span {
+  color: #374151 !important;
+}
+
+/* Выбранный диапазон (середина) */
+.rdrInRange {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Выбранные края (старт и конец) */
+.rdrStartEdge, .rdrEndEdge {
+  background: #3b82f6 !important;
+}
+
+/* Текущий день (сегодня) */
+.rdrDayToday .rdrDayNumber span:after {
+  background: #3b82f6 !important;
+}
+
+/* Растягиваем календарь на всю ширину в мобильном Bottom Sheet */
+.mobile-date-range-wrapper .rdrCalendarWrapper,
+.mobile-date-range-wrapper .rdrMonth {
+  width: 100% !important;
+}
+
+/* Убираем лишние отступы, чтобы влезло на узкие экраны */
+.mobile-date-range-wrapper .rdrMonth {
+  padding: 0 !important;
+}
+
+.rdrDefinedRangesWrapper {
+  display: none !important; /* На мобилках боковая панель не нужна */
+}
+
+.mobile-date-range-wrapper {
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
